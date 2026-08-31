@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Settings — Flixora{% endblock %}
+{% block page_title %}Settings{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Settings</h1>
+    <p>Manage your account, company, integrations, and system configuration.</p>
+</div>
+
+<div class="grid-3">
+    <a href="{{ url_for('settings.profile') }}" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-body" style="display:flex;align-items:center;gap:var(--space-4);">
+            <div class="kpi-icon blue"><span class="material-symbols-outlined">person</span></div>
+            <div>
+                <h4 style="font-weight:600;">Profile</h4>
+                <p style="font-size:var(--text-sm);color:var(--text-secondary);margin-top:2px;">Account, password, timezone</p>
+            </div>
+        </div>
+    </a>
+    <a href="{{ url_for('settings.company') }}" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-body" style="display:flex;align-items:center;gap:var(--space-4);">
+            <div class="kpi-icon blue"><span class="material-symbols-outlined">business</span></div>
+            <div>
+                <h4 style="font-weight:600;">Company</h4>
+                <p style="font-size:var(--text-sm);color:var(--text-secondary);margin-top:2px;">Name, description, contact</p>
+            </div>
+        </div>
+    </a>
+    <a href="{{ url_for('settings.agent') }}" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-body" style="display:flex;align-items:center;gap:var(--space-4);">
+            <div class="kpi-icon blue"><span class="material-symbols-outlined">smart_toy</span></div>
+            <div>
+                <h4 style="font-weight:600;">Agent</h4>
+                <p style="font-size:var(--text-sm);color:var(--text-secondary);margin-top:2px;">AI behavior, tone, rules</p>
+            </div>
+        </div>
+    </a>
+    <a href="{{ url_for('settings.integrations') }}" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-body" style="display:flex;align-items:center;gap:var(--space-4);">
+            <div class="kpi-icon green"><span class="material-symbols-outlined">key</span></div>
+            <div>
+                <h4 style="font-weight:600;">Integrations</h4>
+                <p style="font-size:var(--text-sm);color:var(--text-secondary);margin-top:2px;">API keys, providers</p>
+            </div>
+        </div>
+    </a>
+    <a href="{{ url_for('providers.index') }}" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-body" style="display:flex;align-items:center;gap:var(--space-4);">
+            <div class="kpi-icon yellow"><span class="material-symbols-outlined">hub</span></div>
+            <div>
+                <h4 style="font-weight:600;">LLM Providers</h4>
+                <p style="font-size:var(--text-sm);color:var(--text-secondary);margin-top:2px;">Models, fallback routing</p>
+            </div>
+        </div>
+    </a>
+    <a href="{{ url_for('automation.index') }}" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-body" style="display:flex;align-items:center;gap:var(--space-4);">
+            <div class="kpi-icon yellow"><span class="material-symbols-outlined">autorenew</span></div>
+            <div>
+                <h4 style="font-weight:600;">Automation</h4>
+                <p style="font-size:var(--text-sm);color:var(--text-secondary);margin-top:2px;">Scheduler, jobs</p>
+            </div>
+        </div>
+    </a>
+</div>
+{% endblock %}

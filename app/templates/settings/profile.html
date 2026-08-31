@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Profile Settings — Flixora{% endblock %}
+{% block page_title %}Profile Settings{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Profile Settings</h1>
+    <p>Manage your admin account.</p>
+</div>
+
+<div class="grid-2">
+    <!-- Profile Form -->
+    <div class="card">
+        <div class="card-header"><h3>Profile</h3></div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('settings.profile') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="form-group">
+                    <label class="form-label" for="display_name">Display Name</label>
+                    <input type="text" class="form-input" id="display_name" name="display_name"
+                           value="{{ current_user.display_name or '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-input" value="{{ current_user.username }}" disabled>
+                    <span class="form-hint">Username cannot be changed.</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" value="{{ current_user.email }}" disabled>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="timezone">Timezone</label>
+                    <select class="form-select" id="timezone" name="timezone">
+                        <option value="UTC" {{ 'selected' if current_user.timezone == 'UTC' }}>UTC</option>
+                        <option value="Asia/Kolkata" {{ 'selected' if current_user.timezone == 'Asia/Kolkata' }}>Asia/Kolkata (IST)</option>
+                        <option value="America/New_York" {{ 'selected' if current_user.timezone == 'America/New_York' }}>America/New_York (EST)</option>
+                        <option value="America/Los_Angeles" {{ 'selected' if current_user.timezone == 'America/Los_Angeles' }}>America/Los_Angeles (PST)</option>
+                        <option value="Europe/London" {{ 'selected' if current_user.timezone == 'Europe/London' }}>Europe/London (GMT)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <span class="material-symbols-outlined">save</span>
+                    Save Profile
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Password -->
+    <div class="card">
+        <div class="card-header"><h3>Change Password</h3></div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('settings.change_password_route') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="form-group">
+                    <label class="form-label" for="current_password">Current Password</label>
+                    <div class="form-input-group">
+                        <input type="password" class="form-input" id="current_password" name="current_password" required>
+                        <button type="button" class="input-action password-toggle" aria-label="Toggle visibility">
+                            <span class="material-symbols-outlined">visibility</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="new_password">New Password</label>
+                    <div class="form-input-group">
+                        <input type="password" class="form-input" id="new_password" name="new_password" required minlength="8">
+                        <button type="button" class="input-action password-toggle" aria-label="Toggle visibility">
+                            <span class="material-symbols-outlined">visibility</span>
+                        </button>
+                    </div>
+                    <span class="form-hint">Minimum 8 characters.</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="confirm_password">Confirm New Password</label>
+                    <input type="password" class="form-input" id="confirm_password" name="confirm_password" required>
+                </div>
+
+                <button type="submit" class="btn btn-secondary">
+                    <span class="material-symbols-outlined">lock</span>
+                    Change Password
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endblock %}

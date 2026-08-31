@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics — Flixora{% endblock %}
+{% block page_title %}System Analytics{% endblock %}
+
+{% block content %}
+<div class="section-header" style="margin-bottom:var(--space-6);">
+    <div>
+        <h2>System Performance & Conversion Reports</h2>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:2px;">
+            Overview of leads qualified, sales pipeline values, and LLM Router healthy routing metrics (§77).
+        </p>
+    </div>
+</div>
+
+<!-- KPI CARDS GRID -->
+<div class="grid-4" style="margin-bottom:var(--space-6);">
+    <div class="card">
+        <div class="card-body" style="display:flex;align-items:center;gap:var(--space-4);">
+            <div class="kpi-icon blue"><span class="material-symbols-outlined">group</span></div>
+            <div>
+                <span style="font-size:var(--text-xs);color:var(--text-secondary);text-transform:uppercase;">Total Leads</span>
+                <h3 style="font-size:var(--text-2xl);font-weight:700;margin-top:4px;">{{ total_leads }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body" style="display:flex;align-items:center;gap:var(--space-4);">
+            <div class="kpi-icon green"><span class="material-symbols-outlined">monetization_on</span></div>
+            <div>
+                <span style="font-size:var(--text-xs);color:var(--text-secondary);text-transform:uppercase;">Revenue Won</span>
+                <h3 style="font-size:var(--text-2xl);font-weight:700;margin-top:4px;color:var(--success);">₹{{ revenue_won|round(2) }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body" style="display:flex;align-items:center;gap:var(--space-4);">
+            <div class="kpi-icon yellow"><span class="material-symbols-outlined">payments</span></div>
+            <div>
+                <span style="font-size:var(--text-xs);color:var(--text-secondary);text-transform:uppercase;">Pipeline Value</span>
+                <h3 style="font-size:var(--text-2xl);font-weight:700;margin-top:4px;color:var(--primary-color);">₹{{ pipeline_value|round(2) }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body" style="display:flex;align-items:center;gap:var(--space-4);">
+            <div class="kpi-icon purple"><span class="material-symbols-outlined">bolt</span></div>
+            <div>
+                <span style="font-size:var(--text-xs);color:var(--text-secondary);text-transform:uppercase;">AI Success Rate</span>
+                <h3 style="font-size:var(--text-2xl);font-weight:700;margin-top:4px;">{{ success_rate }}%</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DETAILED CHARTS / METRIC SECTIONS -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-6);margin-bottom:var(--space-6);">
+    <!-- Funnel Conversion Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Pipeline Funnel</h3>
+        </div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:var(--space-4);">
+            <div>
+                <div style="display:flex;justify-content:space-between;font-size:var(--text-sm);margin-bottom:4px;">
+                    <span>Qualified Leads</span>
+                    <strong>{{ qualified }}</strong>
+                </div>
+                <div style="height:8px;background:var(--border-color);border-radius:4px;overflow:hidden;">
+                    <div style="height:100%;background:var(--primary-color);width:{% if total_leads > 0 %}{{ (qualified / total_leads) * 100 }}{% else %}0{% endif %}%;"></div>
+                </div>
+            </div>
+            
+            <div>
+                <div style="display:flex;justify-content:space-between;font-size:var(--text-sm);margin-bottom:4px;">
+                    <span>Contacted Outreach</span>
+                    <strong>{{ contacted }}</strong>
+                </div>
+                <div style="height:8px;background:var(--border-color);border-radius:4px;overflow:hidden;">
+                    <div style="height:100%;background:var(--primary-color);width:{% if qualified > 0 %}{{ (contacted / qualified) * 100 }}{% else %}0{% endif %}%;"></div>
+                </div>
+            </div>
+            
+            <div>
+                <div style="display:flex;justify-content:space-between;font-size:var(--text-sm);margin-bottom:4px;">
+                    <span>Interested prospects</span>
+                    <strong>{{ interested }}</strong>
+                </div>
+                <div style="height:8px;background:var(--border-color);border-radius:4px;overflow:hidden;">
+                    <div style="height:100%;background:var(--success);width:{% if contacted > 0 %}{{ (interested / contacted) * 100 }}{% else %}0{% endif %}%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- LLM Router Health Stats -->
+    <div class="card">
+        <div class="card-header">
+            <h3>LLM Router Metrics</h3>
+        </div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:var(--space-3);font-size:var(--text-sm);">
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border-color);padding-bottom:var(--space-2);">
+                <span style="color:var(--text-secondary);">Total Requests sent</span>
+                <strong>{{ total_requests }}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border-color);padding-bottom:var(--space-2);">
+                <span style="color:var(--text-secondary);">Router Success rate</span>
+                <strong>{{ success_rate }}%</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border-color);padding-bottom:var(--space-2);">
+                <span style="color:var(--text-secondary);">LLM Fallbacks triggered</span>
+                <strong style="color:var(--warning);">{{ total_fallbacks }}</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PROVIDERS PERFORMANCE TABLE -->
+<div class="card">
+    <div class="card-header">
+        <h3>LLM Provider Performance logs</h3>
+    </div>
+    <div class="card-body" style="padding:0;overflow:hidden;">
+        <table class="table" style="margin:0;">
+            <thead>
+                <tr>
+                    <th>Provider Name</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Total Requests</th>
+                    <th>Failure Count</th>
+                    <th>Fallback Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in providers %}
+                <tr>
+                    <td style="font-weight:600;">{{ p.name }}</td>
+                    <td><span class="badge badge-gray">{{ p.priority }}</span></td>
+                    <td>
+                        {% if p.status.name == 'HEALTHY' %}
+                        <span class="badge badge-success">Healthy</span>
+                        {% else %}
+                        <span class="badge badge-error">{{ p.status.name }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ p.request_count or 0 }}</td>
+                    <td>{{ p.failure_count or 0 }}</td>
+                    <td>{{ p.fallback_count or 0 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

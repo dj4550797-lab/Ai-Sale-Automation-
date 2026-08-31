@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Discover Leads — Flixora{% endblock %}
+{% block page_title %}Discover Leads{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2);">
+        <a href="{{ url_for('leads.index') }}" style="display:flex;align-items:center;gap:4px;font-size:var(--text-sm);">
+            <span class="material-symbols-outlined" style="font-size:16px;">arrow_back</span>
+            Back to Database
+        </a>
+    </div>
+    <h1>Discover Leads</h1>
+    <p>Search local business directories and build your prospect database.</p>
+</div>
+
+<div class="card" style="max-width:600px;">
+    <div class="card-header">
+        <h3>Discovery Configuration</h3>
+    </div>
+    <div class="card-body">
+        <form method="POST" id="discoverForm" onsubmit="event.preventDefault(); showConfirmDialog();">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="form-group">
+                <label class="form-label" for="category">Business Category</label>
+                <input type="text" class="form-input" id="category" name="category" required 
+                       placeholder="e.g. Salon, Restaurant, Gym, Dentist">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="location">Location / Area</label>
+                <input type="text" class="form-input" id="location" name="location" required 
+                       placeholder="e.g. Connaught Place Delhi, Indiranagar Bangalore">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="target">Daily Scanner Target</label>
+                    <input type="number" class="form-input" id="target" name="target" value="20" min="1" max="50">
+                    <span class="form-hint">Number of places to scan.</span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="min_rating">Max Google Rating Need</label>
+                    <select class="form-select" id="min_rating" name="min_rating">
+                        <option value="">Any</option>
+                        <option value="4.0">Below 4.0 (High Need)</option>
+                        <option value="4.5">Below 4.5</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top:var(--space-2);">
+                <label class="form-check">
+                    <input type="checkbox" name="require_website">
+                    <span style="font-size:var(--text-sm);color:var(--text-secondary);">Filter: Only import prospects with websites</span>
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="margin-top:var(--space-4);">
+                <span class="material-symbols-outlined">rocket_launch</span>
+                Launch Scanner
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Confirm Dialog (§14) -->
+<div class="dialog-overlay" id="confirmScanDialog">
+    <div class="dialog">
+        <div class="dialog-header">
+            <h3>Start Discovery Scan?</h3>
+            <p>Confirm the configuration below to run Google Places scanner.</p>
+        </div>
+        <div class="dialog-body" style="background:var(--surface-dim);padding:var(--space-4) var(--space-6);margin-bottom:var(--space-4);border-radius:var(--radius-md);">
+            <div style="display:flex;flex-direction:column;gap:var(--space-2);font-size:var(--text-sm);">
+                <div><strong>Category:</strong> <span id="conf_cat"></span></div>
+                <div><strong>Location:</strong> <span id="conf_loc"></span></div>
+                <div><strong>Target Limit:</strong> <span id="conf_target"></span></div>
+                <div><strong>Require Website:</strong> <span id="conf_web"></span></div>
+            </div>
+        </div>
+        <div class="dialog-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDialog('confirmScanDialog')">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="submitScanForm()">Confirm & Launch</button>
+        </div>
+    </div>
+</div>
+
+<!-- Scanning Overlay Progress dialog (§14, §135) -->
+<div class="dialog-overlay" id="scanningOverlay" style="pointer-events:none;">
+    <div class="dialog" style="max-width:400px;text-align:center;padding:var(--space-10) var(--space-6);">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:var(--space-5);">
+            <div class="spinner" style="width:48px;height:48px;border-width:4px;"></div>
+            <div>
+                <h3 style="font-weight:600;margin-bottom:var(--space-2);">Scanning Local Directory...</h3>
+                <p style="color:var(--text-secondary);font-size:var(--text-sm);">
+                    Querying Google Places data, checking reviews, and checking duplicate leads. This may take up to 30 seconds.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showConfirmDialog() {
+    document.getElementById('conf_cat').innerText = document.getElementById('category').value;
+    document.getElementById('conf_loc').innerText = document.getElementById('location').value;
+    document.getElementById('conf_target').innerText = document.getElementById('target').value;
+    
+    const requireWeb = document.getElementsByName('require_website')[0].checked;
+    document.getElementById('conf_web').innerText = requireWeb ? "Yes" : "No";
+
+    openDialog('confirmScanDialog');
+}
+
+function submitScanForm() {
+    closeDialog('confirmScanDialog');
+    openDialog('scanningOverlay');
+    
+    // Actually submit the form
+    document.getElementById('discoverForm').submit();
+}
+</script>
+{% endblock %}

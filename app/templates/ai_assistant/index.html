@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}AI Assistant — Flixora{% endblock %}
+{% block page_title %}AI Assistant{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:260px 1fr;gap:var(--space-6);height:calc(100vh - 160px);align-items:stretch;">
+    
+    <!-- LEFT SIDEBAR: Suggested Metric Quick Query Chips -->
+    <div style="display:flex;flex-direction:column;gap:var(--space-4);">
+        <div class="card" style="padding:var(--space-4);height:100%;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:var(--space-3);color:var(--primary-color);">
+                <span class="material-symbols-outlined" style="font-size:20px;">info</span>
+                <strong style="font-size:var(--text-sm);">Suggested Queries</strong>
+            </div>
+            
+            <div style="display:flex;flex-direction:column;gap:var(--space-2);">
+                {% set chips = [
+                    ("Leads found today", "How many leads were discovered today?"),
+                    ("Pending PRDs", "Show pending PRD drafts."),
+                    ("Deals won this month", "How many deals have we won this month?"),
+                    ("Pricing Plans Lookup", "Show active pricing plans."),
+                    ("Provider Status Health", "What is the status of our LLM providers?"),
+                    ("Automation Runs", "Show automation cron jobs status."),
+                    ("Best Lead Categories", "Which business categories have we discovered?")
+                ] %}
+                
+                {% for label, query in chips %}
+                <button type="button" class="btn btn-ghost" 
+                        style="text-align:left;font-size:var(--text-xs);padding:8px 12px;border:1px solid var(--border-color);border-radius:var(--radius-sm);justify-content:flex-start;line-height:1.3;"
+                        onclick="sendPresetQuery('{{ query|escape }}')">
+                    {{ label }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Fullscreen Chat Box Canvas -->
+    <div class="card" style="display:flex;flex-direction:column;height:100%;padding:0;overflow:hidden;">
+        <!-- Chat Header -->
+        <div class="card-header" style="background:var(--surface-dim);padding:var(--space-4) var(--space-6);border-bottom:1px solid var(--border-color);flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:var(--space-3);">
+                <div style="width:36px;height:36px;border-radius:50%;background:var(--primary-color);color:#fff;display:flex;align-items:center;justify-content:center;">
+                    <span class="material-symbols-outlined">smart_toy</span>
+                </div>
+                <div>
+                    <h3 style="font-size:var(--text-md);font-weight:600;margin:0;">Dashboard Sales Assistant</h3>
+                    <div style="display:flex;align-items:center;gap:4px;margin-top:2px;">
+                        <div style="width:6px;height:6px;border-radius:50%;background:var(--success);"></div>
+                        <span style="font-size:10px;color:var(--text-tertiary);">AI Online & Ready</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chat Feed Area -->
+        <div id="assistantFeed" style="flex:1;overflow-y:auto;padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-4);background:var(--background-light);">
+            
+            <!-- AI Welcome Bubble -->
+            <div style="display:flex;gap:var(--space-3);align-items:flex-start;max-width:80%;">
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--primary-color);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">
+                    <span class="material-symbols-outlined" style="font-size:16px;">smart_toy</span>
+                </div>
+                <div style="background:#fff;border:1px solid var(--border-color);border-radius:0 var(--radius-md) var(--radius-md) var(--radius-md);padding:10px var(--space-4);font-size:var(--text-sm);line-height:1.5;box-shadow:var(--shadow-sm);">
+                    Hello! I am your sales assistant. Ask me questions about lead records, pricing plans, website analysis results, deals pipeline, or system health logs!
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- Chat Loading indicator -->
+        <div id="assistantLoading" style="display:none;align-items:center;gap:8px;padding:var(--space-2) var(--space-6);background:var(--surface-dim);font-size:var(--text-xs);color:var(--text-secondary);border-top:1px solid var(--border-color);flex-shrink:0;">
+            <div class="spinner" style="width:12px;height:12px;border-width:2px;"></div>
+            <span>Assistant is fetching analytics and formulating answer...</span>
+        </div>
+
+        <!-- Chat Input Form -->
+        <div style="padding:var(--space-4) var(--space-6);background:var(--surface-dim);border-top:1px solid var(--border-color);flex-shrink:0;">
+            <form id="assistantForm" onsubmit="submitQuery(event)" style="display:flex;gap:var(--space-3);">
+                <input type="text" class="form-input" id="messageInput" name="message" required autocomplete="off"
+                       placeholder="Type your dashboard statistics question here..." style="font-size:var(--text-sm);padding:12px 16px;">
+                <button type="submit" class="btn btn-primary" style="padding:0 var(--space-6);display:flex;align-items:center;gap:6px;">
+                    <span class="material-symbols-outlined">send</span>
+                    Send
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+const feed = document.getElementById('assistantFeed');
+const chatHistory = [];
+
+function scrollBottom() {
+    feed.scrollTop = feed.scrollHeight;
+}
+
+function sendPresetQuery(query) {
+    document.getElementById('messageInput').value = query;
+    document.getElementById('assistantForm').dispatchEvent(new Event('submit'));
+}
+
+function submitQuery(e) {
+    e.preventDefault();
+    const input = document.getElementById('messageInput');
+    const query = input.value.trim();
+    if (!query) return;
+
+    // Push to history
+    chatHistory.push({sender: 'user', content: query});
+
+    // 1. Append User Bubble
+    const userBubble = document.createElement('div');
+    userBubble.style.display = 'flex';
+    userBubble.style.justifyContent = 'flex-end';
+    userBubble.style.width = '100%';
+    
+    userBubble.innerHTML = `
+        <div style="display:flex;gap:8px;align-items:flex-start;max-width:80%;flex-direction:row-reverse;">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--text-secondary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">
+                <span class="material-symbols-outlined" style="font-size:16px;">person</span>
+            </div>
+            <div style="background:var(--primary-light);color:var(--primary-color);border:1px solid var(--primary-border);border-radius:var(--radius-md) 0 var(--radius-md) var(--radius-md);padding:10px var(--space-4);font-size:var(--text-sm);line-height:1.5;box-shadow:var(--shadow-sm);white-space:pre-wrap;">${query}</div>
+        </div>
+    `;
+    feed.appendChild(userBubble);
+    scrollBottom();
+    
+    // Reset input and show loading spinner
+    input.value = '';
+    input.disabled = true;
+    document.getElementById('assistantLoading').style.display = 'flex';
+
+    // 2. AJAX Post Request
+    const formData = new FormData();
+    formData.append('message', query);
+    formData.append('history', JSON.stringify(chatHistory.slice(-10)));
+
+    fetch("{{ url_for('ai_assistant.message') }}", {
+        method: "POST",
+        body: formData,
+        headers: {
+            "X-CSRFToken": "{{ csrf_token() }}"
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        // Hide loader & enable input
+        document.getElementById('assistantLoading').style.display = 'none';
+        input.disabled = false;
+        input.focus();
+
+        if (data.success) {
+            chatHistory.push({sender: 'assistant', content: data.reply});
+            // Append AI Bubble with formatted reply
+            const aiBubble = document.createElement('div');
+            aiBubble.style.display = 'flex';
+            aiBubble.style.gap = '12px';
+            aiBubble.style.alignItems = 'flex-start';
+            aiBubble.style.maxWidth = '80%';
+            
+            // Format system lines
+            let replyText = data.reply.replace(/\n/g, '<br>');
+
+            aiBubble.innerHTML = `
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--primary-color);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">
+                    <span class="material-symbols-outlined" style="font-size:16px;">smart_toy</span>
+                </div>
+                <div style="background:#fff;border:1px solid var(--border-color);border-radius:0 var(--radius-md) var(--radius-md) var(--radius-md);padding:10px var(--space-4);font-size:var(--text-sm);line-height:1.5;box-shadow:var(--shadow-sm);color:var(--text-primary);">
+                    ${replyText}
+                    ${data.tool_called && data.tool_called !== 'none' ? `<div style="font-size:10px;color:var(--text-tertiary);margin-top:var(--space-2);border-top:1px dashed var(--border-color);padding-top:4px;">Dispatched database metric: ${data.tool_called}</div>` : ''}
+                </div>
+            `;
+            feed.appendChild(aiBubble);
+            scrollBottom();
+        } else {
+            alert("Error: " + data.error);
+        }
+    })
+    .catch(err => {
+        document.getElementById('assistantLoading').style.display = 'none';
+        input.disabled = false;
+        alert("Request failed: " + err);
+    });
+}
+</script>
+{% endblock %}

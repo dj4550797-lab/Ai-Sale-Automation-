@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Agent Settings — Flixora{% endblock %}
+{% block page_title %}Agent Settings{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Agent Settings</h1>
+    <p>Configure the AI agent's identity, behavior, and communication rules.</p>
+</div>
+
+<div class="card" style="max-width:720px;">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('settings.agent') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="agent_name">Agent Name</label>
+                    <input type="text" class="form-input" id="agent_name" name="agent_name"
+                           value="{{ settings.get('agent_name', 'Flixora AI') }}">
+                    <span class="form-hint">Name used when the agent introduces itself.</span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="agent_role">Agent Role</label>
+                    <input type="text" class="form-input" id="agent_role" name="agent_role"
+                           value="{{ settings.get('agent_role', 'Sales Assistant') }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="communication_tone">Communication Tone</label>
+                <select class="form-select" id="communication_tone" name="communication_tone">
+                    {% set tone = settings.get('communication_tone', 'Professional and friendly') %}
+                    <option value="Professional and friendly" {{ 'selected' if tone == 'Professional and friendly' }}>Professional and friendly</option>
+                    <option value="Formal" {{ 'selected' if tone == 'Formal' }}>Formal</option>
+                    <option value="Casual" {{ 'selected' if tone == 'Casual' }}>Casual</option>
+                    <option value="Enthusiastic" {{ 'selected' if tone == 'Enthusiastic' }}>Enthusiastic</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="sales_style">Sales Style</label>
+                <textarea class="form-textarea" id="sales_style" name="sales_style"
+                          placeholder="Describe the selling approach...">{{ settings.get('sales_style', '') }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="allowed_information">Allowed Information</label>
+                <textarea class="form-textarea" id="allowed_information" name="allowed_information"
+                          placeholder="What the agent can share with clients...">{{ settings.get('allowed_information', '') }}</textarea>
+                <span class="form-hint">Information the agent is authorized to share with clients.</span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="restricted_information">Restricted Information</label>
+                <textarea class="form-textarea" id="restricted_information" name="restricted_information"
+                          placeholder="What the agent must NOT share...">{{ settings.get('restricted_information', '') }}</textarea>
+                <span class="form-hint">Information the agent must never reveal to clients.</span>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <span class="material-symbols-outlined">save</span>
+                Save Agent Settings
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

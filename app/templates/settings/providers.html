@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+
+{% block title %}LLM Providers — Flixora{% endblock %}
+{% block page_title %}LLM Providers{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom: var(--space-6); display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h1>AI Providers</h1>
+        <p style="color: var(--text-secondary);">Configure LLM routing parameters, default models, and priority-based fallback connections.</p>
+    </div>
+    <button class="btn btn-primary" onclick="openAddDialog()">
+        <span class="material-symbols-outlined">add</span>
+        Add Provider
+    </button>
+</div>
+
+<!-- ARCHITECTURE AND PRIORITY ROW -->
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: var(--space-6); align-items: start; margin-bottom: var(--space-8);">
+    
+    <!-- FALLBACK ROUTING SUMMARY -->
+    <div class="card" style="height: 100%;">
+        <div class="card-header">
+            <h3 style="margin:0; font-size: var(--text-md);">Routing Sequence</h3>
+        </div>
+        <div class="card-body" style="padding: var(--space-4) var(--space-5);">
+            <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+                {% for provider in providers %}
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--space-2) var(--space-3); background: var(--gray-50); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                    <div style="display: flex; align-items: center; gap: var(--space-3);">
+                        <strong style="color: var(--primary-600); width: var(--space-4); text-align: center;">{{ provider.priority }}</strong>
+                        <span style="font-weight: 600; color: var(--text-primary);">{{ provider.name }}</span>
+                    </div>
+                    <div>
+                        {% if provider.priority == 1 %}
+                        <span class="badge badge-green" style="font-size: 10px; font-weight: bold;">PRIMARY</span>
+                        {% else %}
+                        <span class="badge badge-blue" style="font-size: 10px; font-weight: bold;">FALLBACK</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div style="text-align: center; color: var(--text-tertiary); padding: var(--space-4);">
+                    No providers configured.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- INLINE CONNECTION TEST RESULTS BOX -->
+    <div class="card" style="height: 100%;">
+        <div class="card-header">
+            <h3 style="margin:0; font-size: var(--text-md);">Connection Health Monitor</h3>
+        </div>
+        <div class="card-body">
+            <p style="color: var(--text-secondary); font-size: var(--text-sm); line-height: 1.5; margin-bottom: var(--space-4);">
+                Verify connection latency and response payloads across all active endpoints.
+            </p>
+            <div id="test-results-panel" style="background: var(--gray-50); border: 1px dashed var(--border-color); border-radius: var(--radius-md); padding: var(--space-4); min-height: 80px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: var(--text-sm);">
+                <span>No active test running. Click "Test Connection" on any provider card below.</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- PROVIDER GRID -->
+<h2 style="font-size: var(--text-lg); font-weight: 600; margin-bottom: var(--space-4);">Configured AI Providers</h2>
+<div class="grid-2" style="margin-bottom: var(--space-8);">
+    {% for provider in providers %}
+    <div class="card" id="provider-card-{{ provider.id }}">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: var(--space-3);">
+                <span style="font-size: 16px; color: var(--primary-600);">✦</span>
+                <strong style="font-size: var(--text-md); color: var(--text-primary);">{{ provider.name }}</strong>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: var(--space-3);">
+                <!-- Enabled status toggle -->
+                <label class="switch-container" style="display: inline-flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" id="toggle-{{ provider.id }}" {% if provider.is_enabled %}checked{% endif %} 
+                           onclick="toggleProvider({{ provider.id }})" style="transform: scale(1.1); cursor:pointer;">
+                </label>
+            </div>
+        </div>
+        
+        <div class="card-body" style="padding: var(--space-5) var(--space-6);">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3) var(--space-6); font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-4);">
+                
+                <div>
+                    <span style="display:block; font-size: var(--text-xs); color: var(--text-tertiary); text-transform: uppercase;">Status</span>
+                    <strong style="color: {% if provider.status == 'healthy' %}var(--success){% elif provider.status == 'warning' %}var(--warning){% else %}var(--text-secondary){% endif %};">
+                        ● {{ provider.status|title }}
+                    </strong>
+                </div>
+
+                <div>
+                    <span style="display:block; font-size: var(--text-xs); color: var(--text-tertiary); text-transform: uppercase;">Priority</span>
+                    <strong style="color: var(--text-primary);">
+                        {{ provider.priority }} {% if provider.priority == 1 %}(Primary){% else %}(Fallback){% endif %}
+                    </strong>
+                </div>
+
+                <div>
+                    <span style="display:block; font-size: var(--text-xs); color: var(--text-tertiary); text-transform: uppercase;">Protocol / SDK</span>
+                    <span style="font-family: monospace; color: var(--text-primary);">{{ provider.protocol }}</span>
+                </div>
+
+                <div>
+                    <span style="display:block; font-size: var(--text-xs); color: var(--text-tertiary); text-transform: uppercase;">Active Model</span>
+                    <span style="color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; display: block;" title="{{ provider.default_model }}">
+                        {{ provider.default_model }}
+                    </span>
+                </div>
+
+                <div style="grid-column: 1 / -1;">
+                    <span style="display:block; font-size: var(--text-xs); color: var(--text-tertiary); text-transform: uppercase;">Credential API Key</span>
+                    <span style="font-family: monospace; color: var(--text-secondary); font-size: var(--text-xs);">
+                        {{ provider.masked_key }}
+                    </span>
+                </div>
+
+            </div>
+
+            <!-- Inline Test Result Box for this specific card -->
+            <div id="inline-test-result-{{ provider.id }}" style="font-size: var(--text-xs); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); margin-top: var(--space-3); display: none;">
+            </div>
+        </div>
+
+        <div class="card-footer" style="display: flex; gap: var(--space-2); justify-content: flex-end; padding: var(--space-3) var(--space-4); background: var(--surface-dim); border-top: 1px solid var(--border-color);">
+            <a href="{{ url_for('models.index', provider_id=provider.id) }}" class="btn btn-sm btn-ghost" style="padding: 6px 10px;">
+                <span class="material-symbols-outlined" style="font-size: 16px;">model_training</span>
+                Models
+            </a>
+            <button class="btn btn-sm btn-secondary" onclick="testProvider({{ provider.id }}, this)">
+                Test Connection
+            </button>
+            <button class="btn btn-sm btn-secondary" onclick='openEditDialog({{ provider.to_dict()|tojson }})'>
+                Configure
+            </button>
+            
+            <form method="POST" action="{{ url_for('providers.delete_provider', id=provider.id) }}" 
+                  style="display:inline; margin:0;" onsubmit="return confirm('Are you sure you want to delete this provider?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-danger btn-icon" style="min-width: 32px; min-height: 32px; padding: 4px;">
+                    <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
+                </button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="card" style="grid-column: 1 / -1;">
+        <div class="card-body" style="padding: var(--space-8) 0; text-align: center;">
+            <span class="material-symbols-outlined" style="font-size: 48px; color: var(--text-tertiary); margin-bottom: var(--space-3);">hub</span>
+            <h3 style="margin-bottom: var(--space-2);">No AI Providers Configured</h3>
+            <p style="color: var(--text-secondary); margin-bottom: var(--space-4);">Add your first provider (Google Gemini, OpenRouter, Grok, etc.) to enable LLM capabilities.</p>
+            <button class="btn btn-primary" onclick="openAddDialog()">
+                <span class="material-symbols-outlined">add</span>
+                Add Provider
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- ADD/EDIT PROVIDER DIALOG (DRAWER/MODAL) -->
+<div class="dialog-overlay" id="providerDialog">
+    <div class="dialog" style="max-width: 500px;">
+        <div class="dialog-header">
+            <h3 id="dialogTitle">Add AI Provider</h3>
+            <p id="dialogSubtitle">Configure API protocol, credentials, and routing priority.</p>
+        </div>
+        <form method="POST" id="providerForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="dialog-body">
+                
+                <div class="form-group" style="margin-bottom: var(--space-4);">
+                    <label class="form-label" for="provider_name">Provider Name</label>
+                    <input type="text" class="form-control" id="provider_name" name="name" required placeholder="e.g. Google Gemini">
+                </div>
+
+                <div class="form-group" style="margin-bottom: var(--space-4);">
+                    <label class="form-label" for="provider_protocol">Connection Protocol</label>
+                    <select class="form-control" id="provider_protocol" name="protocol" onchange="adjustFormFields()">
+                        {% for proto in protocols %}
+                        <option value="{{ proto }}">{{ proto }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group" id="base_url_group" style="margin-bottom: var(--space-4);">
+                    <label class="form-label" for="provider_base_url">Base URL</label>
+                    <input type="url" class="form-control" id="provider_base_url" name="base_url" placeholder="e.g. https://api.openai.com/v1">
+                    <span class="form-hint" id="base_url_hint">API endpoint host. Leave blank for default vendor SDK.</span>
+                </div>
+
+                <div class="form-group" style="margin-bottom: var(--space-4);">
+                    <label class="form-label" for="provider_priority">Fallback Priority</label>
+                    <input type="number" class="form-control" id="provider_priority" name="priority" value="10" min="1" max="100" required>
+                    <span class="form-hint">Priority order. 1 is Primary, higher values are fallback sequences.</span>
+                </div>
+
+                <div class="form-group" style="margin-bottom: var(--space-4);">
+                    <label class="form-label" for="provider_api_key" id="api_key_label">API Key</label>
+                    <input type="password" class="form-control" id="provider_api_key" name="api_key" placeholder="Enter API secret token">
+                    <span class="form-hint" id="api_key_hint">Securely encrypted at rest. Leave blank to keep current credential.</span>
+                </div>
+
+                <!-- Test results display inline in modal -->
+                <div id="modal-test-result" style="font-size: var(--text-xs); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); display: none; margin-top: var(--space-3);">
+                </div>
+
+            </div>
+            <div class="dialog-footer" style="border-top: 1px solid var(--border-color); padding-top: var(--space-4);">
+                <button type="button" class="btn btn-secondary" onclick="closeDialog('providerDialog')">Cancel</button>
+                <button type="button" class="btn btn-secondary" id="modalTestBtn" onclick="testModalProvider()">Test Connection</button>
+                <button type="submit" class="btn btn-primary" id="saveBtn">Save Provider</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentEditingProviderId = null;
+
+function adjustFormFields() {
+    const proto = document.getElementById('provider_protocol').value;
+    const baseUrlGroup = document.getElementById('base_url_group');
+    const baseUrlInput = document.getElementById('provider_base_url');
+    const baseUrlHint = document.getElementById('base_url_hint');
+
+    if (proto === 'google') {
+        baseUrlGroup.style.display = 'none';
+        baseUrlInput.required = false;
+    } else if (proto === 'openrouter') {
+        baseUrlGroup.style.display = 'block';
+        baseUrlInput.placeholder = 'https://openrouter.ai/api/v1';
+        baseUrlHint.innerText = 'Defaults to OpenRouter production API URL.';
+        baseUrlInput.required = false;
+    } else if (proto === 'xai') {
+        baseUrlGroup.style.display = 'block';
+        baseUrlInput.placeholder = 'https://api.x.ai/v1';
+        baseUrlHint.innerText = 'Defaults to xAI Groke base URL.';
+        baseUrlInput.required = false;
+    } else {
+        // OpenAI Compatible / custom
+        baseUrlGroup.style.display = 'block';
+        baseUrlInput.placeholder = 'e.g. https://api.openai.com/v1';
+        baseUrlHint.innerText = 'Fully qualified URL to host API endpoint.';
+        baseUrlInput.required = true;
+    }
+}
+
+function openAddDialog() {
+    currentEditingProviderId = null;
+    document.getElementById('dialogTitle').innerText = 'Add AI Provider';
+    document.getElementById('dialogSubtitle').innerText = 'Configure connection protocol and API keys.';
+    document.getElementById('providerForm').action = "{{ url_for('providers.add_provider') }}";
+    
+    document.getElementById('provider_name').value = '';
+    document.getElementById('provider_protocol').value = 'google';
+    document.getElementById('provider_base_url').value = '';
+    document.getElementById('provider_priority').value = '10';
+    document.getElementById('provider_api_key').value = '';
+    document.getElementById('provider_api_key').placeholder = 'Enter API secret token';
+    document.getElementById('api_key_hint').innerText = 'Securely encrypted at rest.';
+    
+    document.getElementById('modal-test-result').style.display = 'none';
+    document.getElementById('modalTestBtn').style.display = 'none'; // Only test saved config
+    
+    adjustFormFields();
+    openDialog('providerDialog');
+}
+
+function openEditDialog(provider) {
+    currentEditingProviderId = provider.id;
+    document.getElementById('dialogTitle').innerText = 'Configure AI Provider';
+    document.getElementById('dialogSubtitle').innerText = 'Modify endpoints, routing status, or key token.';
+    document.getElementById('providerForm').action = `/settings/llm/providers/${provider.id}/edit`;
+    
+    document.getElementById('provider_name').value = provider.name;
+    document.getElementById('provider_protocol').value = provider.protocol;
+    document.getElementById('provider_base_url').value = provider.base_url || '';
+    document.getElementById('provider_priority').value = provider.priority;
+    document.getElementById('provider_api_key').value = '';
+    document.getElementById('provider_api_key').placeholder = '••••••••••••';
+    document.getElementById('api_key_hint').innerText = 'Leave blank to preserve current credentials.';
+    
+    document.getElementById('modal-test-result').style.display = 'none';
+    document.getElementById('modalTestBtn').style.display = 'inline-flex';
+    
+    adjustFormFields();
+    openDialog('providerDialog');
+}
+
+async function toggleProvider(id) {
+    try {
+        const res = await apiFetch(`/settings/llm/providers/${id}/toggle`, { method: 'POST' });
+        showToast(res.message, 'success');
+        // reload stats/dots
+        setTimeout(() => window.location.reload(), 1000);
+    } catch (e) {
+        const chk = document.getElementById(`toggle-${id}`);
+        chk.checked = !chk.checked;
+        showToast('Error toggling status.', 'error');
+    }
+}
+
+async function testProvider(id, btn) {
+    const inlineBox = document.getElementById(`inline-test-result-${id}`);
+    const origText = btn.innerHTML;
+    btn.innerHTML = 'Testing...';
+    btn.disabled = true;
+    
+    inlineBox.style.display = 'none';
+    
+    const panel = document.getElementById('test-results-panel');
+    panel.innerHTML = `<span style="color:var(--primary-600);">Testing connection for provider ${id}...</span>`;
+    
+    try {
+        const res = await apiFetch(`/settings/llm/providers/${id}/test`, { method: 'POST' });
+        if (res.success) {
+            inlineBox.style.display = 'block';
+            inlineBox.style.background = 'var(--success-light)';
+            inlineBox.style.color = 'var(--success)';
+            inlineBox.innerText = `✓ Connection successful! Latency: ${res.latency_ms}ms`;
+            
+            panel.innerHTML = `<span style="color:var(--success);">✓ Connection check succeeded. Latency is ${res.latency_ms}ms.</span>`;
+            showToast('Connection check succeeded!', 'success');
+        } else {
+            inlineBox.style.display = 'block';
+            inlineBox.style.background = 'var(--error-light)';
+            inlineBox.style.color = 'var(--error)';
+            inlineBox.innerText = `✕ Connection failed: ${res.error}`;
+            
+            panel.innerHTML = `<span style="color:var(--error);">✕ Connection test failed. Reason: ${res.error}</span>`;
+            showToast('Connection failed.', 'error');
+        }
+    } catch (e) {
+        inlineBox.style.display = 'block';
+        inlineBox.style.background = 'var(--error-light)';
+        inlineBox.style.color = 'var(--error)';
+        inlineBox.innerText = `✕ Request error during verification.`;
+        
+        panel.innerHTML = `<span style="color:var(--error);">✕ Connection request failed.</span>`;
+        showToast('Verification failed.', 'error');
+    } finally {
+        btn.innerHTML = origText;
+        btn.disabled = false;
+    }
+}
+
+async function testModalProvider() {
+    if (!currentEditingProviderId) return;
+    const btn = document.getElementById('modalTestBtn');
+    const resultBox = document.getElementById('modal-test-result');
+    
+    const origText = btn.innerText;
+    btn.innerText = 'Testing...';
+    btn.disabled = true;
+    resultBox.style.display = 'none';
+    
+    try {
+        const res = await apiFetch(`/settings/llm/providers/${currentEditingProviderId}/test`, { method: 'POST' });
+        resultBox.style.display = 'block';
+        if (res.success) {
+            resultBox.style.background = 'var(--success-light)';
+            resultBox.style.color = 'var(--success)';
+            resultBox.innerText = `✓ Connection successful! Latency: ${res.latency_ms}ms`;
+        } else {
+            resultBox.style.background = 'var(--error-light)';
+            resultBox.style.color = 'var(--error)';
+            resultBox.innerText = `✕ Connection failed: ${res.error}`;
+        }
+    } catch(e) {
+        resultBox.style.display = 'block';
+        resultBox.style.background = 'var(--error-light)';
+        resultBox.style.color = 'var(--error)';
+        resultBox.innerText = `✕ Connection test failed.`;
+    } finally {
+        btn.innerText = origText;
+        btn.disabled = false;
+    }
+}
+</script>
+{% endblock %}

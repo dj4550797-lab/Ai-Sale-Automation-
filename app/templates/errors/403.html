@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Access Denied — Flixora{% endblock %}
+{% block page_title %}Forbidden{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state">
+            <span class="material-symbols-outlined empty-state-icon">lock</span>
+            <h3>Access Denied</h3>
+            <p>You don't have permission to access this page.</p>
+            <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">
+                <span class="material-symbols-outlined">home</span>
+                Go to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

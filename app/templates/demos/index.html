@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Demo Projects — Flixora{% endblock %}
+{% block page_title %}Demo Projects{% endblock %}
+
+{% block content %}
+<div class="section-header" style="margin-bottom:var(--space-6);">
+    <div>
+        <h2>Demo Landing Page Projects</h2>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:2px;">
+            Compile and host customized single-page mockups mapped directly to approved prospect PRDs (§37).
+        </p>
+    </div>
+</div>
+
+<div class="card" style="padding:0;overflow:hidden;">
+    <table class="table" style="margin:0;">
+        <thead>
+            <tr>
+                <th>Prospect Business</th>
+                <th>Category</th>
+                <th>PRD Status</th>
+                <th>Demo State</th>
+                <th>Reachability Check</th>
+                <th style="text-align:right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for state in lead_states %}
+            {% set lead = state.lead %}
+            {% set prd = state.prd %}
+            {% set demo = state.demo %}
+            
+            <tr id="row_lead_{{ lead.id }}">
+                <td style="font-weight:500;">
+                    {{ lead.business_name }}
+                    <span style="font-size:10px;color:var(--text-tertiary);display:block;font-weight:normal;margin-top:2px;">
+                        ID: {{ lead.id }} | {{ lead.website_url or 'No website' }}
+                    </span>
+                </td>
+                <td><span style="font-size:var(--text-xs);color:var(--text-secondary);">{{ lead.business_category|title }}</span></td>
+                <td>
+                    {% if prd %}
+                        {% if prd.status == 'approved' %}
+                        <span class="badge badge-success">Approved</span>
+                        {% elif prd.status == 'rejected' %}
+                        <span class="badge badge-error">Rejected</span>
+                        {% else %}
+                        <span class="badge badge-warning">Under Review</span>
+                        {% endif %}
+                    {% else %}
+                    <span class="badge badge-gray">No PRD</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span id="demo_badge_{{ lead.id }}">
+                        {% if demo %}
+                            {% if demo.demo_url.startswith('http') %}
+                            <span class="badge badge-success">Published</span>
+                            {% else %}
+                            <span class="badge badge-primary">Demo Ready</span>
+                            {% endif %}
+                        {% else %}
+                        <span class="badge badge-gray">No Demo</span>
+                        {% endif %}
+                    </span>
+                    
+                    <!-- Published URL link if available -->
+                    <div id="live_url_container_{{ lead.id }}" style="margin-top:4px;font-size:11px;">
+                        {% if demo and demo.demo_url.startswith('http') %}
+                        <a href="{{ demo.demo_url }}" target="_blank" style="color:var(--primary-color);font-family:monospace;display:flex;align-items:center;gap:2px;">
+                            <span class="material-symbols-outlined" style="font-size:12px;">open_in_new</span>
+                            {{ demo.demo_url }}
+                        </a>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    <div style="display:flex;align-items:center;gap:6px;" id="reachability_status_{{ lead.id }}">
+                        {% if demo %}
+                            {% if demo.url_reachable %}
+                            <div style="width:10px;height:10px;border-radius:50%;background:var(--success);" title="Valid & Reachable"></div>
+                            <span style="font-size:var(--text-xs);color:var(--text-secondary);">Reachable</span>
+                            {% elif demo.url_reachable == False %}
+                            <div style="width:10px;height:10px;border-radius:50%;background:var(--error);" title="Unreachable / Inactive DNS"></div>
+                            <span style="font-size:var(--text-xs);color:var(--error);">Unreachable</span>
+                            {% else %}
+                            <div style="width:10px;height:10px;border-radius:50%;background:var(--border-color);" title="Pending verification"></div>
+                            <span style="font-size:var(--text-xs);color:var(--text-tertiary);">Not Checked</span>
+                            {% endif %}
+                        {% else %}
+                        <span style="font-size:var(--text-xs);color:var(--text-tertiary);">—</span>
+                        {% endif %}
+                    </div>
+                </td>
+                <td style="text-align:right;">
+                    <div style="display:flex;gap:var(--space-2);justify-content:flex-end;">
+                        <!-- Compile generator button -->
+                        <button class="btn btn-secondary btn-sm" id="btn_generate_{{ lead.id }}"
+                                onclick="generateDemo({{ lead.id }})"
+                                {% if not prd or prd.status != 'approved' %}disabled style="opacity:0.5;cursor:not-allowed;" title="PRD must be approved first"{% endif %}>
+                            <span class="material-symbols-outlined" style="font-size:16px;">construction</span>
+                            Compile
+                        </button>
+                        
+                        <!-- Preview button -->
+                        <a href="{{ url_for('demos.preview', lead_id=lead.id) }}" target="_blank" 
+                           class="btn btn-ghost btn-sm" id="btn_preview_{{ lead.id }}" 
+                           style="padding:6px 12px;min-width:auto;{% if not demo %}display:none;{% endif %}">
+                            <span class="material-symbols-outlined" style="font-size:16px;">visibility</span>
+                            Preview
+                        </a>
+                        
+                        <!-- Publish button -->
+                        <button class="btn btn-primary btn-sm" id="btn_publish_{{ lead.id }}"
+                                onclick="publishDemo({{ lead.id }})"
+                                {% if not demo or demo.demo_url.startswith('http') %}style="display:none;"{% endif %}>
+                            <span class="material-symbols-outlined" style="font-size:16px;">publish</span>
+                            Publish
+                        </button>
+
+                        {% if demo %}
+                        <button type="button" class="btn btn-danger btn-sm" style="background:transparent; color:var(--error); border-color:var(--error); padding:5px 10px;" onclick="confirmDeleteDemo({{ demo.id }}, '{{ lead.business_name|replace("'", "\\'")|escape }}', {{ lead.id }}, '{{ demo.demo_url|replace("'", "\\'")|escape }}')">
+                            Delete
+                        </button>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" style="text-align:center;padding:var(--space-8);color:var(--text-tertiary);">
+                    No leads discovered in the database.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Loader Spinner Overlay -->
+<div class="dialog-overlay" id="demoLoadingSpinner" style="background:rgba(0,0,0,0.5);z-index:9999;">
+    <div class="card" style="padding:var(--space-6);max-width:280px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;margin:auto;box-shadow:var(--shadow-lg);">
+        <div class="spinner" style="width:36px;height:36px;border-width:4px;"></div>
+        <strong style="font-size:var(--text-sm);" id="demoLoaderText">Compiling Site Markup...</strong>
+        <p style="font-size:11px;color:var(--text-tertiary);margin:0;">Formulating layout and writing custom CSS components with the AI Router.</p>
+    </div>
+</div>
+
+<script>
+function generateDemo(leadId) {
+    document.getElementById('demoLoaderText').innerText = "Compiling Site Markup...";
+    openDialog('demoLoadingSpinner');
+    
+    fetch("{{ url_for('demos.index') }}/generate/" + leadId, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token() }}"
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        closeDialog('demoLoadingSpinner');
+        if (data.success) {
+            // Update UI elements
+            document.getElementById('demo_badge_' + leadId).innerHTML = '<span class="badge badge-primary">Demo Ready</span>';
+            
+            // Show preview and publish buttons
+            const previewBtn = document.getElementById('btn_preview_' + leadId);
+            previewBtn.style.display = 'inline-flex';
+            previewBtn.href = data.preview_url;
+            
+            const publishBtn = document.getElementById('btn_publish_' + leadId);
+            publishBtn.style.display = 'inline-flex';
+            
+            // Update reachability status light
+            document.getElementById('reachability_status_' + leadId).innerHTML = `
+                <div style="width:10px;height:10px;border-radius:50%;background:var(--success);" title="Valid & Reachable"></div>
+                <span style="font-size:var(--text-xs);color:var(--text-secondary);">Reachable</span>
+            `;
+            
+            alert("Demo landing page compiled successfully! Click Preview to see the site.");
+        } else {
+            alert("Error: " + data.error);
+        }
+    })
+    .catch(err => {
+        closeDialog('demoLoadingSpinner');
+        alert("Request failed: " + err);
+    });
+}
+
+function publishDemo(leadId) {
+    document.getElementById('demoLoaderText').innerText = "Deploying Static Files...";
+    openDialog('demoLoadingSpinner');
+    
+    fetch("{{ url_for('demos.index') }}/publish/" + leadId, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token() }}"
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        closeDialog('demoLoadingSpinner');
+        if (data.success) {
+            // Update badges
+            document.getElementById('demo_badge_' + leadId).innerHTML = '<span class="badge badge-success">Published</span>';
+            
+            // Hide publish button
+            document.getElementById('btn_publish_' + leadId).style.display = 'none';
+            
+            // Show live URL container
+            const urlContainer = document.getElementById('live_url_container_' + leadId);
+            urlContainer.innerHTML = `
+                <a href="${data.published_url}" target="_blank" style="color:var(--primary-color);font-family:monospace;display:flex;align-items:center;gap:2px;">
+                    <span class="material-symbols-outlined" style="font-size:12px;">open_in_new</span>
+                    ${data.published_url}
+                </a>
+            `;
+            
+            alert("Landing page published successfully! Live URL: " + data.published_url);
+        } else {
+            alert("Error: " + data.error);
+        }
+    })
+    .catch(err => {
+        closeDialog('demoLoadingSpinner');
+        alert("Request failed: " + err);
+    });
+}
+
+function confirmDeleteDemo(id, name, leadId, demoUrl) {
+    document.getElementById('delete_demo_id').innerText = id;
+    document.getElementById('delete_demo_business').innerText = name;
+    document.getElementById('delete_demo_lead_id').innerText = leadId;
+    document.getElementById('delete_demo_url').innerText = demoUrl || 'Local Build only';
+    document.getElementById('delete_demo_form').action = `/demos/${id}/delete`;
+    
+    openDialog('deleteDemoModal');
+}
+</script>
+
+<!-- Delete Demo Confirmation Modal -->
+<div class="dialog-overlay" id="deleteDemoModal">
+    <div class="dialog" style="max-width: 450px;">
+        <div class="dialog-header">
+            <h3 style="color: var(--error);">Delete Demo Project?</h3>
+            <p style="margin-top: 4px; font-size: var(--text-sm); color: var(--text-secondary);">
+                This will permanently remove this demo project record.
+            </p>
+        </div>
+        <div class="dialog-body" style="padding-top: var(--space-2);">
+            <div style="background: var(--gray-50); border: 1px solid var(--border-color); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); font-size: var(--text-sm);">
+                <div style="margin-bottom: var(--space-2);">
+                    <span style="color: var(--text-secondary);">Business:</span> 
+                    <strong id="delete_demo_business" style="color: var(--text-primary);"></strong>
+                </div>
+                <div style="margin-bottom: var(--space-2); font-size: var(--text-xs); color: var(--text-tertiary);">
+                    Demo ID: <span id="delete_demo_id"></span>
+                </div>
+                <div style="margin-bottom: var(--space-2);">
+                    <span style="color: var(--text-secondary);">Lead ID:</span> 
+                    <span id="delete_demo_lead_id" style="font-family: monospace;"></span>
+                </div>
+                <div style="word-break: break-all;">
+                    <span style="color: var(--text-secondary);">Demo URL:</span> 
+                    <span id="delete_demo_url" style="font-family: monospace; font-size: var(--text-xs); color: var(--primary-600);"></span>
+                </div>
+            </div>
+            <p style="font-size: var(--text-xs); color: var(--text-tertiary); margin-top: var(--space-3); line-height: 1.4;">
+                Note: This deletes the database record and local compiled code files. Manually deployed external websites or GitHub repositories will not be modified or deleted.
+            </p>
+        </div>
+        <div class="dialog-footer" style="border-top: 1px solid var(--border-color); padding-top: var(--space-4);">
+            <button type="button" class="btn btn-secondary" onclick="closeDialog('deleteDemoModal')">Cancel</button>
+            <form id="delete_demo_form" method="POST" style="display: inline; margin: 0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-danger">Delete Demo</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

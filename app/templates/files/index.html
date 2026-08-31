@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}Files & Assets — Flixora{% endblock %}
+{% block page_title %}Files & Assets{% endblock %}
+
+{% block content %}
+<div class="section-header" style="margin-bottom:var(--space-6);">
+    <div>
+        <h2>Assets & Files Explorer</h2>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:2px;">
+            Upload and audit brand assets, documents, and logos used by the AI agent to draft campaigns.
+        </p>
+    </div>
+    <button class="btn btn-primary" onclick="openUploadModal()">
+        <span class="material-symbols-outlined">upload</span>
+        Upload File
+    </button>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:var(--space-6);">
+    
+    <!-- Logos Category Section -->
+    <div>
+        <h3 style="font-size:var(--text-md);font-weight:600;margin-bottom:var(--space-3);color:var(--text-primary);display:flex;align-items:center;gap:6px;">
+            <span class="material-symbols-outlined" style="color:var(--primary-color);">branding_watermark</span>
+            Brand Logos
+        </h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:var(--space-4);">
+            {% for file in logos %}
+            <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+                <div style="height:120px;background:var(--background-light);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border-color);padding:var(--space-2);position:relative;">
+                    <span class="badge badge-primary" style="position:absolute;top:8px;left:8px;font-size:10px;">Logo</span>
+                    <!-- Show stub or placeholder for image preview -->
+                    <span class="material-symbols-outlined" style="font-size:48px;color:var(--text-tertiary);">image</span>
+                </div>
+                <div style="padding:var(--space-4);flex:1;display:flex;flex-direction:column;justify-content:space-between;">
+                    <div style="margin-bottom:var(--space-3);">
+                        <strong style="font-size:var(--text-sm);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="{{ file.original_filename }}">
+                            {{ file.original_filename }}
+                        </strong>
+                        <span style="font-size:10px;color:var(--text-tertiary);">
+                            {{ (file.file_size / 1024)|round(1) }} KB | Uploaded {{ file.created_at.strftime('%b %d, %Y') }}
+                        </span>
+                    </div>
+                    <div style="display:flex;gap:4px;justify-content:flex-end;">
+                        <button class="btn btn-ghost btn-sm" onclick="triggerVisionAnalysis({{ file.id }}, '{{ file.original_filename|escape }}')" style="padding:4px 8px;min-width:auto;color:var(--primary-color);" title="Analyze brand colors & text">
+                            <span class="material-symbols-outlined" style="font-size:18px;">psychology</span>
+                        </button>
+                        <button class="btn btn-ghost btn-sm" onclick="openRenameModal({{ file.id }}, '{{ file.original_filename|escape }}')" style="padding:4px 8px;min-width:auto;" title="Rename file">
+                            <span class="material-symbols-outlined" style="font-size:18px;">edit</span>
+                        </button>
+                        <form method="POST" action="{{ url_for('files.delete', id=file.id) }}" onsubmit="return confirm('Are you sure you want to delete this file?');" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-ghost btn-sm" style="padding:4px 8px;min-width:auto;color:var(--error);" title="Delete file">
+                                <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card" style="grid-column:1/-1;padding:var(--space-6);text-align:center;color:var(--text-tertiary);font-size:var(--text-sm);">
+                No brand logos uploaded yet.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Images Category Section -->
+    <div>
+        <h3 style="font-size:var(--text-md);font-weight:600;margin-bottom:var(--space-3);color:var(--text-primary);display:flex;align-items:center;gap:6px;">
+            <span class="material-symbols-outlined" style="color:var(--primary-color);">image</span>
+            Mockups & Photos
+        </h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:var(--space-4);">
+            {% for file in images %}
+            <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+                <div style="height:120px;background:var(--background-light);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border-color);padding:var(--space-2);position:relative;">
+                    <span class="badge badge-success" style="position:absolute;top:8px;left:8px;font-size:10px;">Image</span>
+                    <span class="material-symbols-outlined" style="font-size:48px;color:var(--text-tertiary);">photo_library</span>
+                </div>
+                <div style="padding:var(--space-4);flex:1;display:flex;flex-direction:column;justify-content:space-between;">
+                    <div style="margin-bottom:var(--space-3);">
+                        <strong style="font-size:var(--text-sm);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="{{ file.original_filename }}">
+                            {{ file.original_filename }}
+                        </strong>
+                        <span style="font-size:10px;color:var(--text-tertiary);">
+                            {{ (file.file_size / 1024)|round(1) }} KB | Uploaded {{ file.created_at.strftime('%b %d, %Y') }}
+                        </span>
+                    </div>
+                    <div style="display:flex;gap:4px;justify-content:flex-end;">
+                        <button class="btn btn-ghost btn-sm" onclick="triggerVisionAnalysis({{ file.id }}, '{{ file.original_filename|escape }}')" style="padding:4px 8px;min-width:auto;color:var(--primary-color);" title="Analyze visual mockups">
+                            <span class="material-symbols-outlined" style="font-size:18px;">psychology</span>
+                        </button>
+                        <button class="btn btn-ghost btn-sm" onclick="openRenameModal({{ file.id }}, '{{ file.original_filename|escape }}')" style="padding:4px 8px;min-width:auto;" title="Rename file">
+                            <span class="material-symbols-outlined" style="font-size:18px;">edit</span>
+                        </button>
+                        <form method="POST" action="{{ url_for('files.delete', id=file.id) }}" onsubmit="return confirm('Are you sure you want to delete this file?');" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-ghost btn-sm" style="padding:4px 8px;min-width:auto;color:var(--error);" title="Delete file">
+                                <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card" style="grid-column:1/-1;padding:var(--space-6);text-align:center;color:var(--text-tertiary);font-size:var(--text-sm);">
+                No mockups or visual photos uploaded yet.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Documents Category Section -->
+    <div>
+        <h3 style="font-size:var(--text-md);font-weight:600;margin-bottom:var(--space-3);color:var(--text-primary);display:flex;align-items:center;gap:6px;">
+            <span class="material-symbols-outlined" style="color:var(--primary-color);">description</span>
+            Documents & Pricing Briefs
+        </h3>
+        <div class="card" style="padding:0;overflow:hidden;">
+            <table class="table" style="margin:0;">
+                <thead>
+                    <tr>
+                        <th>Filename</th>
+                        <th>Type</th>
+                        <th>Size</th>
+                        <th>Uploaded At</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for file in documents %}
+                    <tr>
+                        <td style="font-weight:500;display:flex;align-items:center;gap:8px;">
+                            <span class="material-symbols-outlined" style="color:var(--text-secondary);font-size:20px;">draft</span>
+                            {{ file.original_filename }}
+                        </td>
+                        <td><span class="badge badge-gray">{{ file.file_type|title }}</span></td>
+                        <td style="color:var(--text-secondary);font-size:var(--text-sm);">{{ (file.file_size / 1024)|round(1) }} KB</td>
+                        <td style="color:var(--text-secondary);font-size:var(--text-sm);">{{ file.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td style="text-align:right;">
+                            <div style="display:flex;gap:4px;justify-content:flex-end;">
+                                <button class="btn btn-ghost btn-sm" onclick="openRenameModal({{ file.id }}, '{{ file.original_filename|escape }}')" style="padding:4px 8px;min-width:auto;">
+                                    <span class="material-symbols-outlined" style="font-size:18px;">edit</span>
+                                </button>
+                                <form method="POST" action="{{ url_for('files.delete', id=file.id) }}" onsubmit="return confirm('Are you sure you want to delete this document?');" style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-ghost btn-sm" style="padding:4px 8px;min-width:auto;color:var(--error);">
+                                        <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align:center;padding:var(--space-6);color:var(--text-tertiary);">
+                            No project briefs, documents, or PDF guides uploaded yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- UPLOAD FILE DIALOG MODAL -->
+<div class="dialog-overlay" id="uploadFileModal">
+    <div class="dialog" style="max-width:500px;">
+        <form method="POST" action="{{ url_for('files.upload') }}" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="dialog-header">
+                <h3>Upload Project Asset File</h3>
+                <p>Add assets used to audit prospects or customize campaign demos.</p>
+            </div>
+            <div class="dialog-body" style="display:flex;flex-direction:column;gap:var(--space-4);">
+                <div class="form-group">
+                    <label class="form-label" for="upload_file">Select File</label>
+                    <input type="file" class="form-input" id="upload_file" name="file" required style="padding:8px;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="upload_type">Asset Category Type</label>
+                    <select class="form-select" id="upload_type" name="file_type" required>
+                        <option value="logo">Brand Logo</option>
+                        <option value="image">Mockup Photo / Design Visual</option>
+                        <option value="document">Business Plan / pricing PDF</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="upload_lead">Associate with Lead (Optional)</label>
+                    <select class="form-select" id="upload_lead" name="lead_id">
+                        <option value="">-- No Association --</option>
+                        {% for lead in leads %}
+                        <option value="{{ lead.id }}">{{ lead.business_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeDialog('uploadFileModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Upload Now</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- RENAME FILE DIALOG MODAL -->
+<div class="dialog-overlay" id="renameFileModal">
+    <div class="dialog" style="max-width:450px;">
+        <form method="POST" id="renameForm" action="">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="dialog-header">
+                <h3>Rename File Asset</h3>
+                <p>Change the catalog display name of this resource.</p>
+            </div>
+            <div class="dialog-body">
+                <div class="form-group">
+                    <label class="form-label" for="rename_new_name">New Filename</label>
+                    <input type="text" class="form-input" id="rename_new_name" name="new_name" required>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeDialog('renameFileModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Rename</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- VISION AUDIT RESULTS MODAL -->
+<div class="dialog-overlay" id="visionResultModal">
+    <div class="dialog" style="max-width:550px;">
+        <div class="dialog-header">
+            <h3 id="visionFilename">Vision Logo Audit Results</h3>
+            <p>Extracted design tokens and style variables extracted by the Vision LLM.</p>
+        </div>
+        <div class="dialog-body" style="display:flex;flex-direction:column;gap:var(--space-4);">
+            <!-- Color Palettes -->
+            <div>
+                <strong style="font-size:var(--text-xs);color:var(--text-tertiary);display:block;margin-bottom:var(--space-2);text-transform:uppercase;">Dominant Colors</strong>
+                <div style="display:flex;gap:var(--space-3);" id="visionColorSwatches">
+                    <!-- swatches will be inserted by JS -->
+                </div>
+            </div>
+            <!-- Brand Style -->
+            <div>
+                <strong style="font-size:var(--text-xs);color:var(--text-tertiary);display:block;margin-bottom:4px;text-transform:uppercase;">Brand Tone & Aesthetics</strong>
+                <p id="visionStyleNotes" style="font-size:var(--text-sm);color:var(--text-secondary);background:var(--background-light);padding:var(--space-3);border-radius:var(--radius-sm);margin:0;line-height:1.5;"></p>
+            </div>
+            <!-- Extracted Text -->
+            <div>
+                <strong style="font-size:var(--text-xs);color:var(--text-tertiary);display:block;margin-bottom:4px;text-transform:uppercase;">Extracted Logo Text / Typography</strong>
+                <ul id="visionTextElements" style="margin:0;padding-left:20px;font-size:var(--text-sm);color:var(--text-secondary);line-height:1.5;"></ul>
+            </div>
+            <!-- Inferred Industry -->
+            <div>
+                <strong style="font-size:var(--text-xs);color:var(--text-tertiary);display:block;margin-bottom:4px;text-transform:uppercase;">Inferred Business Category</strong>
+                <span class="badge badge-primary" id="visionInferredIndustry" style="font-size:var(--text-xs);"></span>
+            </div>
+        </div>
+        <div class="dialog-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDialog('visionResultModal')">Close Dialog</button>
+        </div>
+    </div>
+</div>
+
+<!-- Loader Spinner Overlay -->
+<div class="dialog-overlay" id="visionLoadingSpinner" style="background:rgba(0,0,0,0.5);z-index:9999;">
+    <div class="card" style="padding:var(--space-6);max-width:260px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;margin:auto;box-shadow:var(--shadow-lg);">
+        <div class="spinner" style="width:36px;height:36px;border-width:4px;"></div>
+        <strong style="font-size:var(--text-sm);">Running Vision Audit...</strong>
+        <p style="font-size:11px;color:var(--text-tertiary);margin:0;">Analyzing branding colors, mood, styles, and text elements.</p>
+    </div>
+</div>
+
+<script>
+function openUploadModal() {
+    document.getElementById('upload_file').value = '';
+    document.getElementById('upload_type').value = 'logo';
+    document.getElementById('upload_lead').value = '';
+    openDialog('uploadFileModal');
+}
+
+function openRenameModal(id, originalName) {
+    document.getElementById('renameForm').action = "{{ url_for('files.index') }}/rename/" + id;
+    document.getElementById('rename_new_name').value = originalName;
+    openDialog('renameFileModal');
+}
+
+function triggerVisionAnalysis(id, filename) {
+    // Show spinner loader
+    openDialog('visionLoadingSpinner');
+    
+    fetch("{{ url_for('files.index') }}/analyze/" + id, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token() }}"
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        closeDialog('visionLoadingSpinner');
+        if (data.success) {
+            const result = data.data;
+            document.getElementById('visionFilename').innerText = "Vision Logo Audit: " + filename;
+            
+            // Generate color swatches
+            const swatchContainer = document.getElementById('visionColorSwatches');
+            swatchContainer.innerHTML = '';
+            result.dominant_colors.forEach(hex => {
+                const swatch = document.createElement('div');
+                swatch.style.display = 'flex';
+                swatch.style.flexDirection = 'column';
+                swatch.style.alignItems = 'center';
+                swatch.style.gap = '4px';
+                
+                swatch.innerHTML = `
+                    <div style="width:40px;height:40px;border-radius:4px;background:${hex};border:1px solid var(--border-color);box-shadow:var(--shadow-sm);"></div>
+                    <span style="font-size:10px;font-family:monospace;color:var(--text-secondary);">${hex}</span>
+                `;
+                swatchContainer.appendChild(swatch);
+            });
+            
+            // Set style notes
+            document.getElementById('visionStyleNotes').innerText = result.brand_style;
+            
+            // List text elements
+            const textContainer = document.getElementById('visionTextElements');
+            textContainer.innerHTML = '';
+            if (result.extracted_text && result.extracted_text.length > 0) {
+                result.extracted_text.forEach(text => {
+                    const li = document.createElement('li');
+                    li.innerText = text;
+                    textContainer.appendChild(li);
+                });
+            } else {
+                textContainer.innerHTML = '<span style="color:var(--text-tertiary);">No text found.</span>';
+            }
+            
+            // Set industry
+            document.getElementById('visionInferredIndustry').innerText = result.inferred_industry || 'Unknown';
+            
+            openDialog('visionResultModal');
+        } else {
+            alert("Vision analysis failed: " + data.error);
+        }
+    })
+    .catch(err => {
+        closeDialog('visionLoadingSpinner');
+        alert("Request Error: " + err);
+    });
+}
+</script>
+{% endblock %}

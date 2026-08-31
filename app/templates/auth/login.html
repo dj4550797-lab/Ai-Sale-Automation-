@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Login — Flixora</title>
+    <meta name="description" content="Login to Flixora AI Sales Automation Agent">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body>
+    <div class="login-page">
+        <div class="login-card">
+            <div class="login-logo">
+                <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;">
+                    <span style="width:40px;height:40px;background:var(--primary-600);color:#fff;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;">F</span>
+                </div>
+                <h1>FLIXORA</h1>
+                <p>AI Sales Automation Agent</p>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                <div class="flash {{ category }}">
+                    <span class="material-symbols-outlined">
+                        {% if category == 'error' %}error{% else %}info{% endif %}
+                    </span>
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" class="login-form" id="loginForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="form-group">
+                    <label class="form-label" for="username">Username or Email</label>
+                    <input type="text" class="form-input" id="username" name="username"
+                           placeholder="Enter your username" required autofocus autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <div class="form-input-group">
+                        <input type="password" class="form-input" id="password" name="password"
+                               placeholder="Enter your password" required autocomplete="current-password">
+                        <button type="button" class="input-action" onclick="togglePassword('password')"
+                                aria-label="Toggle password visibility">
+                            <span class="material-symbols-outlined">visibility</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-check">
+                        <input type="checkbox" name="remember">
+                        <span style="font-size:var(--text-sm);color:var(--text-secondary);">Remember me</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <span class="material-symbols-outlined">login</span>
+                    Log In
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Website Analysis — Flixora{% endblock %}
+{% block page_title %}Website Analysis{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <div>
+        <h2>Website Analysis Database</h2>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:2px;">
+            Manage and view audits for prospect websites.
+        </p>
+    </div>
+</div>
+
+<!-- Search Bar -->
+<div class="card" style="margin-bottom:var(--space-6);">
+    <div class="card-body" style="padding:var(--space-4) var(--space-6);">
+        <form method="GET" action="{{ url_for('analysis.index') }}" style="display:flex;gap:var(--space-4);align-items:flex-end;">
+            <div style="flex:1;min-width:200px;">
+                <label class="form-label" for="search">Search</label>
+                <input type="text" class="form-input" id="search" name="search" 
+                       value="{{ request.args.get('search', '') }}" placeholder="Search by business name...">
+            </div>
+            <button type="submit" class="btn btn-secondary">Search</button>
+            <a href="{{ url_for('analysis.index') }}" class="btn btn-ghost">Clear</a>
+        </form>
+    </div>
+</div>
+
+<!-- Analyses Table -->
+<div class="card">
+    <div class="card-body" style="padding:0;">
+        <div class="table-container table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Business</th>
+                        <th>Website URL</th>
+                        <th>Status</th>
+                        <th>Verdict</th>
+                        <th>Score</th>
+                        <th>Date Completed</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in analyses %}
+                    <tr>
+                        <td data-label="Business">
+                            <strong>{{ a.lead.business_name }}</strong>
+                            <div style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:2px;">{{ a.lead.business_category|title }}</div>
+                        </td>
+                        <td data-label="Website URL">
+                            {% if a.url %}
+                            <a href="{{ a.url }}" target="_blank" style="font-size:var(--text-sm);display:flex;align-items:center;gap:4px;">
+                                {{ a.url }}
+                                <span class="material-symbols-outlined" style="font-size:12px;">open_in_new</span>
+                            </a>
+                            {% else %}
+                            <span class="text-muted">None (No Website)</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Status">
+                            {% if a.status == 'completed' %}
+                            <span class="badge badge-success">Completed</span>
+                            {% elif a.status == 'analyzing' %}
+                            <span class="badge badge-warning">Analyzing...</span>
+                            {% elif a.status == 'failed' %}
+                            <span class="badge badge-error">Failed</span>
+                            {% else %}
+                            <span class="badge badge-gray">{{ a.status|title }}</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Verdict">
+                            {% if a.verdict == 'needs_improvement' %}
+                            <span class="badge badge-error">Needs Improvement</span>
+                            {% elif a.verdict == 'adequate' %}
+                            <span class="badge badge-success">Adequate</span>
+                            {% elif a.verdict == 'no_website' %}
+                            <span class="badge badge-warning">No Website</span>
+                            {% else %}
+                            <span class="badge badge-gray">-</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Score">
+                            {% if a.overall_score is not none %}
+                            <strong style="color: {% if a.overall_score >= 80 %}var(--success){% elif a.overall_score >= 50 %}var(--warning){% else %}var(--error){% endif %};">
+                                {{ a.overall_score }}/100
+                            </strong>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td data-label="Date Completed">
+                            {{ a.completed_at.strftime('%Y-%m-%d %H:%M') if a.completed_at else '-' }}
+                        </td>
+                        <td data-label="Actions" style="white-space:nowrap;">
+                            <a href="{{ url_for('analysis.detail', id=a.id) }}" class="btn btn-sm btn-secondary" style="margin-right:4px;">
+                                View
+                            </a>
+                            <form action="{{ url_for('leads.regenerate_analysis', id=a.lead_id) }}" method="POST" style="margin: 0; display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-secondary" style="margin-right:4px; padding: 5px 10px;">
+                                    Regenerate
+                                </button>
+                            </form>
+                            <button type="button" class="btn btn-sm btn-danger" style="background:transparent; color:var(--error); border-color:var(--error); padding: 5px 10px;" onclick="confirmDeleteAnalysis({{ a.id }}, '{{ a.lead.business_name|replace("'", "\\'")|escape }}', '{{ (a.url or "")|replace("'", "\\'")|escape }}')">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center" style="padding:var(--space-8);">
+                            <div style="color:var(--text-tertiary);display:flex;flex-direction:column;align-items:center;gap:var(--space-2);">
+                                <span class="material-symbols-outlined" style="font-size:48px;">language</span>
+                                <p>No audits conducted yet.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Paginator -->
+        {% if pagination and pagination.pages > 1 %}
+        <div style="display:flex;justify-content:center;padding:var(--space-4);">
+            <div style="display:flex;gap:var(--space-1);">
+                {% for p in pagination.iter_pages() %}
+                    {% if p %}
+                        <a href="{{ url_for('analysis.index', page=p, search=request.args.get('search','')) }}" 
+                           class="btn {% if p == pagination.page %}btn-primary{% else %}btn-ghost{% endif %}" 
+                           style="padding:6px 12px;min-width:36px;text-align:center;">{{ p }}</a>
+                    {% else %}
+                        <span style="padding:6px 12px;">...</span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Analysis Confirmation Modal -->
+<div class="dialog-overlay" id="deleteAnalysisModal">
+    <div class="dialog" style="max-width: 450px;">
+        <div class="dialog-header">
+            <h3 style="color: var(--error);">Delete Website Analysis?</h3>
+            <p style="margin-top: 4px; font-size: var(--text-sm); color: var(--text-secondary);">
+                This will permanently remove this website analysis record.
+            </p>
+        </div>
+        <div class="dialog-body" style="padding-top: var(--space-2);">
+            <div style="background: var(--gray-50); border: 1px solid var(--border-color); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); font-size: var(--text-sm);">
+                <div style="margin-bottom: var(--space-2);">
+                    <span style="color: var(--text-secondary);">Business:</span> 
+                    <strong id="delete_analysis_business" style="color: var(--text-primary);"></strong>
+                </div>
+                <div style="word-break: break-all;">
+                    <span style="color: var(--text-secondary);">Website URL:</span> 
+                    <span id="delete_analysis_url" style="font-family: monospace; font-size: var(--text-xs); color: var(--primary-600);"></span>
+                </div>
+            </div>
+            <p style="font-size: var(--text-xs); color: var(--text-tertiary); margin-top: var(--space-3); line-height: 1.4;">
+                Warning: Deleting a Website Analysis does not delete the associated Lead record, but all parsed scores and findings will be removed.
+            </p>
+        </div>
+        <div class="dialog-footer" style="border-top: 1px solid var(--border-color); padding-top: var(--space-4);">
+            <button type="button" class="btn btn-secondary" onclick="closeDialog('deleteAnalysisModal')">Cancel</button>
+            <form id="delete_analysis_form" method="POST" style="display: inline; margin: 0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-danger">Delete Analysis</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDeleteAnalysis(id, business, url) {
+    document.getElementById('delete_analysis_business').innerText = business;
+    document.getElementById('delete_analysis_url').innerText = url || 'No Website';
+    document.getElementById('delete_analysis_form').action = `/analysis/${id}/delete`;
+    
+    openDialog('deleteAnalysisModal');
+}
+</script>
+{% endblock %}

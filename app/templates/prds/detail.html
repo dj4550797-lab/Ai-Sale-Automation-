@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}{{ prd.title }} — Flixora{% endblock %}
+{% block page_title %}PRD Document Editor{% endblock %}
+
+{% block content %}
+<div class="page-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: var(--space-4); margin-bottom: var(--space-4);">
+    <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2);">
+        <a href="{{ url_for('prds.index') }}" style="display:flex;align-items:center;gap:4px;font-size:var(--text-sm);">
+            <span class="material-symbols-outlined" style="font-size:16px;">arrow_back</span>
+            Back to PRD Directory
+        </a>
+    </div>
+    
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-4);">
+        <div>
+            <h1 style="margin:0;font-size:var(--text-2xl);">{{ content.title or prd.title }}</h1>
+            <div style="display:flex;align-items:center;gap:var(--space-3);margin-top:var(--space-1);flex-wrap:wrap;">
+                <span class="badge badge-gray" style="font-weight:600;">v{{ selected_version }}</span>
+                {% if prd.status == 'approved' %}
+                <span class="badge badge-success">Approved</span>
+                {% elif prd.status == 'under_review' %}
+                <span class="badge badge-warning">Under Review</span>
+                {% elif prd.status == 'rejected' %}
+                <span class="badge badge-error">Rejected</span>
+                {% else %}
+                <span class="badge badge-gray">{{ prd.status|upper }}</span>
+                {% endif %}
+                
+                <span style="font-size:var(--text-xs);color:var(--text-tertiary);">
+                    Last edited: {{ prd.updated_at.strftime('%Y-%m-%d %H:%M') if prd.updated_at else '-' }}
+                </span>
+            </div>
+        </div>
+        
+        <!-- Document Action Forms -->
+        <div style="display:flex;gap:var(--space-2);">
+            <form method="POST" action="{{ url_for('prds.action', id=prd.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% if prd.status != 'approved' %}
+                <button type="submit" name="action" value="approve" class="btn btn-primary">
+                    <span class="material-symbols-outlined">check_circle</span>
+                    Approve PRD
+                </button>
+                {% endif %}
+                {% if prd.status != 'rejected' %}
+                <button type="submit" name="action" value="reject" class="btn btn-secondary">
+                    <span class="material-symbols-outlined">cancel</span>
+                    Reject
+                </button>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:3fr 1fr;gap:var(--space-6);align-items:start;">
+    
+    <!-- LEFT COLUMN: Structured PRD Content Blocks -->
+    <div style="display:flex;flex-direction:column;gap:var(--space-6);">
+        
+        <!-- Version Selector & Version Compare Bar -->
+        <div class="card" style="padding:var(--space-4) var(--space-6);">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-4);">
+                <!-- Select Version -->
+                <div style="display:flex;align-items:center;gap:var(--space-2);">
+                    <label class="form-label" for="vSelect" style="margin-bottom:0;white-space:nowrap;">Viewing Version:</label>
+                    <select class="form-select" id="vSelect" onchange="switchVersion(this.value)" style="width:90px;padding:4px 8px;">
+                        {% for v in versions %}
+                        <option value="{{ v.version }}" {{ 'selected' if selected_version == v.version }}>v{{ v.version }} ({{ v.author_type|upper }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Compare Version -->
+                <div style="display:flex;align-items:center;gap:var(--space-2);">
+                    <label class="form-label" for="compSelect" style="margin-bottom:0;white-space:nowrap;">Compare with:</label>
+                    <select class="form-select" id="compSelect" onchange="compareVersion(this.value)" style="width:110px;padding:4px 8px;">
+                        <option value="">None</option>
+                        {% for v in versions %}
+                        {% if v.version != selected_version %}
+                        <option value="{{ v.version }}" {{ 'selected' if compare_version == v.version }}>v{{ v.version }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Comparison Notice Banner -->
+            {% if compare_version %}
+            <div style="margin-top:var(--space-3);padding:var(--space-2) var(--space-4);background:var(--secondary-light);color:var(--primary-color);border-radius:var(--radius-sm);font-size:var(--text-xs);display:flex;align-items:center;justify-content:space-between;">
+                <span>Comparing v{{ selected_version }} (main body) against v{{ compare_version }} (red highlighted diff block).</span>
+                <a href="{{ url_for('prds.detail', id=prd.id, version=selected_version) }}" style="font-weight:600;text-decoration:underline;">Cancel Compare</a>
+            </div>
+            {% endif %}
+        </div>
+
+        {% set sections = [
+            ('business_overview', 'Business Overview', 'Overview of target profile and branding objectives.'),
+            ('business_analysis', 'Business Analysis', 'Existing website defects or marketing gaps identified.'),
+            ('website_goal', 'Website Goal', 'Target conversions, visitor actions, and website goals.'),
+            ('target_audience', 'Target Audience', 'Audience demographics, customer personas and pain points.'),
+            ('design_direction', 'Design Direction', 'Color palette details, fonts, visuals, and responsiveness directions.'),
+            ('site_structure', 'Site Structure & Pages', 'Sitemap links, pages layout, and nav structure.'),
+            ('functional_requirements', 'Functional Requirements', 'Core site features, integrations, forms, and tools.'),
+            ('content_requirements', 'Content Requirements', 'Information copy, images, logo, and resources assets needed.'),
+            ('cta_strategy', 'CTA Placement Strategy', 'Placements and messaging rules for call-to-actions.'),
+            ('technical_requirements', 'Technical & SEO Specifications', 'Hosting, domain settings, performance benchmarks, and local SEO metadata.')
+        ] %}
+
+        {% for key, title, desc in sections %}
+        <div class="card" id="card_{{ key }}">
+            <div class="card-header" style="background:var(--surface-dim);cursor:pointer;user-select:none;" onclick="toggleCardBody('body_{{ key }}')">
+                <div style="display:flex;flex-direction:column;">
+                    <h3 style="font-size:var(--text-md);font-weight:600;">{{ title }}</h3>
+                    <span style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:2px;">{{ desc }}</span>
+                </div>
+                <span class="material-symbols-outlined" id="icon_body_{{ key }}">expand_more</span>
+            </div>
+            <div class="card-body" id="body_{{ key }}" style="display:block;padding:var(--space-6);">
+                <div style="display:grid;grid-template-columns:{% if compare_version %}1fr 1fr{% else %}1fr{% endif %};gap:var(--space-4);">
+                    <!-- Main Version Content -->
+                    <div style="font-size:var(--text-sm);line-height:1.6;color:var(--text-primary);white-space:pre-wrap;">{{ content[key] or 'No content drafted for this section.' }}</div>
+                    
+                    <!-- Compare Version Content -->
+                    {% if compare_version %}
+                    <div style="font-size:var(--text-sm);line-height:1.6;color:var(--error);background:#fff5f5;padding:var(--space-4);border-radius:var(--radius-sm);border-left:3px solid var(--error);white-space:pre-wrap;">{{ compare_content[key] or 'No content existed in this version.' }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+    </div>
+    
+    <!-- RIGHT COLUMN: Admin AI Chat Revision Drawer (§33) -->
+    <div class="card" style="position:sticky;top:20px;">
+        <div class="card-header" style="background:var(--primary-light);border-bottom: 1px solid var(--primary-border);">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <span class="material-symbols-outlined" style="color:var(--primary-color);">smart_toy</span>
+                <h3 style="color:var(--primary-color);font-weight:600;">PRD Revision Chat</h3>
+            </div>
+        </div>
+        
+        <div class="card-body" style="padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-4);">
+            <!-- Chat Feed logs -->
+            <div id="chatFeed" style="height:320px;overflow-y:auto;border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:var(--space-3);background:var(--surface-dim);display:flex;flex-direction:column;gap:var(--space-3);">
+                
+                <!-- System intro -->
+                <div style="display:flex;gap:8px;align-items:flex-start;">
+                    <div style="width:24px;height:24px;border-radius:50%;background:var(--primary-color);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">AI</div>
+                    <div style="background:#fff;padding:8px var(--space-3);border-radius:var(--radius-md);font-size:var(--text-xs);border:1px solid var(--border-color);line-height:1.4;">
+                        Hello! I am your PRD generation assistant. Provide text instructions below to revise document sections (e.g. <i>"Add pricing tables to sitemap"</i> or <i>"Make visual branding dark gold themed"</i>).
+                    </div>
+                </div>
+                
+                <!-- Versions log items -->
+                {% for v in versions|reverse %}
+                {% if v.change_summary and v.version > 1 %}
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                    <!-- User Instruction -->
+                    <div style="display:flex;gap:8px;align-items:flex-start;justify-content:flex-end;">
+                        <div style="background:var(--primary-light);color:var(--primary-color);padding:8px var(--space-3);border-radius:var(--radius-md);font-size:var(--text-xs);border:1px solid var(--primary-border);line-height:1.4;max-width:85%;">
+                            {{ v.change_summary.replace('Admin revision chat: ', '') }}
+                        </div>
+                        <div style="width:24px;height:24px;border-radius:50%;background:var(--text-secondary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">AD</div>
+                    </div>
+                    <!-- AI response confirmation -->
+                    <div style="display:flex;gap:8px;align-items:flex-start;">
+                        <div style="width:24px;height:24px;border-radius:50%;background:var(--primary-color);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">AI</div>
+                        <div style="background:#fff;padding:8px var(--space-3);border-radius:var(--radius-md);font-size:var(--text-xs);border:1px solid var(--border-color);line-height:1.4;">
+                            I have updated the document sections to apply those requirements. Incremented version to <b>v{{ v.version }}</b>.
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- Loader Indicator -->
+            <div id="chatLoader" style="display:none;align-items:center;justify-content:center;gap:8px;background:var(--surface-dim);padding:var(--space-3);border-radius:var(--radius-sm);font-size:var(--text-xs);color:var(--text-secondary);">
+                <div class="spinner" style="width:16px;height:16px;border-width:2px;"></div>
+                <span>LLM is revising PRD sections...</span>
+            </div>
+
+            <!-- Input Form -->
+            <form id="chatForm" onsubmit="submitRevision(event)">
+                <div class="form-group" style="margin-bottom:var(--space-2);">
+                    <textarea class="form-input" id="instruction" name="instruction" required rows="3" 
+                              placeholder="e.g. Add a contact form for consultation bookings..." style="font-size:var(--text-sm);resize:none;"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;">
+                    <span class="material-symbols-outlined">send</span>
+                    Send Instruction
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Chat Drawer Feed Scroll Bottom
+const chatFeed = document.getElementById('chatFeed');
+chatFeed.scrollTop = chatFeed.scrollHeight;
+
+function toggleCardBody(bodyId) {
+    const body = document.getElementById(bodyId);
+    const icon = document.getElementById('icon_' + bodyId);
+    if (body.style.display === 'none') {
+        body.style.display = 'block';
+        icon.innerText = 'expand_more';
+    } else {
+        body.style.display = 'none';
+        icon.innerText = 'expand_less';
+    }
+}
+
+function switchVersion(val) {
+    let url = new URL(window.location.href);
+    url.searchParams.set('version', val);
+    window.location.href = url.toString();
+}
+
+function compareVersion(val) {
+    let url = new URL(window.location.href);
+    if (val) {
+        url.searchParams.set('compare', val);
+    } else {
+        url.searchParams.delete('compare');
+    }
+    window.location.href = url.toString();
+}
+
+function submitRevision(e) {
+    e.preventDefault();
+    const input = document.getElementById('instruction');
+    const instruction = input.value.trim();
+    if (!instruction) return;
+
+    // Show Loader
+    document.getElementById('chatLoader').style.display = 'flex';
+    input.disabled = true;
+    
+    const formData = new FormData();
+    formData.append('instruction', instruction);
+
+    fetch("{{ url_for('prds.chat', id=prd.id) }}", {
+        method: "POST",
+        body: formData,
+        headers: {
+            "X-CSRFToken": "{{ csrf_token() }}"
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            // Reload pointing to the new version on success
+            let url = new URL(window.location.href);
+            url.searchParams.set('version', data.version);
+            url.searchParams.delete('compare'); // clear compare to highlight new revision
+            window.location.href = url.toString();
+        } else {
+            document.getElementById('chatLoader').style.display = 'none';
+            input.disabled = false;
+            alert("Revision Failed: " + data.error);
+        }
+    })
+    .catch(err => {
+        document.getElementById('chatLoader').style.display = 'none';
+        input.disabled = false;
+        alert("Request Error: " + err);
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Website Analysis Details — Flixora{% endblock %}
+{% block page_title %}Website Audit Details{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2);">
+        <a href="{{ url_for('analysis.index') }}" style="display:flex;align-items:center;gap:4px;font-size:var(--text-sm);">
+            <span class="material-symbols-outlined" style="font-size:16px;">arrow_back</span>
+            Back to Audits List
+        </a>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-4);">
+        <div>
+            <h1>Audit: {{ lead.business_name }}</h1>
+            <p>Category: {{ lead.business_category|title }} | Website: 
+                {% if analysis.url %}
+                <a href="{{ analysis.url }}" target="_blank" style="text-decoration:underline;">{{ analysis.url }}</a>
+                {% else %}
+                No website URL
+                {% endif %}
+            </p>
+        </div>
+        <div style="display:flex;gap:var(--space-2);">
+            <button class="btn btn-secondary" onclick="triggerReanalysis()">
+                <span class="material-symbols-outlined">refresh</span>
+                Rerun Audit
+            </button>
+            <button class="btn btn-primary" onclick="triggerPrdGeneration()">
+                <span class="material-symbols-outlined">description</span>
+                Generate PRD
+            </button>
+        </div>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 2fr;gap:var(--space-6);margin-top:var(--space-4);">
+    
+    <!-- LEFT SIDE: Overall Verdict and Scores Summary -->
+    <div style="display:flex;flex-direction:column;gap:var(--space-6);">
+        <!-- Overall Score Card -->
+        <div class="card" style="text-align:center;padding:var(--space-6);">
+            <div class="card-header" style="justify-content:center;border-bottom:none;padding-bottom:0;">
+                <h3>Overall Quality Score</h3>
+            </div>
+            <div class="card-body">
+                <div style="font-size:64px;font-weight:800;color:{% if analysis.overall_score >= 80 %}var(--success){% elif analysis.overall_score >= 50 %}var(--warning){% else %}var(--error){% endif %};line-height:1;margin:var(--space-2) 0;">
+                    {{ analysis.overall_score or 0 }}<span style="font-size:24px;font-weight:400;color:var(--text-tertiary);">/100</span>
+                </div>
+                
+                <div style="margin-top:var(--space-4);">
+                    {% if analysis.verdict == 'needs_improvement' %}
+                    <span class="badge badge-error" style="font-size:var(--text-sm);padding:6px 12px;">Needs Improvement</span>
+                    {% elif analysis.verdict == 'adequate' %}
+                    <span class="badge badge-success" style="font-size:var(--text-sm);padding:6px 12px;">Adequate</span>
+                    {% else %}
+                    <span class="badge badge-warning" style="font-size:var(--text-sm);padding:6px 12px;">No Website</span>
+                    {% endif %}
+                </div>
+                
+                <p style="font-size:var(--text-sm);color:var(--text-secondary);margin-top:var(--space-4);text-align:left;background:var(--surface-dim);padding:var(--space-4);border-radius:var(--radius-md);">
+                    <strong>Improvement Reason:</strong><br>
+                    {{ analysis.improvement_reason }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Scores breakdown -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Criteria Breakdown</h3>
+            </div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:var(--space-4);">
+                {% set scores = [
+                    ('Visual Design', analysis.visual_design_score),
+                    ('Layout & Structure', analysis.layout_score),
+                    ('Typography', analysis.typography_score),
+                    ('Branding Consistency', analysis.branding_score),
+                    ('Mobile Responsiveness', analysis.mobile_score),
+                    ('Navigation flow', analysis.navigation_score),
+                    ('Call to Action (CTA)', analysis.cta_score),
+                    ('Contact Us flow', analysis.contact_flow_score),
+                    ('Service details', analysis.service_presentation_score),
+                    ('Reviews & Trust', analysis.trust_signals_score),
+                    ('Load Performance', analysis.performance_score),
+                    ('Accessibility', analysis.accessibility_score),
+                    ('Conversion potential', analysis.conversion_score)
+                ] %}
+                
+                {% for label, val in scores %}
+                <div>
+                    <div style="display:flex;justify-content:space-between;font-size:var(--text-xs);margin-bottom:4px;">
+                        <span>{{ label }}</span>
+                        <strong>{{ val or 0 }}/100</strong>
+                    </div>
+                    <div style="height:6px;background:var(--border-color);border-radius:3px;overflow:hidden;">
+                        <div style="height:100%;width:{{ val or 0 }}%;background:{% if val >= 80 %}var(--success){% elif val >= 50 %}var(--warning){% else %}var(--error){% endif %};"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT SIDE: Observed Facts, recommendations, Inferences -->
+    <div style="display:flex;flex-direction:column;gap:var(--space-6);">
+        
+        <!-- Observed Facts -->
+        <div class="card" style="border-left: 4px solid var(--primary-color);">
+            <div class="card-header" style="display:flex;align-items:center;gap:8px;">
+                <span class="material-symbols-outlined" style="color:var(--primary-color);">fact_check</span>
+                <h3>Observed Facts (Website Realities)</h3>
+            </div>
+            <div class="card-body">
+                <ul style="padding-left:var(--space-4);display:flex;flex-direction:column;gap:var(--space-2);">
+                    {% for fact in analysis.observed_facts or [] %}
+                    <li style="font-size:var(--text-sm);color:var(--text-primary);">{{ fact }}</li>
+                    {% else %}
+                    <li style="font-size:var(--text-sm);color:var(--text-tertiary);list-style:none;">No observed facts logged.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- AI Recommendations -->
+        <div class="card" style="border-left: 4px solid var(--success);">
+            <div class="card-header" style="display:flex;align-items:center;gap:8px;">
+                <span class="material-symbols-outlined" style="color:var(--success);">lightbulb</span>
+                <h3>AI Recommendations</h3>
+            </div>
+            <div class="card-body">
+                <ul style="padding-left:var(--space-4);display:flex;flex-direction:column;gap:var(--space-2);">
+                    {% for rec in analysis.ai_recommendations or [] %}
+                    <li style="font-size:var(--text-sm);color:var(--text-primary);">{{ rec }}</li>
+                    {% else %}
+                    <li style="font-size:var(--text-sm);color:var(--text-tertiary);list-style:none;">No recommendations logged.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- AI Inferences -->
+        <div class="card" style="border-left: 4px solid var(--warning);">
+            <div class="card-header" style="display:flex;align-items:center;gap:8px;">
+                <span class="material-symbols-outlined" style="color:var(--warning);">psychology</span>
+                <h3>AI Inferences & Business Impact</h3>
+            </div>
+            <div class="card-body">
+                <ul style="padding-left:var(--space-4);display:flex;flex-direction:column;gap:var(--space-2);">
+                    {% for inf in analysis.ai_inferences or [] %}
+                    <li style="font-size:var(--text-sm);color:var(--text-primary);">{{ inf }}</li>
+                    {% else %}
+                    <li style="font-size:var(--text-sm);color:var(--text-tertiary);list-style:none;">No inferences logged.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Scanning Overlay dialog -->
+<div class="dialog-overlay" id="processingOverlay" style="pointer-events:none;">
+    <div class="dialog" style="max-width:400px;text-align:center;padding:var(--space-10) var(--space-6);">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:var(--space-5);">
+            <div class="spinner" style="width:48px;height:48px;border-width:4px;"></div>
+            <div>
+                <h3 style="font-weight:600;margin-bottom:var(--space-2);" id="spinnerTitle">Analyzing website...</h3>
+                <p style="color:var(--text-secondary);font-size:var(--text-sm);" id="spinnerDesc">
+                    Reading layout components and computing audit metrics.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function triggerReanalysis() {
+    document.getElementById('spinnerTitle').innerText = "Rerunning Audit...";
+    document.getElementById('spinnerDesc').innerText = "Scraping page tags and running LLM checks.";
+    openDialog('processingOverlay');
+    
+    fetch("{{ url_for('analysis.run', lead_id=analysis.lead_id) }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token() }}"
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        closeDialog('processingOverlay');
+        if (data.success) {
+            location.reload();
+        } else {
+            alert("Error: " + data.error);
+        }
+    })
+    .catch(e => {
+        closeDialog('processingOverlay');
+        alert("Request failed: " + e);
+    });
+}
+
+function triggerPrdGeneration() {
+    document.getElementById('spinnerTitle').innerText = "Generating PRD...";
+    document.getElementById('spinnerDesc').innerText = "Drafting functional requirements and layout Sitemap.";
+    openDialog('processingOverlay');
+    
+    fetch("{{ url_for('prds.run', lead_id=analysis.lead_id) }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token() }}"
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        closeDialog('processingOverlay');
+        if (data.success) {
+            window.location.href = "{{ url_for('prds.index') }}/" + data.prd_id;
+        } else {
+            if (data.code === "adequate_website") {
+                alert("Redesign Skip: " + data.error);
+            } else {
+                alert("Error: " + data.error);
+            }
+        }
+    })
+    .catch(e => {
+        closeDialog('processingOverlay');
+        alert("Request failed: " + e);
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — Flixora{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- KPI Cards (§11) -->
+<div class="grid-kpi" style="margin-bottom:var(--space-6);">
+    <div class="kpi-card">
+        <div class="kpi-icon blue"><span class="material-symbols-outlined">group_add</span></div>
+        <div class="kpi-content">
+            <div class="kpi-label">Today's Leads</div>
+            <div class="kpi-value">{{ today_leads }}</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon green"><span class="material-symbols-outlined">verified</span></div>
+        <div class="kpi-content">
+            <div class="kpi-label">Qualified Leads</div>
+            <div class="kpi-value">{{ qualified_leads }}</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon yellow"><span class="material-symbols-outlined">description</span></div>
+        <div class="kpi-content">
+            <div class="kpi-label">PRDs Pending</div>
+            <div class="kpi-value">{{ prds_pending }}</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon blue"><span class="material-symbols-outlined">web</span></div>
+        <div class="kpi-content">
+            <div class="kpi-label">Demos Ready</div>
+            <div class="kpi-value">{{ demos_ready }}</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon blue"><span class="material-symbols-outlined">send</span></div>
+        <div class="kpi-content">
+            <div class="kpi-label">Messages Sent</div>
+            <div class="kpi-value">{{ messages_sent }}</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon green"><span class="material-symbols-outlined">reply</span></div>
+        <div class="kpi-content">
+            <div class="kpi-label">Replies</div>
+            <div class="kpi-value">{{ replies }}</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon green"><span class="material-symbols-outlined">thumb_up</span></div>
+        <div class="kpi-content">
+            <div class="kpi-label">Interested</div>
+            <div class="kpi-value">{{ interested }}</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon yellow"><span class="material-symbols-outlined">handshake</span></div>
+        <div class="kpi-content">
+            <div class="kpi-label">Negotiations</div>
+            <div class="kpi-value">{{ negotiations }}</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon green"><span class="material-symbols-outlined">emoji_events</span></div>
+        <div class="kpi-content">
+            <div class="kpi-label">Deals Won</div>
+            <div class="kpi-value">{{ deals_won }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Grid -->
+<div class="grid-2" style="margin-bottom:var(--space-6);">
+    <!-- Lead Funnel -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Lead Funnel</h3>
+        </div>
+        <div class="card-body">
+            <div class="funnel">
+                <div class="funnel-step">
+                    <span class="funnel-label">Leads</span>
+                    <div class="funnel-bar" data-value="{{ funnel.total }}" style="transition:width 0.6s ease;">{{ funnel.total }}</div>
+                    <span class="funnel-count">{{ funnel.total }}</span>
+                </div>
+                <div class="funnel-step">
+                    <span class="funnel-label">Qualified</span>
+                    <div class="funnel-bar" data-value="{{ funnel.qualified }}" style="transition:width 0.6s ease;">{{ funnel.qualified }}</div>
+                    <span class="funnel-count">{{ funnel.qualified }}</span>
+                </div>
+                <div class="funnel-step">
+                    <span class="funnel-label">Contacted</span>
+                    <div class="funnel-bar" data-value="{{ funnel.contacted }}" style="transition:width 0.6s ease;">{{ funnel.contacted }}</div>
+                    <span class="funnel-count">{{ funnel.contacted }}</span>
+                </div>
+                <div class="funnel-step">
+                    <span class="funnel-label">Replied</span>
+                    <div class="funnel-bar" data-value="{{ funnel.replied }}" style="transition:width 0.6s ease;">{{ funnel.replied }}</div>
+                    <span class="funnel-count">{{ funnel.replied }}</span>
+                </div>
+                <div class="funnel-step">
+                    <span class="funnel-label">Interested</span>
+                    <div class="funnel-bar" data-value="{{ funnel.interested }}" style="transition:width 0.6s ease;">{{ funnel.interested }}</div>
+                    <span class="funnel-count">{{ funnel.interested }}</span>
+                </div>
+                <div class="funnel-step">
+                    <span class="funnel-label">Won</span>
+                    <div class="funnel-bar" data-value="{{ funnel.won }}" style="transition:width 0.6s ease;">{{ funnel.won }}</div>
+                    <span class="funnel-count">{{ funnel.won }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Recent Activity</h3>
+        </div>
+        <div class="card-body">
+            {% if recent_leads %}
+            <div class="activity-feed">
+                {% for lead in recent_leads %}
+                <div class="activity-item">
+                    <div class="activity-dot"></div>
+                    <div class="activity-content">
+                        <div class="activity-title">{{ lead.business_name }}</div>
+                        <div class="activity-desc">{{ lead.last_action or 'Lead created' }}</div>
+                    </div>
+                    <div class="activity-time">{{ lead.updated_at.strftime('%H:%M') if lead.updated_at else '' }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state" style="padding:var(--space-8);">
+                <span class="material-symbols-outlined empty-state-icon">history</span>
+                <h3>No activity yet</h3>
+                <p>Start discovering leads to see activity here.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="grid-2" style="margin-bottom:var(--space-6);">
+    <!-- AI System Status -->
+    <div class="card">
+        <div class="card-header">
+            <h3>AI System Status</h3>
+        </div>
+        <div class="card-body">
+            <div class="status-grid">
+                <div class="status-item">
+                    <span class="status-dot {{ 'online' if llm_healthy > 0 else 'neutral' }}"></span>
+                    <span class="status-label">LLM Status</span>
+                    <span class="status-value">{{ llm_healthy }}/{{ llm_total }} Online</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot online"></span>
+                    <span class="status-label">Automation</span>
+                    <span class="status-value">{{ automation_active }} Active</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot neutral"></span>
+                    <span class="status-label">Messaging</span>
+                    <span class="status-value">Not configured</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot neutral"></span>
+                    <span class="status-label">Lead Discovery</span>
+                    <span class="status-value">Ready</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions (§12) -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Quick Actions</h3>
+        </div>
+        <div class="card-body">
+            <div class="quick-actions">
+                <a href="{{ url_for('leads.discover') }}" class="quick-action">
+                    <span class="material-symbols-outlined">search</span>
+                    <span>Find Leads</span>
+                </a>
+                <a href="{{ url_for('analysis.index') }}" class="quick-action">
+                    <span class="material-symbols-outlined">language</span>
+                    <span>Analyze</span>
+                </a>
+                <a href="{{ url_for('prds.index') }}" class="quick-action">
+                    <span class="material-symbols-outlined">description</span>
+                    <span>PRDs</span>
+                </a>
+                <a href="{{ url_for('demos.index') }}" class="quick-action">
+                    <span class="material-symbols-outlined">web</span>
+                    <span>Add Demo</span>
+                </a>
+                <a href="{{ url_for('conversations.index') }}" class="quick-action">
+                    <span class="material-symbols-outlined">chat</span>
+                    <span>Conversations</span>
+                </a>
+                <a href="{{ url_for('automation.index') }}" class="quick-action">
+                    <span class="material-symbols-outlined">autorenew</span>
+                    <span>Automation</span>
+                </a>
+                <a href="{{ url_for('ai_assistant.index') }}" class="quick-action">
+                    <span class="material-symbols-outlined">smart_toy</span>
+                    <span>AI Assistant</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

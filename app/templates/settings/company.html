@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Company Settings — Flixora{% endblock %}
+{% block page_title %}Company Settings{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Company Settings</h1>
+    <p>Configure your company information used by the AI agent.</p>
+</div>
+
+<div class="card" style="max-width:720px;">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('settings.company') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="company_name">Company Name</label>
+                    <input type="text" class="form-input" id="company_name" name="company_name"
+                           value="{{ settings.get('company_name', 'Flixora') }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="website">Website</label>
+                    <input type="url" class="form-input" id="website" name="website"
+                           value="{{ settings.get('website', '') }}" placeholder="https://flixora.com">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="company_description">Company Description</label>
+                <textarea class="form-textarea" id="company_description" name="company_description"
+                          placeholder="Describe what your company does...">{{ settings.get('company_description', '') }}</textarea>
+                <span class="form-hint">Used by the AI agent when introducing the company to clients.</span>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="business_email">Business Email</label>
+                    <input type="email" class="form-input" id="business_email" name="business_email"
+                           value="{{ settings.get('business_email', '') }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="business_phone">Business Phone</label>
+                    <input type="tel" class="form-input" id="business_phone" name="business_phone"
+                           value="{{ settings.get('business_phone', '') }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="business_location">Business Location</label>
+                <input type="text" class="form-input" id="business_location" name="business_location"
+                       value="{{ settings.get('business_location', '') }}" placeholder="City, State, Country">
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <span class="material-symbols-outlined">save</span>
+                Save Company Settings
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

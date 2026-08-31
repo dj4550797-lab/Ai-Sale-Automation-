@@ -1,0 +1,542 @@
+{% extends "base.html" %}
+
+{% block title %}Automation — Flixora{% endblock %}
+{% block page_title %}Automation{% endblock %}
+
+{% block content %}
+<style>
+/* Modern Switch Toggle Style */
+.switch-container {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    cursor: pointer;
+}
+.switch-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.switch-slider {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 24px;
+    background-color: var(--gray-300);
+    border-radius: var(--radius-full);
+    transition: background-color 0.25s ease;
+}
+.switch-slider::before {
+    content: "";
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.25s ease;
+}
+.switch-input:checked + .switch-slider {
+    background-color: var(--success);
+}
+.switch-input:checked + .switch-slider::before {
+    transform: translateX(22px);
+}
+
+/* Pipeline Step Styles */
+.pipeline-track {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+    position: relative;
+}
+.pipeline-step {
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4) var(--space-3);
+    text-align: center;
+    position: relative;
+    box-shadow: var(--shadow-xs);
+    transition: all var(--transition-base);
+}
+.pipeline-step:hover {
+    box-shadow: var(--shadow-sm);
+    border-color: var(--primary-300);
+    transform: translateY(-1px);
+}
+.pipeline-step-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-2);
+}
+.pipeline-step-count {
+    font-size: var(--text-2xl);
+    font-weight: 800;
+    color: var(--primary-600);
+}
+.pipeline-step-arrow {
+    position: absolute;
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+    z-index: 2;
+    font-size: 18px;
+    pointer-events: none;
+}
+@media (max-width: 1024px) {
+    .pipeline-track {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    .pipeline-step-arrow { display: none; }
+}
+@media (max-width: 768px) {
+    .pipeline-track {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
+
+<div class="page-header" style="margin-bottom: var(--space-6);">
+    <h1>Automation</h1>
+    <p style="color: var(--text-secondary);">Control automated lead discovery and monitor the sales pipeline.</p>
+</div>
+
+<!-- TOP LAYOUT: GLOBAL SWITCH & STATS -->
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: var(--space-6); align-items: start; margin-bottom: var(--space-6);">
+    
+    <!-- MAIN AUTOMATION CONTROL CARD -->
+    <div class="card" style="height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+        <div class="card-body">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3);">
+                <h3 style="margin: 0; font-size: var(--text-lg); font-weight: 600;">Lead Discovery Automation</h3>
+                <span id="global-status-badge" class="badge {% if global_enabled %}badge-green{% else %}badge-gray{% endif %}" style="display: inline-flex; align-items: center; gap: 6px;">
+                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: currentColor;"></span>
+                    <span id="global-status-text">{% if global_enabled %}ON{% else %}OFF{% endif %}</span>
+                </span>
+            </div>
+            
+            <p style="color: var(--text-secondary); font-size: var(--text-sm); line-height: 1.5; margin-bottom: var(--space-6);">
+                Automatically discover and process new business leads every day.
+            </p>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span id="automation-state-label" style="font-weight: 600; font-size: var(--text-sm); color: {% if global_enabled %}var(--success){% else %}var(--text-secondary){% endif %};">
+                    {% if global_enabled %}Automation Active{% else %}Automation Paused{% endif %}
+                </span>
+                
+                <label class="switch-container">
+                    <input type="checkbox" id="global-switch-input" class="switch-input" {% if global_enabled %}checked{% endif %} onclick="toggleGlobalAutomation()">
+                    <span class="switch-slider"></span>
+                </label>
+            </div>
+        </div>
+        <div class="card-footer" style="font-size: var(--text-xs); color: var(--text-secondary); border-top: 1px solid var(--border-color); background: var(--surface-dim);">
+            <div style="display: flex; justify-content: space-between;">
+                <span>Schedule Mode:</span>
+                <strong style="color: var(--primary-600);">REAL</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATS GRID -->
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); height: 100%;">
+        
+        <!-- Leads Today -->
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background: var(--primary-50); color: var(--primary-600);">
+                <span class="material-symbols-outlined">analytics</span>
+            </div>
+            <div>
+                <span class="kpi-label">Leads Today</span>
+                <span class="kpi-value">{{ leads_today }} / {{ daily_limit }}</span>
+            </div>
+        </div>
+
+        <!-- Remaining Capacity -->
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background: {% if remaining_capacity > 0 %}var(--primary-50){% else %}var(--gray-100){% endif %}; color: {% if remaining_capacity > 0 %}var(--primary-600){% else %}var(--text-tertiary){% endif %};">
+                <span class="material-symbols-outlined">trending_flat</span>
+            </div>
+            <div>
+                <span class="kpi-label">Remaining</span>
+                <span class="kpi-value">{{ remaining_capacity }}</span>
+            </div>
+        </div>
+
+        <!-- Last Run -->
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background: var(--gray-50); color: var(--text-secondary);">
+                <span class="material-symbols-outlined">schedule</span>
+            </div>
+            <div style="overflow: hidden;">
+                <span class="kpi-label">Last Run</span>
+                <span class="kpi-value" style="font-size: var(--text-sm); white-space: nowrap; text-overflow: ellipsis; display: block;" title="{% if jobs and jobs[0].last_run_at %}{{ jobs[0].last_run_at.strftime('%Y-%m-%d %H:%M') }}{% else %}Never{% endif %}">
+                    {% if jobs and jobs[0].last_run_at %}
+                        {{ jobs[0].last_run_at.strftime('%H:%M %p') }}
+                    {% else %}
+                        Never
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Next Run -->
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background: var(--primary-50); color: var(--primary-600);">
+                <span class="material-symbols-outlined">update</span>
+            </div>
+            <div style="overflow: hidden;">
+                <span class="kpi-label">Next Run</span>
+                <span class="kpi-value" style="font-size: var(--text-sm); white-space: nowrap; text-overflow: ellipsis; display: block;" title="{{ schedule }}">
+                    {{ schedule }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Success Rate -->
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background: var(--success-light); color: var(--success);">
+                <span class="material-symbols-outlined">check_circle</span>
+            </div>
+            <div>
+                <span class="kpi-label">Success Rate</span>
+                <span class="kpi-value">{{ success_rate }}%</span>
+            </div>
+        </div>
+
+        <!-- API Status -->
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background: {% if api_status == 'Connected' %}var(--success-light){% elif api_status == 'Issues' %}var(--error-light){% else %}var(--gray-100){% endif %}; color: {% if api_status == 'Connected' %}var(--success){% elif api_status == 'Issues' %}var(--error){% else %}var(--text-tertiary){% endif %};">
+                <span class="material-symbols-outlined">cloud</span>
+            </div>
+            <div>
+                <span class="kpi-label">API Status</span>
+                <span class="kpi-value" style="font-size: var(--text-sm);">{{ api_status }}</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- PIPELINE OVERVIEW -->
+<div class="card" style="margin-bottom: var(--space-6);">
+    <div class="card-header">
+        <h3 style="margin: 0; font-size: var(--text-md);">Pipeline Stages Overview</h3>
+    </div>
+    <div class="card-body">
+        <div class="pipeline-track">
+            
+            <div class="pipeline-step">
+                <div class="pipeline-step-title">Discovered</div>
+                <div class="pipeline-step-count">{{ pipeline_counts.discovered }}</div>
+                <span class="material-symbols-outlined pipeline-step-arrow">chevron_right</span>
+            </div>
+            
+            <div class="pipeline-step">
+                <div class="pipeline-step-title">Analyzed</div>
+                <div class="pipeline-step-count">{{ pipeline_counts.analyzed }}</div>
+                <span class="material-symbols-outlined pipeline-step-arrow">chevron_right</span>
+            </div>
+            
+            <div class="pipeline-step">
+                <div class="pipeline-step-title">PRD Ready</div>
+                <div class="pipeline-step-count">{{ pipeline_counts.prd_ready }}</div>
+                <span class="material-symbols-outlined pipeline-step-arrow">chevron_right</span>
+            </div>
+            
+            <div class="pipeline-step">
+                <div class="pipeline-step-title">Waiting Demo</div>
+                <div class="pipeline-step-count">{{ pipeline_counts.waiting_demo }}</div>
+                <span class="material-symbols-outlined pipeline-step-arrow">chevron_right</span>
+            </div>
+            
+            <div class="pipeline-step">
+                <div class="pipeline-step-title">Outreach</div>
+                <div class="pipeline-step-count">{{ pipeline_counts.outreach }}</div>
+                <span class="material-symbols-outlined pipeline-step-arrow">chevron_right</span>
+            </div>
+            
+            <div class="pipeline-step">
+                <div class="pipeline-step-title">Conversations</div>
+                <div class="pipeline-step-count">{{ pipeline_counts.conversation }}</div>
+                <span class="material-symbols-outlined pipeline-step-arrow">chevron_right</span>
+            </div>
+            
+            <div class="pipeline-step" style="border-color: var(--primary-500); background: var(--primary-50);">
+                <div class="pipeline-step-title" style="color: var(--primary-700);">Hot Leads</div>
+                <div class="pipeline-step-count" style="color: var(--primary-700);">{{ pipeline_counts.hot_lead }}</div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- CONFIGURATION & HISTORY LAYOUT -->
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: var(--space-6); align-items: start;">
+    
+    <!-- SETTINGS PANEL -->
+    <div class="card">
+        <div class="card-header">
+            <h3 style="margin: 0; font-size: var(--text-md);">Discovery Parameters</h3>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('automation.save_settings') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="form-group" style="margin-bottom: var(--space-4);">
+                    <label class="form-label">Daily Lead Limit</label>
+                    <input type="number" class="form-control" name="daily_limit" value="{{ daily_limit }}" min="1" max="100" required>
+                    <span class="form-hint">Cap on new qualified leads fetched per day.</span>
+                </div>
+
+                <div class="form-group" style="margin-bottom: var(--space-4);">
+                    <label class="form-label">Discovery Categories</label>
+                    <input type="text" class="form-control" name="category" value="{{ category }}" required>
+                    <span class="form-hint">Search niches (comma-separated, e.g. Gym, Salon, Restaurant)</span>
+                </div>
+
+                <div class="form-group" style="margin-bottom: var(--space-4);">
+                    <label class="form-label">Discovery Locations</label>
+                    <input type="text" class="form-control" name="location" value="{{ location }}" required>
+                    <span class="form-hint">Target cities (e.g. Pune, Delhi)</span>
+                </div>
+
+                <div class="form-group" style="margin-bottom: var(--space-4);">
+                    <label class="form-label">Discovery Schedule</label>
+                    <input type="text" class="form-control" name="schedule" value="{{ schedule }}" placeholder="Daily at 08:00 PM" required>
+                    <span class="form-hint">Display label of run schedule.</span>
+                </div>
+
+                <div class="form-group" style="margin-bottom: var(--space-5);">
+                    <label class="form-label">Timezone</label>
+                    <select class="form-control" name="timezone" style="width: 100%;">
+                        <option value="Asia/Kolkata" {% if timezone == 'Asia/Kolkata' %}selected{% endif %}>Asia/Kolkata (IST)</option>
+                        <option value="UTC" {% if timezone == 'UTC' %}selected{% endif %}>UTC</option>
+                        <option value="America/New_York" {% if timezone == 'America/New_York' %}selected{% endif %}>America/New_York (EST)</option>
+                        <option value="Europe/London" {% if timezone == 'Europe/London' %}selected{% endif %}>Europe/London (GMT)</option>
+                    </select>
+                    <span class="form-hint">Timezone applied for daily resets.</span>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Save Configuration</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- EXECUTION LOGS & RUNS -->
+    <div style="display: flex; flex-direction: column; gap: var(--space-6);">
+        
+        <!-- CONFIGURED JOBS -->
+        <div class="card">
+            <div class="card-header">
+                <h3 style="margin: 0; font-size: var(--text-md);">Automation Jobs</h3>
+            </div>
+            <div class="card-body" style="padding: 0; overflow: hidden;">
+                <table class="table" style="margin: 0; border: none;">
+                    <thead>
+                        <tr>
+                            <th>Job Details</th>
+                            <th>Status</th>
+                            <th style="text-align: right;">Trigger</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in jobs %}
+                        <tr>
+                            <td>
+                                <strong style="color: var(--text-primary);">{{ job.name }}</strong>
+                                <span style="font-size: 11px; color: var(--text-tertiary); display: block; margin-top: 2px;">
+                                    Type: {{ job.job_type }} | Schedule: {{ job.cron_expression or 'External API webhook' }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if job.status.name == 'RUNNING' or job.status == 'running' %}
+                                <span class="badge badge-primary">Running</span>
+                                {% elif job.is_enabled %}
+                                <span class="badge badge-green">Enabled</span>
+                                {% else %}
+                                <span class="badge badge-gray">Disabled</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: right;">
+                                <button class="btn btn-secondary btn-sm" onclick="triggerJobRun({{ job.id }}, this)">
+                                    Run Discovery Now
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- EXECUTION HISTORY -->
+        <div class="card">
+            <div class="card-header">
+                <h3 style="margin: 0; font-size: var(--text-md);">Execution Run Log</h3>
+            </div>
+            <div class="card-body" style="padding: 0; overflow: hidden;">
+                <table class="table" style="margin: 0; border: none;">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">Status</th>
+                            <th>Time</th>
+                            <th>Duration</th>
+                            <th>Result Message</th>
+                            <th style="text-align: right; width: 60px;">Logs</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for run in runs %}
+                        <tr>
+                            <td>
+                                {% if run.status == 'completed' %}
+                                <span style="color: var(--success); font-weight: bold; font-size: 16px;">✓</span>
+                                {% else %}
+                                <span style="color: var(--error); font-weight: bold; font-size: 16px;">⚠</span>
+                                {% endif %}
+                            </td>
+                            <td style="font-size: var(--text-sm); color: var(--text-secondary);">
+                                {{ run.started_at.strftime('%H:%M') }}
+                                <span style="font-size: 10px; color: var(--text-tertiary); display: block;">{{ run.started_at.strftime('%Y-%m-%d') }}</span>
+                            </td>
+                            <td style="font-size: var(--text-sm); color: var(--text-secondary);">
+                                {% if run.completed_at %}
+                                    {{ (run.completed_at - run.started_at).total_seconds()|round(1) }}s
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td style="font-size: var(--text-sm); color: var(--text-secondary);">
+                                {% if run.status == 'completed' %}
+                                    Discovery completed: {{ run.items_succeeded }} qualified leads saved.
+                                {% else %}
+                                    Execution check completed ({{ run.error_message or 'Failure logged' }}).
+                                {% endif %}
+                            </td>
+                            <td style="text-align: right;">
+                                <button class="btn btn-ghost btn-sm btn-icon" onclick="openLogsDialog('{{ run.log_output|replace('\n', '\\n')|replace("'", "\\'")|escape }}')">
+                                    <span class="material-symbols-outlined" style="font-size: 18px;">receipt_long</span>
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: var(--space-6); color: var(--text-tertiary);">
+                                No automation activity recorded.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- LOG DETAILS MODAL -->
+<div class="dialog-overlay" id="logsDetailDialog">
+    <div class="dialog" style="max-width: 600px;">
+        <div class="dialog-header">
+            <h3>Execution Logs</h3>
+            <p>Review background task run metrics.</p>
+        </div>
+        <div class="dialog-body">
+            <pre id="log_output_box" style="background: var(--gray-50); padding: var(--space-4); border-radius: var(--radius-sm); font-family: monospace; font-size: var(--text-xs); line-height: 1.4; overflow-x: auto; white-space: pre-wrap; max-height: 300px; overflow-y: auto; border: 1px solid var(--border-color);"></pre>
+        </div>
+        <div class="dialog-footer">
+            <button class="btn btn-secondary" onclick="closeDialog('logsDetailDialog')">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleGlobalAutomation() {
+    const input = document.getElementById('global-switch-input');
+    const label = document.getElementById('automation-state-label');
+    const badge = document.getElementById('global-status-badge');
+    const badgeText = document.getElementById('global-status-text');
+    
+    input.disabled = true;
+    
+    fetch("{{ url_for('automation.toggle_global') }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token() }}"
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        input.disabled = false;
+        if (data.success) {
+            if (data.global_enabled) {
+                label.innerText = "Automation Active";
+                label.style.color = "var(--success)";
+                badge.className = "badge badge-green";
+                badgeText.innerText = "ON";
+            } else {
+                label.innerText = "Automation Paused";
+                label.style.color = "var(--text-secondary)";
+                badge.className = "badge badge-gray";
+                badgeText.innerText = "OFF";
+            }
+            showToast("Global automation state updated.", "success");
+        } else {
+            input.checked = !input.checked;
+            showToast("Failed to toggle state: " + data.error, "error");
+        }
+    })
+    .catch(err => {
+        input.disabled = false;
+        input.checked = !input.checked;
+        showToast("Request error toggling state.", "error");
+    });
+}
+
+function triggerJobRun(jobId, btn) {
+    const origText = btn.innerText;
+    btn.innerText = "Running...";
+    btn.disabled = true;
+    
+    fetch("{{ url_for('automation.index') }}/run/" + jobId, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token() }}"
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.innerText = origText;
+        btn.disabled = false;
+        if (data.success) {
+            showToast("Automation run completed.", "success");
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showToast("Run failed: " + data.error, "error");
+        }
+    })
+    .catch(err => {
+        btn.innerText = origText;
+        btn.disabled = false;
+        showToast("Error starting job run.", "error");
+    });
+}
+
+function openLogsDialog(logs) {
+    document.getElementById('log_output_box').innerText = logs;
+    openDialog('logsDetailDialog');
+}
+</script>
+{% endblock %}

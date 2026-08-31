@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Performance — Flixora{% endblock %}
+{% block page_title %}AI Agent Performance{% endblock %}
+
+{% block content %}
+<div class="section-header" style="margin-bottom:var(--space-6);">
+    <div>
+        <h2>AI Agent Performance & Correction Rules</h2>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:2px;">
+            Monitor AI response status, track correction logs, and manage LLM adjustment instructions (§84-87).
+        </p>
+    </div>
+</div>
+
+<div class="grid-3" style="margin-bottom:var(--space-6);">
+    {% for p in providers %}
+    <div class="card">
+        <div class="card-body">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-3);">
+                <strong style="font-size:var(--text-md);">{{ p.name }}</strong>
+                {% if p.status.name == 'HEALTHY' %}
+                <span class="badge badge-success">Healthy</span>
+                {% else %}
+                <span class="badge badge-error">{{ p.status.name }}</span>
+                {% endif %}
+            </div>
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2);font-size:var(--text-sm);color:var(--text-secondary);">
+                <div>Total Pings:</div>
+                <div style="font-weight:600;color:var(--text-primary);">{{ p.request_count or 0 }}</div>
+                <div>Failures:</div>
+                <div style="font-weight:600;color:var(--text-primary);">{{ p.failure_count or 0 }}</div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- CORRECTION RULES CARD -->
+<div class="card">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <h3>AI Correction Rules</h3>
+        <button class="btn btn-primary btn-sm" onclick="openDialog('addRuleDialog')">
+            <span class="material-symbols-outlined" style="font-size:16px;">add</span> Add Rule
+        </button>
+    </div>
+    <div class="card-body" style="padding:0;overflow:hidden;">
+        <table class="table" style="margin:0;">
+            <thead>
+                <tr>
+                    <th>Rule ID</th>
+                    <th>Error Type</th>
+                    <th>Correction Directive</th>
+                    <th>Occurrences</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rule in rules %}
+                <tr>
+                    <td style="font-size:var(--text-xs);color:var(--text-secondary);">#{{ rule.id }}</td>
+                    <td style="font-weight:600;">
+                        {{ rule.error_type }}
+                        <span style="font-size:10px;color:var(--text-tertiary);display:block;font-weight:normal;">
+                            {{ rule.error_description }}
+                        </span>
+                    </td>
+                    <td style="font-size:var(--text-sm);line-height:1.4;max-width:300px;font-family:monospace;background:var(--background-light);padding:var(--space-2);border-radius:var(--radius-sm);">
+                        {{ rule.correction }}
+                    </td>
+                    <td><span class="badge badge-gray">{{ rule.occurrence_count }}</span></td>
+                    <td>
+                        <div class="form-check">
+                            <input type="checkbox" id="toggle-rule-{{ rule.id }}" {% if rule.is_active %}checked{% endif %}
+                                   onclick="toggleRule({{ rule.id }})">
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align:center;padding:var(--space-8);color:var(--text-tertiary);">
+                        No correction rules registered.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ADD CORRECTION RULE DIALOG -->
+<div class="dialog-overlay" id="addRuleDialog">
+    <div class="dialog" style="max-width:500px;">
+        <div class="dialog-header">
+            <h3>Add Correction Rule</h3>
+            <p>Manually insert AI behavioral adjustment criteria (§84).</p>
+        </div>
+        <form method="POST" action="{{ url_for('performance.add_rule') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="dialog-body">
+                <div class="form-group">
+                    <label class="form-label" for="error_type">Error Type</label>
+                    <input type="text" class="form-input" id="error_type" name="error_type" required placeholder="e.g. Inaccurate Pricing Quote">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="error_description">Error Description</label>
+                    <textarea class="form-input" id="error_description" name="error_description" rows="2" placeholder="Describe the error case..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="cause">Root Cause</label>
+                    <textarea class="form-input" id="cause" name="cause" rows="2" placeholder="e.g. LLM hallucinates plan rates not inside FAQ."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="correction">Correction Instruction</label>
+                    <textarea class="form-input" id="correction" name="correction" rows="3" required placeholder="Describe what the AI must do instead..."></textarea>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeDialog('addRuleDialog')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Rule</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleRule(id) {
+    fetch("{{ url_for('performance.index') }}/rules/toggle/" + id, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token() }}"
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) {
+            alert("Error: " + data.error);
+        }
+    });
+}
+</script>
+{% endblock %}

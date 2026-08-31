@@ -1,0 +1,447 @@
+{% extends "base.html" %}
+
+{% block title %}Lead Details — {{ lead.business_name }}{% endblock %}
+{% block page_title %}Lead: {{ lead.business_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom:var(--space-5);">
+    <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2);">
+        <a href="{{ url_for('leads.index') }}" style="display:flex;align-items:center;gap:4px;font-size:var(--text-sm);">
+            <span class="material-symbols-outlined" style="font-size:16px;">arrow_back</span>
+            Back to Database
+        </a>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--space-4);">
+        <div>
+            <h1>{{ lead.business_name }}</h1>
+            <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:2px;">{{ lead.address }}</p>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;">
+            <span class="badge {% if lead.status == 'qualified' %}badge-green{% elif lead.status == 'disqualified' %}badge-red{% else %}badge-blue{% endif %}" style="font-size:var(--text-sm);padding:4px 12px;margin-right:var(--space-2);">
+                Status: {{ lead.status|title }}
+            </span>
+            <span class="badge badge-gray" style="font-size:var(--text-sm);padding:4px 12px;font-weight:600;margin-right:var(--space-2);">
+                Score: {{ lead.lead_score }}/100
+            </span>
+            <a href="{{ url_for('leads.download_full_lead_txt_route', id=lead.id) }}" class="btn btn-secondary btn-sm">
+                <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px;">download</span> Download TXT
+            </a>
+            {% if prd %}
+            <a href="{{ url_for('leads.download_prd', id=lead.id) }}" class="btn btn-secondary btn-sm">
+                <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px;">download</span> Download PRD
+            </a>
+            {% endif %}
+            <button type="button" class="btn btn-danger btn-sm" onclick="openDialog('deleteLeadModal')">
+                <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px;">delete</span> Delete Lead
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Tab Navigation -->
+<div class="tabs" style="margin-bottom:var(--space-6);">
+    <button class="tab active" data-tab="tab-business">Business Profile</button>
+    <button class="tab" data-tab="tab-contacts">Contact & Socials</button>
+    <button class="tab" data-tab="tab-analysis">Website Analysis</button>
+    <button class="tab" data-tab="tab-prd">Website PRD</button>
+    <button class="tab" data-tab="tab-demo">Demo Website</button>
+</div>
+
+<!-- Business Tab -->
+<div class="tab-panel active" id="tab-business">
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+                <h3>Business Information</h3>
+                {% if dossier %}
+                <a href="{{ url_for('leads.download_dossier', id=lead.id) }}" class="btn btn-sm btn-primary">
+                    <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">download</span> Download Dossier (TXT)
+                </a>
+                {% else %}
+                <a href="{{ url_for('leads.download_dossier', id=lead.id) }}" class="btn btn-sm btn-primary">
+                    <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">download</span> Generate & Download Dossier
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div style="display:flex;flex-direction:column;gap:var(--space-3);">
+                    <div>
+                        <span class="form-label" style="font-size:var(--text-xs);color:var(--text-tertiary);">Category</span>
+                        <strong>{{ lead.business_category|title or 'NOT AVAILABLE' }}</strong>
+                    </div>
+                    <div>
+                        <span class="form-label" style="font-size:var(--text-xs);color:var(--text-tertiary);">Description</span>
+                        <p style="margin:0;font-size:var(--text-sm);">{{ lead.description or 'NOT AVAILABLE' }}</p>
+                    </div>
+                    <div>
+                        <span class="form-label" style="font-size:var(--text-xs);color:var(--text-tertiary);">Opening Hours</span>
+                        <p style="margin:0;font-size:var(--text-sm);font-family:monospace;">{{ lead.business_hours or 'NOT AVAILABLE' }}</p>
+                    </div>
+                    <div>
+                        <span class="form-label" style="font-size:var(--text-xs);color:var(--text-tertiary);">Rating & Reviews</span>
+                        <div>
+                            {% if lead.rating %}
+                            <strong style="color:var(--warning);">★ {{ lead.rating }}</strong> ({{ lead.review_count }} reviews)
+                            {% else %}
+                            <span>NOT AVAILABLE</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        <span class="form-label" style="font-size:var(--text-xs);color:var(--text-tertiary);">Website URL</span>
+                        <form action="{{ url_for('leads.update_website', id=lead.id) }}" method="POST" style="display:flex;gap:8px;margin-top:4px;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="url" name="website_url" class="form-input" value="{{ lead.website_url or '' }}" placeholder="https://example.com" style="flex:1;padding:4px 8px;font-size:var(--text-sm);">
+                            <button type="submit" class="btn btn-primary btn-sm">Save & Auto-Process</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>Scanner Discovery Metadata</h3>
+            </div>
+            <div class="card-body">
+                <div style="display:flex;flex-direction:column;gap:var(--space-3);font-size:var(--text-base);">
+                    <div>
+                        <span class="form-label" style="font-size:var(--text-xs);color:var(--text-tertiary);">Scanner Source</span>
+                        <span>{{ source.source_type|upper if source else 'NOT AVAILABLE' }}</span>
+                    </div>
+                    <div>
+                        <span class="form-label" style="font-size:var(--text-xs);color:var(--text-tertiary);">Location Context</span>
+                        <span>{{ source.source_location if source else 'NOT AVAILABLE' }}</span>
+                    </div>
+                    <div>
+                        <span class="form-label" style="font-size:var(--text-xs);color:var(--text-tertiary);">Discovery Query</span>
+                        <span style="font-family:monospace;font-size:var(--text-sm);">{{ source.source_query if source else 'NOT AVAILABLE' }}</span>
+                    </div>
+                    <div>
+                        <span class="form-label" style="font-size:var(--text-xs);color:var(--text-tertiary);">Discovered At</span>
+                        <span>{{ lead.created_at.strftime('%Y-%m-%d %H:%M:%S') if lead.created_at else 'NOT AVAILABLE' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contacts & Socials Tab -->
+<div class="tab-panel" id="tab-contacts">
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-header">
+                <h3>Contact Details</h3>
+            </div>
+            <div class="card-body">
+                <div style="display:flex;flex-direction:column;gap:var(--space-3);">
+                    <div>
+                        <span class="form-label" style="font-size:var(--text-xs);color:var(--text-tertiary);">Owner / Contact Person</span>
+                        <strong>{{ owner_contact.value if owner_contact else 'NOT AVAILABLE' }}</strong>
+                    </div>
+                    <div>
+                        <span class="form-label" style="font-size:var(--text-xs);color:var(--text-tertiary);">Phone Number</span>
+                        <strong>{{ phone_contact.value if phone_contact else 'NOT AVAILABLE' }}</strong>
+                    </div>
+                    <div>
+                        <span class="form-label" style="font-size:var(--text-xs);color:var(--text-tertiary);">Email Address</span>
+                        <strong>{{ email_contact.value if email_contact else 'NOT AVAILABLE' }}</strong>
+                    </div>
+                    {% if booking_contact %}
+                    <div>
+                        <span class="form-label" style="font-size:var(--text-xs);color:var(--text-tertiary);">Booking Scheduler URL</span>
+                        <a href="{{ booking_contact.value }}" target="_blank" style="word-break:break-all;">{{ booking_contact.value }}</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>Social Profiles</h3>
+            </div>
+            <div class="card-body">
+                {% set socials = lead.social_profiles.all() %}
+                {% if socials %}
+                <div style="display:flex;flex-direction:column;gap:var(--space-3);">
+                    {% for social in socials %}
+                    <div style="display:flex;align-items:center;gap:var(--space-2);">
+                        <span class="material-symbols-outlined" style="color:var(--primary-500);">link</span>
+                        <span style="font-weight:600;width:80px;text-transform:capitalize;">{{ social.platform }}:</span>
+                        <a href="{{ social.profile_url }}" target="_blank" style="word-break:break-all;">{{ social.profile_url }}</a>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state" style="padding:var(--space-4);">
+                    <span class="material-symbols-outlined empty-state-icon">link_off</span>
+                    <h3>No social profiles found</h3>
+                    <p>Instagram and Facebook profiles were not detected on directory mapping or website parsing.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Website Analysis Tab -->
+<div class="tab-panel" id="tab-analysis">
+    {% if analysis and analysis.status == 'completed' %}
+    <div class="card" style="margin-bottom:var(--space-5);">
+        <div class="card-header">
+            <h3>Redesign Audit Verdict</h3>
+        </div>
+        <div class="card-body">
+            <div style="display:flex;align-items:center;gap:var(--space-4);margin-bottom:var(--space-4);">
+                <div style="text-align:center;background:var(--primary-50);padding:var(--space-4) var(--space-6);border-radius:var(--radius-lg);">
+                    <div style="font-size:36px;font-weight:800;color:var(--primary-700);line-height:1;">{{ analysis.overall_score }}</div>
+                    <div style="font-size:var(--text-xs);color:var(--text-secondary);margin-top:4px;">Audit Score</div>
+                </div>
+                <div>
+                    <h3>Verdict: <span class="badge {% if analysis.verdict == 'adequate' %}badge-green{% else %}badge-red{% endif %}">{{ analysis.verdict|title }}</span></h3>
+                    <p style="margin-top:4px;">{{ analysis.improvement_reason }}</p>
+                </div>
+            </div>
+            
+            <div class="grid-2">
+                <div>
+                    <h4>Observed Facts</h4>
+                    <ul style="padding-left:20px;margin-top:8px;">
+                        {% for fact in analysis.observed_facts or [] %}
+                        <li style="margin-bottom:4px;font-size:var(--text-sm);">{{ fact }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div>
+                    <h4>AI Recommendations</h4>
+                    <ul style="padding-left:20px;margin-top:8px;">
+                        {% for rec in analysis.ai_recommendations or [] %}
+                        <li style="margin-bottom:4px;font-size:var(--text-sm);color:var(--primary-700);">{{ rec }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body">
+            <div class="empty-state" style="padding:var(--space-6);">
+                <span class="material-symbols-outlined empty-state-icon">language</span>
+                <h3>Website Analysis Missing</h3>
+                <p>Website performance auditing is queued or failed.</p>
+                <form action="{{ url_for('leads.trigger_pipeline', id=lead.id) }}" method="POST" style="margin-top:var(--space-4);">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-primary">
+                        <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px;">play_arrow</span> Run Auto-Analysis & PRD Pipeline
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Website PRD Tab -->
+<div class="tab-panel" id="tab-prd">
+    {% if prd %}
+    <div class="card">
+        <div class="card-header">
+            <h3>{{ prd.title }} (v{{ prd.current_version }})</h3>
+        </div>
+        <div class="card-body">
+            <div style="margin-bottom:var(--space-4);">
+                <span class="badge badge-blue">Status: {{ prd.status|title }}</span>
+                <span class="badge badge-gray">Type: {{ 'Redesign' if prd.is_improvement else 'New Build' }}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:var(--space-4);">
+                <div>
+                    <h4 style="border-bottom:1px solid var(--border-primary);padding-bottom:4px;">Business Overview</h4>
+                    <p style="font-size:var(--text-sm);white-space:pre-wrap;">{{ prd.business_overview }}</p>
+                </div>
+                <div>
+                    <h4 style="border-bottom:1px solid var(--border-primary);padding-bottom:4px;">Website Goal</h4>
+                    <p style="font-size:var(--text-sm);white-space:pre-wrap;">{{ prd.website_goal }}</p>
+                </div>
+                <div>
+                    <h4 style="border-bottom:1px solid var(--border-primary);padding-bottom:4px;">Design Direction</h4>
+                    <p style="font-size:var(--text-sm);white-space:pre-wrap;">{{ prd.design_direction }}</p>
+                </div>
+                <div>
+                    <h4 style="border-bottom:1px solid var(--border-primary);padding-bottom:4px;">Site Structure & Sitemap</h4>
+                    <p style="font-size:var(--text-sm);white-space:pre-wrap;">{{ prd.site_structure }}</p>
+                </div>
+                <div>
+                    <h4 style="border-bottom:1px solid var(--border-primary);padding-bottom:4px;">Functional Requirements</h4>
+                    <p style="font-size:var(--text-sm);white-space:pre-wrap;">{{ prd.functional_requirements }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body">
+            <div class="empty-state" style="padding:var(--space-6);">
+                <span class="material-symbols-outlined empty-state-icon">description</span>
+                <h3>PRD Generator (Phase 5)</h3>
+                <p>Generate, review, and finalize premium website PRD drafts tailored to this lead.</p>
+                <form action="{{ url_for('leads.trigger_pipeline', id=lead.id) }}" method="POST" style="margin-top:var(--space-4);">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-primary">
+                        <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px;">play_arrow</span> Run Auto-Analysis & PRD Pipeline
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Demo Website Tab -->
+<div class="tab-panel" id="tab-demo">
+    <div class="grid-2">
+        
+        <!-- DEMO URL CONFIGURATION -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Admin Demo URL Mapping</h3>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('leads.save_demo_url', id=lead.id) }}" method="POST" style="margin-bottom:var(--space-5);">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="form-group" style="margin-bottom:var(--space-4);">
+                        <label class="form-label">Manual Demo URL</label>
+                        <input type="url" name="demo_url" class="form-control" value="{{ demo.demo_url if demo else '' }}" placeholder="https://my-custom-demo.vercel.app" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;">Save & Verify Demo URL</button>
+                </form>
+
+                {% if demo %}
+                <div style="display:flex; flex-direction:column; gap:var(--space-3); border-top:1px solid var(--border-color); padding-top:var(--space-4);">
+                    <div>
+                        <span style="font-size:var(--text-xs); color:var(--text-secondary); display:block; text-transform:uppercase;">Status</span>
+                        {% if demo.url_valid and demo.url_reachable %}
+                        <span class="badge badge-green">Ready & Verified</span>
+                        {% else %}
+                        <span class="badge badge-warning">Unverified / Unreachable</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <span style="font-size:var(--text-xs); color:var(--text-secondary); display:block; text-transform:uppercase;">Demo Link</span>
+                        <a href="{{ demo.demo_url }}" target="_blank" style="font-weight:600; color:var(--primary);">{{ demo.demo_url }}</a>
+                    </div>
+                    <div>
+                        <span style="font-size:var(--text-xs); color:var(--text-secondary); display:block; text-transform:uppercase;">Last Ping Verification</span>
+                        <span style="font-size:var(--text-sm);">{{ demo.last_validated.strftime('%Y-%m-%d %H:%M:%S') if demo.last_validated else 'Never' }}</span>
+                    </div>
+                </div>
+                {% else %}
+                <p style="color:var(--text-secondary); font-size:var(--text-sm);">
+                    Enter a manually deployed Vercel, Netlify, or custom URL to unlock the sales outreach pitch module.
+                </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- OUTREACH CAMPAIGNS PANEL -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Sales Outreach Pitch Control</h3>
+            </div>
+            <div class="card-body">
+                {% if demo and demo.demo_url %}
+                <div style="display:flex; flex-direction:column; gap:var(--space-4);">
+                    <div>
+                        <span style="font-size:var(--text-xs); color:var(--text-secondary); display:block; text-transform:uppercase;">Outreach Status</span>
+                        {% if not lead.last_action or 'Outreach' not in lead.last_action %}
+                        <span class="badge badge-gray">Not Started</span>
+                        {% else %}
+                        <span class="badge badge-success">Active Outreach</span>
+                        {% endif %}
+                    </div>
+
+                    <div style="display:flex; gap:var(--space-2); margin-top:var(--space-3);">
+                        <form action="{{ url_for('leads.start_outreach', id=lead.id) }}" method="POST" style="flex:1;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-success" style="width:100%;">
+                                <span class="material-symbols-outlined" style="font-size:16px; vertical-align:middle; margin-right:4px;">send</span> Start WhatsApp Outreach
+                            </button>
+                        </form>
+                    </div>
+
+                    <div style="display:flex; gap:var(--space-2);">
+                        <form action="{{ url_for('leads.pause_outreach', id=lead.id) }}" method="POST" style="flex:1;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-secondary" style="width:100%;">
+                                <span class="material-symbols-outlined" style="font-size:16px; vertical-align:middle; margin-right:4px;">pause</span> Pause
+                            </button>
+                        </form>
+                        <form action="{{ url_for('leads.stop_outreach', id=lead.id) }}" method="POST" style="flex:1;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-danger" style="width:100%;">
+                                <span class="material-symbols-outlined" style="font-size:16px; vertical-align:middle; margin-right:4px;">stop</span> Stop
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <div style="text-align:center; padding:var(--space-6); color:var(--text-tertiary);">
+                    <span class="material-symbols-outlined" style="font-size:48px; margin-bottom:var(--space-3);">lock</span>
+                    <h4>Outreach Pitch Locked</h4>
+                    <p style="font-size:var(--text-sm); margin-top:var(--space-2);">
+                        You must configure and verify a Demo URL first before triggering the WhatsApp Cloud API pitcher.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Custom Delete Lead Confirmation Modal -->
+<div class="dialog-overlay" id="deleteLeadModal">
+    <div class="dialog" style="max-width: 460px;">
+        <div class="dialog-header">
+            <h3 style="color: var(--error);">Delete Lead?</h3>
+            <p style="margin-top: 4px; font-size: var(--text-sm); color: var(--text-secondary);">
+                This will permanently delete this lead and its associated records.
+            </p>
+        </div>
+        <div class="dialog-body" style="padding-top: var(--space-2);">
+            <div style="background: var(--gray-50); border: 1px solid var(--border-color); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-4);">
+                <div style="margin-bottom: var(--space-2); font-size: var(--text-sm);">
+                    <span style="color: var(--text-secondary);">Business:</span> 
+                    <strong style="color: var(--text-primary);">{{ lead.business_name }}</strong>
+                </div>
+                <div style="font-size: var(--text-xs); color: var(--text-tertiary);">
+                    Lead ID: {{ lead.id }}
+                </div>
+            </div>
+            
+            <div style="font-size: var(--text-xs); color: var(--text-secondary);">
+                <span style="font-weight: 600; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary);">The following related records will be removed:</span>
+                <ul style="margin: 0; padding-left: var(--space-4); display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px;">
+                    <li>Contacts: <strong>{{ lead.contacts.count() }}</strong></li>
+                    <li>Website Analysis: <strong>{{ lead.website_analyses.count() }}</strong></li>
+                    <li>PRD Documents: <strong>{{ lead.prds.count() }}</strong></li>
+                    <li>Demo Projects: <strong>{{ lead.demos.count() }}</strong></li>
+                    <li>Conversations: <strong>{{ lead.conversations.count() }}</strong></li>
+                    <li>Outreach Campaigns: <strong>{{ lead.outreach_campaigns.count() }}</strong></li>
+                    <li>Follow-Ups: <strong>{{ lead.followups.count() }}</strong></li>
+                    <li>Sales Pipeline Deals: <strong>{{ lead.sales_deals.count() }}</strong></li>
+                </ul>
+            </div>
+        </div>
+        <div class="dialog-footer" style="border-top: 1px solid var(--border-color); padding-top: var(--space-4);">
+            <button type="button" class="btn btn-secondary" onclick="closeDialog('deleteLeadModal')">Cancel</button>
+            <form action="{{ url_for('leads.delete_lead', id=lead.id) }}" method="POST" style="display: inline; margin: 0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-danger">Delete Lead</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
