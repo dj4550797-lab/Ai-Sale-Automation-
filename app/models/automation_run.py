@@ -13,7 +13,7 @@ class AutomationRun(db.Model):
     job_id = db.Column(db.Integer, db.ForeignKey('automation_jobs.id'), nullable=False, index=True)
 
     # Lock key for duplicate prevention (§82)
-    lock_key = db.Column(db.String(200), unique=True, default='')
+    lock_key = db.Column(db.String(200), nullable=True, index=True)
 
     status = db.Column(db.String(30), default='running')  # running, completed, failed, cancelled
     started_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
