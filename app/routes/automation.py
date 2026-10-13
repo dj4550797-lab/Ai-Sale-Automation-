@@ -17,6 +17,8 @@ logger = get_logger('automation_routes')
 automation_bp = Blueprint('automation', __name__, url_prefix='/automation')
 
 
+import uuid
+
 def check_discovery_locked():
     """Look for any run in 'running' state that started in the last 15 minutes."""
     active_run = AutomationRun.query.filter_by(status='running').order_by(AutomationRun.started_at.desc()).first()
@@ -24,8 +26,15 @@ def check_discovery_locked():
         started_at = active_run.started_at
         if started_at.tzinfo is None:
             started_at = started_at.replace(tzinfo=timezone.utc)
-        if (datetime.now(timezone.utc) - started_at).total_seconds() < 900:  # 15 minutes lock time
+        elapsed = (datetime.now(timezone.utc) - started_at).total_seconds()
+        if elapsed < 900:  # 15 minutes lock time
             return True
+        else:
+            # Auto-cleanup stale orphaned run
+            active_run.status = 'failed'
+            active_run.completed_at = datetime.now(timezone.utc)
+            active_run.error_message = 'Run timed out or worker process restarted.'
+            db.session.commit()
     return False
 
 
@@ -117,9 +126,10 @@ def start_automation_run(app, job):
     if remaining_capacity <= 0:
         return {"success": False, "error": f"Daily limit reached ({leads_today}/{daily_limit})."}
         
-    # Create the run record
+    # Create the run record with unique lock_key
     run = AutomationRun(
         job_id=job.id,
+        lock_key=f"job_{job.id}_{int(datetime.now(timezone.utc).timestamp())}_{uuid.uuid4().hex[:6]}",
         status='running',
         started_at=datetime.now(timezone.utc),
         log_output=f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Started lead discovery run for {category} in {location}."
