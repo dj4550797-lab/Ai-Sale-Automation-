@@ -128,6 +128,20 @@ def _register_commands(app):
         except Exception:
             db.session.rollback()
 
+        try:
+            db.session.execute(text("ALTER TABLE leads ADD COLUMN business_hours VARCHAR(500) DEFAULT ''"))
+            db.session.commit()
+            click.echo("Migrated: Added 'business_hours' to 'leads' table.")
+        except Exception:
+            db.session.rollback()
+
+        try:
+            db.session.execute(text("ALTER TABLE leads ADD COLUMN google_place_id VARCHAR(300)"))
+            db.session.commit()
+            click.echo("Migrated: Added 'google_place_id' to 'leads' table.")
+        except Exception:
+            db.session.rollback()
+
         # Create default admin
         from flask import current_app
         from app.services.auth_service import create_admin_user
@@ -191,14 +205,14 @@ def _seed_defaults(db):
         db.session.add(openrouter)
         db.session.commit()
 
-        # Seed dummy credential (masking sk-or-v1-...)
-        dummy_key = "sk-or-v1-dummy-openrouter-key-replace-me"
+        # Seed credential (use environment variable if available, else placeholder)
+        initial_openrouter_key = os.environ.get('OPENROUTER_API_KEY', '').strip() or "sk-or-v1-dummy-openrouter-key-replace-me"
         cred = APICredential(
             provider_id=openrouter.id,
             credential_type='api_key',
             service_name='openrouter primary',
-            encrypted_value=encrypt_value(dummy_key),
-            last_four=dummy_key[-4:]
+            encrypted_value=encrypt_value(initial_openrouter_key),
+            last_four=initial_openrouter_key[-4:]
         )
         db.session.add(cred)
 
@@ -228,24 +242,24 @@ def _seed_defaults(db):
         gname = f'Google AI Studio fallback {i}'
         existing_g = LLMProvider.query.filter_by(name=gname).first()
         if not existing_g:
+            initial_gemini_key = os.environ.get('GOOGLE_AI_API_KEY', '').strip() if i == 1 else ''
+            gemini_key_val = initial_gemini_key or f"dummy-google-ai-studio-key-{i}-replace-me"
             gprov = LLMProvider(
                 name=gname,
                 protocol=LLMProtocol.GEMINI,
-                status=ProviderStatus.DISABLED,
+                status=ProviderStatus.HEALTHY if initial_gemini_key else ProviderStatus.DISABLED,
                 priority=i + 1,  # priority 2, 3, 4
                 is_enabled=True
             )
             db.session.add(gprov)
             db.session.commit()
 
-            # Seed dummy key
-            gkey = f"dummy-google-ai-studio-key-{i}-replace-me"
             gcred = APICredential(
                 provider_id=gprov.id,
                 credential_type='api_key',
                 service_name=gname.lower(),
-                encrypted_value=encrypt_value(gkey),
-                last_four=gkey[-4:]
+                encrypted_value=encrypt_value(gemini_key_val),
+                last_four=gemini_key_val[-4:]
             )
             db.session.add(gcred)
 
