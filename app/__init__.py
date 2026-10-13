@@ -142,6 +142,13 @@ def _register_commands(app):
         except Exception:
             db.session.rollback()
 
+        try:
+            db.session.execute(text("UPDATE automation_runs SET lock_key = 'run_' || id WHERE lock_key = '' OR lock_key IS NULL"))
+            db.session.execute(text("UPDATE automation_runs SET status = 'failed' WHERE status = 'running'"))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
         # Create default admin
         from flask import current_app
         from app.services.auth_service import create_admin_user
