@@ -25,8 +25,8 @@ def compile_demo_html(lead_id):
     if not lead:
         return {"success": False, "error": f"Lead with ID {lead_id} not found."}
 
-    # 1. Fetch approved PRD (§37)
-    prd = PRD.query.filter_by(lead_id=lead_id, status=PRDStatus.APPROVED).first()
+    # 1. Fetch approved or ready PRD (§37)
+    prd = PRD.query.filter(PRD.lead_id == lead_id, PRD.status.in_([PRDStatus.APPROVED, PRDStatus.READY])).first()
     if not prd:
         return {"success": False, "error": "An approved PRD is required before compiling the demo website. Please approve the draft in PRD Review."}
 

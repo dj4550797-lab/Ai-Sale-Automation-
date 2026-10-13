@@ -22,7 +22,7 @@ def generate_outreach_message(lead_id, channel):
     if not lead:
         return {"success": False, "error": f"Lead with ID {lead_id} not found."}
 
-    prd = PRD.query.filter_by(lead_id=lead_id, status='approved').first()
+    prd = PRD.query.filter(PRD.lead_id == lead_id, PRD.status.in_(['ready', 'approved'])).first()
     demo = DemoProject.query.filter_by(lead_id=lead_id).first()
 
     if not prd or not demo:
