@@ -77,7 +77,7 @@ def run_lead_discovery(location, category, daily_target=20, min_rating=None, req
     
     saved_count = 0
     duplicate_count = 0
-    processed_leads = []
+    processed_lead_ids = []
     page_token = None
     
     while saved_count < remaining_capacity:
@@ -121,14 +121,15 @@ def run_lead_discovery(location, category, daily_target=20, min_rating=None, req
             
             if verdict.get('status') == 'likely_duplicate':
                 try:
-                    existing_lead = Lead.query.get(verdict['matched_lead_id'])
+                    matched_id = verdict.get('matched_lead_id')
+                    existing_lead = db.session.get(Lead, matched_id) if matched_id else None
                     if existing_lead:
                         existing_lead.rating = item.get('rating')
                         existing_lead.review_count = item.get('review_count')
                         existing_lead.lead_score = lead_score
                         existing_lead.last_action = "Updated via discovery rerun"
                         db.session.commit()
-                        processed_leads.append(existing_lead)
+                        processed_lead_ids.append(matched_id)
                         duplicate_count += 1
                 except Exception as update_err:
                     db.session.rollback()
@@ -166,11 +167,12 @@ def run_lead_discovery(location, category, daily_target=20, min_rating=None, req
                 )
                 db.session.add(lead)
                 db.session.commit()
+                new_lead_id = lead.id
                 
                 # Save phone
                 if item.get('phone'):
                     contact = LeadContact(
-                        lead_id=lead.id,
+                        lead_id=new_lead_id,
                         contact_type='phone',
                         value=item['phone'],
                         is_primary=True
@@ -179,7 +181,7 @@ def run_lead_discovery(location, category, daily_target=20, min_rating=None, req
                     
                 # Save source
                 source = LeadSource(
-                    lead_id=lead.id,
+                    lead_id=new_lead_id,
                     source_type='google_places',
                     source_query=f"{category} in {location}",
                     source_location=location,
@@ -191,12 +193,12 @@ def run_lead_discovery(location, category, daily_target=20, min_rating=None, req
                 # Auto enrichment and analysis with failure isolation
                 from app.services.pipeline_service import process_lead_pipeline
                 try:
-                    process_lead_pipeline(lead.id)
+                    process_lead_pipeline(new_lead_id)
                 except Exception as pipeline_err:
                     db.session.rollback()
-                    logger.error(f"Failed to execute pipeline for lead {lead.id}: {pipeline_err}")
+                    logger.error(f"Failed to execute pipeline for lead {new_lead_id}: {pipeline_err}")
                     
-                processed_leads.append(lead)
+                processed_lead_ids.append(new_lead_id)
                 saved_count += 1
             except Exception as save_err:
                 db.session.rollback()
@@ -212,7 +214,7 @@ def run_lead_discovery(location, category, daily_target=20, min_rating=None, req
         "processed_count": saved_count + duplicate_count,
         "saved_count": saved_count,
         "duplicate_count": duplicate_count,
-        "leads": [l.id for l in processed_leads]
+        "leads": processed_lead_ids
     }
 
 

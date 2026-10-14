@@ -316,34 +316,39 @@ function initConfirmInterceptors() {
     });
 }
 
-// ── Theme Switcher (Dark / Light Mode) ──────────────────────
+// ── Theme Switcher (6 Themes System) ────────────────────────
 function initAppTheme() {
     const currentTheme = localStorage.getItem('flixora_theme') || 'light';
     applyTheme(currentTheme);
 }
 
-function toggleAppTheme() {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const nextTheme = isDark ? 'light' : 'dark';
-    localStorage.setItem('flixora_theme', nextTheme);
-    applyTheme(nextTheme);
-    showToast(nextTheme === 'dark' ? '🌙 Dark Mode Activated' : '☀️ Light Mode Activated', 'info', 2000);
+function selectTheme(themeName) {
+    localStorage.setItem('flixora_theme', themeName);
+    applyTheme(themeName);
+    const themeTitles = {
+        'light': 'Clean SaaS (Light)',
+        'dark': 'Glassmorphism (Dark)',
+        'flat': 'Flat Design',
+        'neo-brutalism': 'Neo-Brutalism',
+        'cyberpunk': 'Cyberpunk Neon',
+        'synthwave': 'Retro-Futurism / Synthwave'
+    };
+    showToast(`🎨 Theme applied: ${themeTitles[themeName] || themeName}`, 'info', 2200);
 }
 
 function applyTheme(theme) {
-    if (theme === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
+    if (theme && theme !== 'light') {
+        document.documentElement.setAttribute('data-theme', theme);
     } else {
         document.documentElement.removeAttribute('data-theme');
     }
-    const icon = document.getElementById('themeToggleIcon');
-    if (icon) {
-        icon.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
-    }
-    const btn = document.getElementById('themeToggleBtn');
-    if (btn) {
-        btn.setAttribute('data-tooltip', theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode');
-    }
+    document.querySelectorAll('.theme-card-option').forEach(card => {
+        if (card.dataset.theme === theme || (!theme && card.dataset.theme === 'light')) {
+            card.classList.add('selected');
+        } else {
+            card.classList.remove('selected');
+        }
+    });
 }
 
 // ── Initialize ──────────────────────────────────────────────

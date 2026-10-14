@@ -21,28 +21,34 @@ import uuid
 
 def check_discovery_locked():
     """Look for any run in 'running' state that started in the last 15 minutes."""
-    active_run = AutomationRun.query.filter_by(status='running').order_by(AutomationRun.started_at.desc()).first()
-    if active_run:
-        started_at = active_run.started_at
-        if started_at.tzinfo is None:
-            started_at = started_at.replace(tzinfo=timezone.utc)
-        elapsed = (datetime.now(timezone.utc) - started_at).total_seconds()
-        if elapsed < 900:  # 15 minutes lock time
-            return True
-        else:
-            # Auto-cleanup stale orphaned run
-            active_run.status = 'failed'
-            active_run.completed_at = datetime.now(timezone.utc)
-            active_run.error_message = 'Run timed out or worker process restarted.'
-            db.session.commit()
+    try:
+        db.session.rollback()
+        active_run = AutomationRun.query.filter_by(status='running').order_by(AutomationRun.started_at.desc()).first()
+        if active_run:
+            started_at = active_run.started_at
+            if started_at.tzinfo is None:
+                started_at = started_at.replace(tzinfo=timezone.utc)
+            elapsed = (datetime.now(timezone.utc) - started_at).total_seconds()
+            if elapsed < 900:  # 15 minutes lock time
+                return True
+            else:
+                # Auto-cleanup stale orphaned run
+                active_run.status = 'failed'
+                active_run.completed_at = datetime.now(timezone.utc)
+                active_run.error_message = 'Run timed out or worker process restarted.'
+                db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.warning(f"Error in check_discovery_locked: {e}")
     return False
 
 
 def run_lead_discovery_background(app, location, category, daily_target, job_id, run_id):
     """Run lead discovery in a background thread to prevent HTTP timeouts."""
     with app.app_context():
-        run = AutomationRun.query.get(run_id)
-        job = AutomationJob.query.get(job_id)
+        db.session.rollback()
+        run = db.session.get(AutomationRun, run_id)
+        job = db.session.get(AutomationJob, job_id)
         if not run or not job:
             return
             
@@ -361,3 +367,19 @@ def trigger_cron():
         return jsonify(res), 202
     else:
         return jsonify(res), 400
+
+
+@automation_bp.route('/runs/clear', methods=['POST'])
+@login_required
+def clear_runs():
+    """Clear all automation execution history logs."""
+    try:
+        db.session.rollback()
+        deleted_count = AutomationRun.query.delete()
+        db.session.commit()
+        flash(f"Cleared {deleted_count} execution run logs successfully.", "success")
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error clearing automation runs: {e}")
+        flash(f"Error clearing logs: {str(e)}", "error")
+    return redirect(url_for('automation.index'))

@@ -282,51 +282,78 @@
 <!-- CONFIGURATION & HISTORY LAYOUT -->
 <div class="automation-grid-layout" style="display: grid; grid-template-columns: minmax(320px, 1fr) minmax(0, 2fr); gap: var(--space-6); align-items: start;">
     
-    <!-- SETTINGS PANEL -->
-    <div class="card">
-        <div class="card-header">
-            <h3 style="margin: 0; font-size: var(--text-md);">Discovery Parameters</h3>
+    <!-- SETTINGS PANEL (MATERIAL DESIGN 3 OUTLINED SPEC) -->
+    <div class="m3-card" style="padding: 0;">
+        <div class="card-header" style="background: var(--surface); padding: 18px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="material-symbols-outlined" style="color: var(--primary-500); font-size: 20px;">tune</span>
+                <h3 style="margin: 0; font-size: 15px; font-weight: 700;">Discovery Parameters</h3>
+            </div>
+            <span class="badge badge-secondary" style="font-size: 10px; font-weight: 600;">M3 Outlined</span>
         </div>
-        <div class="card-body">
-            <form action="{{ url_for('automation.save_settings') }}" method="POST">
+        <div class="card-body" style="padding: 20px;">
+            <form action="{{ url_for('automation.save_settings') }}" method="POST" style="display: flex; flex-direction: column; gap: var(--space-4);">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 
-                <div class="form-group" style="margin-bottom: var(--space-4);">
-                    <label class="form-label">Daily Lead Limit</label>
-                    <input type="number" class="form-control" name="daily_limit" value="{{ daily_limit }}" min="1" max="100" required>
-                    <span class="form-hint">Cap on new qualified leads fetched per day.</span>
+                <!-- 1. Daily Limit Field (M3 Outlined) -->
+                <div class="m3-field">
+                    <label class="m3-field-label">
+                        <span class="material-symbols-outlined" style="font-size: 14px; color: var(--primary-500);">speed</span>
+                        Daily Lead Limit
+                    </label>
+                    <input type="number" class="m3-field-input" name="daily_limit" value="{{ daily_limit }}" min="1" max="100" required>
+                    <span class="m3-field-hint">Cap on new qualified leads fetched per day</span>
                 </div>
 
-                <div class="form-group" style="margin-bottom: var(--space-4);">
-                    <label class="form-label">Discovery Categories</label>
-                    <input type="text" class="form-control" name="category" value="{{ category }}" required>
-                    <span class="form-hint">Search niches (comma-separated, e.g. Gym, Salon, Restaurant)</span>
+                <!-- 2. Categories Field (M3 Outlined) -->
+                <div class="m3-field">
+                    <label class="m3-field-label">
+                        <span class="material-symbols-outlined" style="font-size: 14px; color: var(--primary-500);">category</span>
+                        Discovery Categories
+                    </label>
+                    <input type="text" class="m3-field-input" name="category" value="{{ category }}" required>
+                    <span class="m3-field-hint">Search niches (comma-separated, e.g. Gym, Salon, Restaurant)</span>
                 </div>
 
-                <div class="form-group" style="margin-bottom: var(--space-4);">
-                    <label class="form-label">Discovery Locations</label>
-                    <input type="text" class="form-control" name="location" value="{{ location }}" required>
-                    <span class="form-hint">Target cities (e.g. Pune, Delhi)</span>
+                <!-- 3. Locations Field (M3 Outlined) -->
+                <div class="m3-field">
+                    <label class="m3-field-label">
+                        <span class="material-symbols-outlined" style="font-size: 14px; color: var(--primary-500);">location_on</span>
+                        Discovery Locations
+                    </label>
+                    <input type="text" class="m3-field-input" name="location" value="{{ location }}" required>
+                    <span class="m3-field-hint">Target cities (e.g. Pune, Delhi, Mumbai)</span>
                 </div>
 
-                <div class="form-group" style="margin-bottom: var(--space-4);">
-                    <label class="form-label">Discovery Schedule</label>
-                    <input type="text" class="form-control" name="schedule" value="{{ schedule }}" placeholder="Daily at 08:00 PM" required>
-                    <span class="form-hint">Display label of run schedule.</span>
+                <!-- 4. Schedule Field (M3 Outlined) -->
+                <div class="m3-field">
+                    <label class="m3-field-label">
+                        <span class="material-symbols-outlined" style="font-size: 14px; color: var(--primary-500);">schedule</span>
+                        Discovery Schedule
+                    </label>
+                    <input type="text" class="m3-field-input" name="schedule" value="{{ schedule }}" placeholder="Daily at 08:00 AM" required>
+                    <span class="m3-field-hint">Display label of run schedule</span>
                 </div>
 
-                <div class="form-group" style="margin-bottom: var(--space-5);">
-                    <label class="form-label">Timezone</label>
-                    <select class="form-control" name="timezone" style="width: 100%;">
+                <!-- 5. Timezone Field (M3 Outlined) -->
+                <div class="m3-field">
+                    <label class="m3-field-label">
+                        <span class="material-symbols-outlined" style="font-size: 14px; color: var(--primary-500);">public</span>
+                        Timezone
+                    </label>
+                    <select class="m3-field-input" name="timezone" style="cursor: pointer; background: transparent;">
                         <option value="Asia/Kolkata" {% if timezone == 'Asia/Kolkata' %}selected{% endif %}>Asia/Kolkata (IST)</option>
                         <option value="UTC" {% if timezone == 'UTC' %}selected{% endif %}>UTC</option>
                         <option value="America/New_York" {% if timezone == 'America/New_York' %}selected{% endif %}>America/New_York (EST)</option>
                         <option value="Europe/London" {% if timezone == 'Europe/London' %}selected{% endif %}>Europe/London (GMT)</option>
                     </select>
-                    <span class="form-hint">Timezone applied for daily resets.</span>
+                    <span class="m3-field-hint">Timezone applied for daily resets</span>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Save Configuration</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%; border-radius: 24px; padding: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px;">
+                    <span class="material-symbols-outlined" style="font-size: 18px;">save</span>
+                    Save Configuration
+                </button>
             </form>
         </div>
     </div>
@@ -380,8 +407,18 @@
 
         <!-- EXECUTION HISTORY -->
         <div class="card">
-            <div class="card-header">
-                <h3 style="margin: 0; font-size: var(--text-md);">Execution Run Log</h3>
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="material-symbols-outlined" style="color: var(--primary-500); font-size: 20px;">history</span>
+                    <h3 style="margin: 0; font-size: var(--text-md);">Execution Run Log</h3>
+                </div>
+                <form action="{{ url_for('automation.clear_runs') }}" method="POST" onsubmit="return confirm('Delete all execution run history logs?');" style="margin: 0;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-ghost btn-sm" style="color: var(--error); gap: 4px; font-size: 12px; padding: 4px 8px;" title="Clear run history">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">delete_sweep</span>
+                        Clear Logs
+                    </button>
+                </form>
             </div>
             <div class="card-body" style="padding: 0; overflow-x: auto; max-width: 100%;">
                 <table class="table" style="margin: 0; border: none; width: 100%;">

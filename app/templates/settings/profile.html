@@ -94,6 +94,124 @@
         </div>
     </div>
 </div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     THEMES & APPEARANCE SYSTEM (6 THEMES)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="card" style="margin-top: var(--space-6);">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+            <h3 style="margin:0;font-size:var(--text-lg);font-weight:700;">Design Themes & Appearance</h3>
+            <p style="font-size:var(--text-xs);color:var(--text-secondary);margin-top:2px;">
+                Choose from 6 visual aesthetics tailored for your workspace and workflows.
+            </p>
+        </div>
+        <span class="badge badge-primary" style="display:flex;align-items:center;gap:4px;">
+            <span class="material-symbols-outlined" style="font-size:14px;">palette</span> 6 Themes
+        </span>
+    </div>
+    <div class="card-body">
+        <div class="theme-selector-grid">
+            
+            <!-- 1. Light SaaS -->
+            <div class="theme-card-option" data-theme="light" onclick="selectTheme('light')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14px;color:var(--text-primary);">Clean SaaS (Light)</strong>
+                    <span class="badge badge-secondary" style="font-size:10px;">Default</span>
+                </div>
+                <div style="height:60px;border-radius:8px;background:#f8fafc;border:1px solid #e2e8f0;display:flex;align-items:center;padding:8px;gap:8px;">
+                    <div style="width:24px;height:24px;border-radius:6px;background:#2563eb;"></div>
+                    <div style="flex:1;">
+                        <div style="height:6px;background:#cbd5e1;border-radius:3px;width:70%;margin-bottom:4px;"></div>
+                        <div style="height:5px;background:#e2e8f0;border-radius:3px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Clean, professional white workspace with royal blue accents.</div>
+            </div>
+
+            <!-- 2. Dark Glassmorphism -->
+            <div class="theme-card-option" data-theme="dark" onclick="selectTheme('dark')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14px;color:var(--text-primary);">Glassmorphism (Dark)</strong>
+                    <span class="badge badge-primary" style="font-size:10px;">Glass</span>
+                </div>
+                <div style="height:60px;border-radius:8px;background:rgba(17,24,39,0.9);border:1px solid rgba(255,255,255,0.15);backdrop-filter:blur(10px);display:flex;align-items:center;padding:8px;gap:8px;">
+                    <div style="width:24px;height:24px;border-radius:6px;background:#3b82f6;box-shadow:0 0 8px rgba(59,130,246,0.5);"></div>
+                    <div style="flex:1;">
+                        <div style="height:6px;background:#4b5563;border-radius:3px;width:70%;margin-bottom:4px;"></div>
+                        <div style="height:5px;background:#374151;border-radius:3px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Translucent frosted glass, ambient depth, low-light eye comfort.</div>
+            </div>
+
+            <!-- 3. Flat Design -->
+            <div class="theme-card-option" data-theme="flat" onclick="selectTheme('flat')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14px;color:var(--text-primary);">Flat Design</strong>
+                    <span class="badge badge-secondary" style="font-size:10px;">Zero Shadow</span>
+                </div>
+                <div style="height:60px;border-radius:4px;background:#ffffff;border:1px solid #94a3b8;display:flex;align-items:center;padding:8px;gap:8px;">
+                    <div style="width:24px;height:24px;border-radius:3px;background:#2563eb;"></div>
+                    <div style="flex:1;">
+                        <div style="height:6px;background:#64748b;border-radius:0;width:70%;margin-bottom:4px;"></div>
+                        <div style="height:5px;background:#94a3b8;border-radius:0;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Sharp crisp borders, pure flat color blocks, zero drop shadows.</div>
+            </div>
+
+            <!-- 4. Neo-Brutalism -->
+            <div class="theme-card-option" data-theme="neo-brutalism" onclick="selectTheme('neo-brutalism')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14px;color:var(--text-primary);">Neo-Brutalism</strong>
+                    <span class="badge" style="background:#ffe600;color:#000;border:1.5px solid #000;font-size:10px;font-weight:800;">Bold</span>
+                </div>
+                <div style="height:60px;border-radius:4px;background:#fffdf5;border:2px solid #000;box-shadow:3px 3px 0px #000;display:flex;align-items:center;padding:8px;gap:8px;">
+                    <div style="width:24px;height:24px;border-radius:4px;background:#ffe600;border:1.5px solid #000;box-shadow:2px 2px 0px #000;"></div>
+                    <div style="flex:1;">
+                        <div style="height:6px;background:#000;border-radius:0;width:70%;margin-bottom:4px;"></div>
+                        <div style="height:5px;background:#000;border-radius:0;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Heavy black outlines, hard offset drop shadows, energetic pop colors.</div>
+            </div>
+
+            <!-- 5. Cyberpunk -->
+            <div class="theme-card-option" data-theme="cyberpunk" onclick="selectTheme('cyberpunk')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14px;color:var(--text-primary);">Cyberpunk</strong>
+                    <span class="badge" style="background:rgba(0,240,255,0.15);color:#00f0ff;border:1px solid #00f0ff;font-size:10px;">Neon</span>
+                </div>
+                <div style="height:60px;border-radius:8px;background:#050811;border:1px solid #00f0ff;box-shadow:0 0 10px rgba(0,240,255,0.3);display:flex;align-items:center;padding:8px;gap:8px;">
+                    <div style="width:24px;height:24px;border-radius:4px;background:#00f0ff;box-shadow:0 0 10px #00f0ff;"></div>
+                    <div style="flex:1;">
+                        <div style="height:6px;background:#00f0ff;border-radius:2px;width:70%;margin-bottom:4px;opacity:0.8;"></div>
+                        <div style="height:5px;background:#ff0055;border-radius:2px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">High-tech cyber black, neon cyan & laser magenta futuristic vibes.</div>
+            </div>
+
+            <!-- 6. Retro-Futurism / Synthwave -->
+            <div class="theme-card-option" data-theme="synthwave" onclick="selectTheme('synthwave')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14px;color:var(--text-primary);">Synthwave / Retro</strong>
+                    <span class="badge" style="background:rgba(236,72,153,0.15);color:#ec4899;border:1px solid #ec4899;font-size:10px;">Arcade</span>
+                </div>
+                <div style="height:60px;border-radius:8px;background:#130924;border:1px solid #ec4899;box-shadow:0 0 12px rgba(236,72,153,0.3);display:flex;align-items:center;padding:8px;gap:8px;">
+                    <div style="width:24px;height:24px;border-radius:4px;background:linear-gradient(135deg,#ec4899,#8b5cf6);box-shadow:0 0 10px #ec4899;"></div>
+                    <div style="flex:1;">
+                        <div style="height:6px;background:#ec4899;border-radius:2px;width:70%;margin-bottom:4px;"></div>
+                        <div style="height:5px;background:#8b5cf6;border-radius:2px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Midnight purple, vibrant neon sunset gradients, 80s arcade feel.</div>
+            </div>
+
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}

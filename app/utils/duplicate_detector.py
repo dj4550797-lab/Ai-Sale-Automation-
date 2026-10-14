@@ -9,6 +9,7 @@ Matches by:
 4. Business Name + Address
 """
 from urllib.parse import urlparse
+from app.extensions import db
 from app.models import Lead, LeadContact
 
 
@@ -61,7 +62,7 @@ def check_for_duplicate(business_data):
         # Search lead contacts for national phone match
         contact = LeadContact.query.filter_by(contact_type='phone', value=phone).first()
         if contact:
-            existing = Lead.query.get(contact.lead_id)
+            existing = db.session.get(Lead, contact.lead_id)
             if existing:
                 return {
                     'status': 'confirmed_duplicate',

@@ -371,3 +371,378 @@ select optgroup {
     border-color: var(--glass-border) !important;
     box-shadow: var(--glass-shadow);
 }
+
+/* ═══════════════════════════════════════════════════════════
+   THEME 3: FLAT DESIGN [data-theme="flat"]
+   Minimalist, crisp 1px borders, zero shadows, clean flat blocks
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="flat"] {
+    --primary-50:  #eff6ff;
+    --primary-500: #2563eb;
+    --primary-600: #1d4ed8;
+    --surface: #ffffff;
+    --surface-dim: #f8fafc;
+    --surface-container: #e2e8f0;
+    --surface-elevated: #ffffff;
+    --border-color: #cbd5e1;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --shadow-xs: none !important;
+    --shadow-sm: none !important;
+    --shadow-md: none !important;
+    --shadow-lg: none !important;
+    --shadow-xl: none !important;
+}
+[data-theme="flat"] .card,
+[data-theme="flat"] .kpi-card,
+[data-theme="flat"] .topbar,
+[data-theme="flat"] .sidebar,
+[data-theme="flat"] .dialog,
+[data-theme="flat"] .btn {
+    box-shadow: none !important;
+    border-radius: 4px !important;
+    border: 1px solid #cbd5e1 !important;
+}
+[data-theme="flat"] .btn-primary {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME 4: NEO-BRUTALISM [data-theme="neo-brutalism"]
+   Thick black borders, hard offset shadows, vibrant pop yellow & pink
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="neo-brutalism"] {
+    --primary-50:  #fef08a;
+    --primary-500: #eab308;
+    --primary-600: #ca8a04;
+    --surface: #fffdf5;
+    --surface-dim: #fefce8;
+    --surface-container: #fef9c3;
+    --surface-elevated: #ffffff;
+    --border-color: #000000;
+    --text-primary: #000000;
+    --text-secondary: #1f2937;
+    --text-link: #000000;
+    --shadow-xs: 2px 2px 0px #000000 !important;
+    --shadow-sm: 3px 3px 0px #000000 !important;
+    --shadow-md: 4px 4px 0px #000000 !important;
+    --shadow-lg: 6px 6px 0px #000000 !important;
+    --shadow-xl: 8px 8px 0px #000000 !important;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 10px;
+}
+[data-theme="neo-brutalism"] .card,
+[data-theme="neo-brutalism"] .kpi-card,
+[data-theme="neo-brutalism"] .sidebar,
+[data-theme="neo-brutalism"] .topbar,
+[data-theme="neo-brutalism"] .dialog,
+[data-theme="neo-brutalism"] .table,
+[data-theme="neo-brutalism"] .dropdown-menu {
+    border: 2.5px solid #000000 !important;
+    box-shadow: 4px 4px 0px #000000 !important;
+    background: #fffdf5 !important;
+}
+[data-theme="neo-brutalism"] .btn {
+    border: 2px solid #000000 !important;
+    box-shadow: 3px 3px 0px #000000 !important;
+    font-weight: 700 !important;
+    transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+}
+[data-theme="neo-brutalism"] .btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px #000000 !important;
+}
+[data-theme="neo-brutalism"] .btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px #000000 !important;
+}
+[data-theme="neo-brutalism"] .btn-primary {
+    background: #ffe600 !important;
+    color: #000000 !important;
+}
+[data-theme="neo-brutalism"] .form-input,
+[data-theme="neo-brutalism"] .form-select,
+[data-theme="neo-brutalism"] .form-textarea,
+[data-theme="neo-brutalism"] .form-control {
+    border: 2px solid #000000 !important;
+    box-shadow: 2px 2px 0px #000000 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-weight: 600;
+}
+[data-theme="neo-brutalism"] .form-input:focus,
+[data-theme="neo-brutalism"] .form-select:focus,
+[data-theme="neo-brutalism"] .form-textarea:focus,
+[data-theme="neo-brutalism"] .form-control:focus {
+    box-shadow: 4px 4px 0px #000000 !important;
+    border-color: #000000 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME 5: CYBERPUNK [data-theme="cyberpunk"]
+   High-tech cyber black, neon cyan & magenta glows, futuristic HUD
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="cyberpunk"] {
+    --primary-50:  #06232d;
+    --primary-500: #00f0ff;
+    --primary-600: #00d4e3;
+    --surface: #0a0e17;
+    --surface-dim: #050811;
+    --surface-container: #111827;
+    --surface-elevated: #151d2f;
+    --border-color: rgba(0, 240, 255, 0.25);
+    --border-focus: #00f0ff;
+    --text-primary: #e0f2fe;
+    --text-secondary: #7dd3fc;
+    --text-tertiary: #38bdf8;
+    --text-link: #00f0ff;
+    --shadow-md: 0 0 15px rgba(0, 240, 255, 0.2);
+    --shadow-lg: 0 0 25px rgba(0, 240, 255, 0.3);
+}
+[data-theme="cyberpunk"] .card,
+[data-theme="cyberpunk"] .kpi-card,
+[data-theme="cyberpunk"] .dialog {
+    background: #0a0e17 !important;
+    border: 1px solid rgba(0, 240, 255, 0.35) !important;
+    box-shadow: 0 0 16px rgba(0, 240, 255, 0.15), inset 0 0 12px rgba(0, 240, 255, 0.04) !important;
+}
+[data-theme="cyberpunk"] .sidebar {
+    background: #050811 !important;
+    border-right: 1px solid rgba(0, 240, 255, 0.3) !important;
+}
+[data-theme="cyberpunk"] .topbar {
+    background: #070b16 !important;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.3) !important;
+}
+[data-theme="cyberpunk"] .btn-primary {
+    background: linear-gradient(135deg, #00f0ff 0%, #0284c7 100%) !important;
+    color: #050811 !important;
+    font-weight: 700 !important;
+    border: none !important;
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.5) !important;
+}
+[data-theme="cyberpunk"] .btn-primary:hover {
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.8) !important;
+}
+[data-theme="cyberpunk"] .form-input,
+[data-theme="cyberpunk"] .form-select,
+[data-theme="cyberpunk"] .form-textarea,
+[data-theme="cyberpunk"] .form-control {
+    background: #050811 !important;
+    color: #00f0ff !important;
+    border: 1px solid rgba(0, 240, 255, 0.3) !important;
+}
+[data-theme="cyberpunk"] .form-input:focus,
+[data-theme="cyberpunk"] .form-select:focus,
+[data-theme="cyberpunk"] .form-textarea:focus,
+[data-theme="cyberpunk"] .form-control:focus {
+    border-color: #00f0ff !important;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.4) !important;
+}
+[data-theme="cyberpunk"] select,
+[data-theme="cyberpunk"] option,
+[data-theme="cyberpunk"] optgroup {
+    background-color: #050811 !important;
+    color: #00f0ff !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME 6: RETRO-FUTURISM / SYNTHWAVE [data-theme="synthwave"]
+   Midnight purple, sunset neon fuchsia, glowing 80s arcade aesthetics
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="synthwave"] {
+    --primary-50:  #2d124d;
+    --primary-500: #ec4899;
+    --primary-600: #db2777;
+    --surface: #1e1338;
+    --surface-dim: #130924;
+    --surface-container: #29184d;
+    --surface-elevated: #331d61;
+    --border-color: rgba(236, 72, 153, 0.25);
+    --border-focus: #ec4899;
+    --text-primary: #fdf2f8;
+    --text-secondary: #f472b6;
+    --text-tertiary: #c084fc;
+    --text-link: #ec4899;
+    --shadow-md: 0 0 18px rgba(236, 72, 153, 0.25);
+    --shadow-lg: 0 0 28px rgba(236, 72, 153, 0.35);
+}
+[data-theme="synthwave"] .card,
+[data-theme="synthwave"] .kpi-card,
+[data-theme="synthwave"] .dialog {
+    background: #1e1338 !important;
+    border: 1px solid rgba(236, 72, 153, 0.3) !important;
+    box-shadow: 0 4px 20px rgba(19, 9, 36, 0.6), 0 0 15px rgba(236, 72, 153, 0.15) !important;
+}
+[data-theme="synthwave"] .sidebar {
+    background: #130924 !important;
+    border-right: 1px solid rgba(236, 72, 153, 0.2) !important;
+}
+[data-theme="synthwave"] .topbar {
+    background: #190c2e !important;
+    border-bottom: 1px solid rgba(236, 72, 153, 0.2) !important;
+}
+[data-theme="synthwave"] .btn-primary {
+    background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    border: none !important;
+    box-shadow: 0 0 18px rgba(236, 72, 153, 0.5) !important;
+}
+[data-theme="synthwave"] .form-input,
+[data-theme="synthwave"] .form-select,
+[data-theme="synthwave"] .form-textarea,
+[data-theme="synthwave"] .form-control {
+    background: #130924 !important;
+    color: #fdf2f8 !important;
+    border: 1px solid rgba(236, 72, 153, 0.3) !important;
+}
+[data-theme="synthwave"] .form-input:focus,
+[data-theme="synthwave"] .form-select:focus,
+[data-theme="synthwave"] .form-textarea:focus,
+[data-theme="synthwave"] .form-control:focus {
+    border-color: #ec4899 !important;
+    box-shadow: 0 0 12px rgba(236, 72, 153, 0.4) !important;
+}
+[data-theme="synthwave"] select,
+[data-theme="synthwave"] option,
+[data-theme="synthwave"] optgroup {
+    background-color: #130924 !important;
+    color: #fdf2f8 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MATERIAL DESIGN 3 (M3) TOKENS & COMPONENTS
+   ═══════════════════════════════════════════════════════════ */
+.m3-card {
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    position: relative;
+    overflow: hidden;
+}
+.m3-field {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface-container);
+    border: 1.5px solid var(--border-color);
+    border-radius: 14px;
+    padding: 10px 14px;
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+.m3-field:focus-within {
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+    background: var(--surface);
+}
+.m3-field-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+.m3-field-input {
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    outline: none;
+    width: 100%;
+}
+.m3-field-hint {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+}
+
+/* M3 Tonal Chips */
+.m3-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 12px;
+    background: var(--surface-container);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.m3-chip:hover {
+    background: var(--primary-50);
+    color: var(--primary-600);
+    border-color: var(--primary-300);
+    transform: translateY(-1px);
+}
+
+/* M3 Chat Bubbles */
+.m3-bubble-user {
+    background: var(--primary-500);
+    color: #ffffff;
+    border-radius: 20px 4px 20px 20px;
+    padding: 14px 18px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.m3-bubble-ai {
+    background: var(--surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px 20px 20px 20px;
+    padding: 16px 20px;
+    font-size: 13.5px;
+    line-height: 1.6;
+    box-shadow: var(--shadow-xs);
+}
+[data-theme="dark"] .m3-bubble-ai {
+    background: rgba(30, 41, 59, 0.85);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+[data-theme="dark"] .m3-bubble-user {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+/* Theme Selector Grid */
+.theme-selector-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+}
+.theme-card-option {
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 16px;
+    cursor: pointer;
+    background: var(--surface);
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.theme-card-option:hover {
+    border-color: var(--primary-400);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+.theme-card-option.selected {
+    border-color: var(--primary-600);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+

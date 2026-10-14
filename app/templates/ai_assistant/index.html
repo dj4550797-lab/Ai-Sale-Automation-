@@ -61,32 +61,32 @@
 
 <div style="display:grid;grid-template-columns:300px 1fr;gap:var(--space-4);height:calc(100vh - 140px);align-items:stretch;">
     
-    <!-- LEFT SIDEBAR: ChatGPT-style Conversations History -->
-    <div class="card" style="display:flex;flex-direction:column;height:100%;padding:var(--space-3);overflow:hidden;background:var(--surface);border:1px solid var(--border-color);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);">
+    <!-- LEFT SIDEBAR: Material Design 3 Drawer & Quick Insights -->
+    <div class="m3-card" style="display:flex;flex-direction:column;height:100%;padding:var(--space-4);background:var(--surface);border:1px solid var(--border-color);border-radius:20px;box-shadow:var(--shadow-sm);">
         
-        <!-- New Chat Button -->
+        <!-- M3 Extended Pill New Chat Button -->
         <button type="button" class="btn btn-primary" onclick="createNewSession()" 
-                style="width:100%;justify-content:center;gap:8px;padding:10px 14px;margin-bottom:var(--space-3);font-weight:600;border-radius:var(--radius-md);">
-            <span class="material-symbols-outlined" style="font-size:18px;">add_circle</span>
+                style="width:100%;justify-content:center;gap:8px;padding:12px 16px;margin-bottom:var(--space-4);font-weight:700;border-radius:28px;box-shadow:0 4px 12px rgba(37,99,235,0.25);">
+            <span class="material-symbols-outlined" style="font-size:20px;">add_circle</span>
             New Chat
         </button>
         
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-2);padding:0 6px;">
-            <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-tertiary);">Recent Chats</span>
-            <span class="badge badge-secondary" style="font-size:11px;padding:2px 6px;">{{ sessions|length }}</span>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-2);padding:0 8px;">
+            <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-tertiary);">Recent Chats</span>
+            <span class="badge badge-secondary" style="font-size:11px;padding:2px 8px;border-radius:10px;">{{ sessions|length }}</span>
         </div>
 
-        <!-- Scrollable Session List -->
-        <div id="sessionList" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;padding-right:2px;">
+        <!-- Scrollable Session List with M3 Pill Items -->
+        <div id="sessionList" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-right:2px;">
             {% if sessions %}
                 {% for s in sessions %}
                 <div class="session-item {% if active_session and active_session.id == s.id %}active{% endif %}" 
                      id="session-item-{{ s.id }}"
                      onclick="switchSession({{ s.id }})"
-                     style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:var(--radius-md);cursor:pointer;border:1px solid {% if active_session and active_session.id == s.id %}var(--primary-600){% else %}transparent{% endif %};background:{% if active_session and active_session.id == s.id %}rgba(37,99,235,0.08){% else %}transparent{% endif %};transition:all 0.15s ease;">
-                    <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
-                        <span class="material-symbols-outlined" style="font-size:16px;color:{% if active_session and active_session.id == s.id %}var(--primary-600){% else %}var(--text-tertiary){% endif %};flex-shrink:0;">chat_bubble_outline</span>
-                        <span class="session-title" style="font-size:13px;font-weight:{% if active_session and active_session.id == s.id %}600{% else %}500{% endif %};color:{% if active_session and active_session.id == s.id %}var(--primary-600){% else %}var(--text-primary){% endif %};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="{{ s.title }}">{{ s.title }}</span>
+                     style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:16px;cursor:pointer;border:1px solid {% if active_session and active_session.id == s.id %}var(--primary-500){% else %}transparent{% endif %};background:{% if active_session and active_session.id == s.id %}var(--primary-50){% else %}transparent{% endif %};transition:all 0.15s ease;">
+                    <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
+                        <span class="material-symbols-outlined" style="font-size:18px;color:{% if active_session and active_session.id == s.id %}var(--primary-600){% else %}var(--text-tertiary){% endif %};flex-shrink:0;">chat_bubble</span>
+                        <span class="session-title" style="font-size:13px;font-weight:{% if active_session and active_session.id == s.id %}700{% else %}500{% endif %};color:{% if active_session and active_session.id == s.id %}var(--primary-700){% else %}var(--text-primary){% endif %};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="{{ s.title }}">{{ s.title }}</span>
                     </div>
                     <div style="display:flex;align-items:center;gap:2px;flex-shrink:0;">
                         <button type="button" class="btn btn-ghost" onclick="requestDeleteSession(event, {{ s.id }}, '{{ s.title|replace('\'', '\\\'')|escape }}')" 
@@ -97,78 +97,79 @@
                 </div>
                 {% endfor %}
             {% else %}
-                <div style="padding:var(--space-6) var(--space-2);text-align:center;color:var(--text-tertiary);font-size:var(--text-xs);">
-                    <span class="material-symbols-outlined" style="font-size:32px;display:block;margin-bottom:8px;opacity:0.6;">chat</span>
-                    No chat history yet.<br>Click "New Chat" to begin!
+                <div style="padding:var(--space-8) var(--space-2);text-align:center;color:var(--text-tertiary);font-size:var(--text-xs);">
+                    <span class="material-symbols-outlined" style="font-size:36px;display:block;margin-bottom:8px;opacity:0.5;">forum</span>
+                    No conversation history yet.<br>Click "New Chat" to begin!
                 </div>
             {% endif %}
         </div>
 
-        <!-- Quick Prompts Drawer -->
-        <div style="border-top:1px solid var(--border-color);padding-top:var(--space-3);margin-top:var(--space-2);">
+        <!-- M3 Tonal Action Chips (Quick Insights) -->
+        <div style="border-top:1px solid var(--border-color);padding-top:var(--space-4);margin-top:var(--space-3);">
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:var(--space-2);color:var(--text-secondary);">
-                <span class="material-symbols-outlined" style="font-size:15px;color:var(--warning);">lightbulb</span>
-                <strong style="font-size:11px;text-transform:uppercase;letter-spacing:0.04em;">Quick Insights</strong>
+                <span class="material-symbols-outlined" style="font-size:16px;color:var(--warning);">auto_awesome</span>
+                <strong style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Quick Insights (M3)</strong>
             </div>
             
-            <div style="display:flex;flex-direction:column;gap:4px;max-height:160px;overflow-y:auto;">
+            <div style="display:flex;flex-wrap:wrap;gap:6px;max-height:160px;overflow-y:auto;">
                 {% set chips = [
-                    ("Leads found today", "How many leads were discovered today?"),
-                    ("Pending PRDs", "Show pending PRD drafts."),
-                    ("Deals won this month", "How many deals have we won this month?"),
-                    ("Pricing Plans Lookup", "Show active pricing plans."),
-                    ("Agency Knowledge Base", "What guidelines are stored in our Knowledge Base?"),
-                    ("LLM System Health", "What is the status of our LLM providers?")
+                    ("Leads today", "How many leads were discovered today?", "analytics"),
+                    ("Pending PRDs", "Show pending PRD drafts.", "description"),
+                    ("Won Deals", "How many deals have we won this month?", "trending_up"),
+                    ("Pricing Plans", "Show active pricing plans.", "price_check"),
+                    ("Knowledge Base", "What guidelines are stored in our Knowledge Base?", "menu_book"),
+                    ("LLM Health", "What is the status of our LLM providers?", "hub")
                 ] %}
-                {% for label, query in chips %}
-                <button type="button" class="btn btn-ghost" 
-                        style="text-align:left;font-size:11px;padding:6px 8px;border:1px solid var(--border-color);border-radius:var(--radius-sm);justify-content:flex-start;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:var(--surface-container);color:var(--text-secondary);"
-                        onclick="sendPresetQuery('{{ query|escape }}')">
-                    {{ label }}
+                {% for label, query, chip_icon in chips %}
+                <button type="button" class="m3-chip" onclick="sendPresetQuery('{{ query|escape }}')" title="{{ query }}">
+                    <span class="material-symbols-outlined" style="font-size:14px;color:var(--primary-500);">{{ chip_icon }}</span>
+                    <span>{{ label }}</span>
                 </button>
                 {% endfor %}
             </div>
         </div>
-    </div>    <!-- RIGHT: ChatGPT-Style Conversation Canvas -->
-    <div class="card" style="display:flex;flex-direction:column;height:100%;padding:0;overflow:hidden;border:1px solid var(--border-color);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);background:var(--surface);">
+    </div>
+
+    <!-- RIGHT: Material Design 3 Conversation Canvas -->
+    <div class="m3-card" style="display:flex;flex-direction:column;height:100%;padding:0;overflow:hidden;border:1px solid var(--border-color);border-radius:20px;box-shadow:var(--shadow-sm);background:var(--surface);">
         
-        <!-- Header: Active Session Meta & New Chat Action -->
-        <div style="padding:12px var(--space-5);border-bottom:1px solid var(--border-color);background:var(--surface);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);">
+        <!-- M3 Surface Header -->
+        <div style="padding:14px var(--space-6);border-bottom:1px solid var(--border-color);background:var(--surface);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);">
             <div style="display:flex;align-items:center;gap:12px;min-width:0;">
-                <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg, #2563eb, #1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(37,99,235,0.3);flex-shrink:0;">
-                    <span class="material-symbols-outlined" style="font-size:18px;">auto_awesome</span>
+                <div style="width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg, #2563eb, #1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(37,99,235,0.3);flex-shrink:0;">
+                    <span class="material-symbols-outlined" style="font-size:20px;">smart_toy</span>
                 </div>
                 <div style="min-width:0;">
-                    <h3 id="currentSessionTitle" style="font-size:14px;font-weight:700;margin:0;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    <h3 id="currentSessionTitle" style="font-size:15px;font-weight:700;margin:0;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                         {{ active_session.title if active_session else "New Conversation" }}
                     </h3>
                     <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
-                        <span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--success);font-weight:600;">
-                            <span class="material-symbols-outlined" style="font-size:12px;">check_circle</span> Auto-Saved
+                        <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--success);font-weight:600;">
+                            <span class="material-symbols-outlined" style="font-size:13px;">verified</span> M3 Active
                         </span>
                         <span style="font-size:10px;color:var(--text-tertiary);">•</span>
-                        <span style="font-size:11px;color:var(--text-secondary);">Flixora CRM & Intelligence Agent</span>
+                        <span style="font-size:11px;color:var(--text-secondary);">Flixora CRM Intelligence Suite</span>
                     </div>
                 </div>
             </div>
 
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-                <button type="button" class="btn btn-secondary btn-sm" onclick="createNewSession()" title="Start new conversation thread" style="gap:6px;font-weight:500;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="createNewSession()" title="Start new conversation" style="gap:6px;font-weight:600;border-radius:18px;">
                     <span class="material-symbols-outlined" style="font-size:16px;">add</span>
                     New Chat
                 </button>
             </div>
         </div>
         
-        <!-- Chat Feed Area -->
+        <!-- M3 Chat Feed Area -->
         <div id="assistantFeed" style="flex:1;overflow-y:auto;padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-4);background:var(--surface-dim);">
             
-            <!-- Default Welcome Bubble -->
+            <!-- Default M3 Welcome Bubble -->
             <div style="display:flex;gap:12px;align-items:flex-start;max-width:85%;">
-                <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg, #2563eb, #1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 4px rgba(37,99,235,0.25);">
+                <div style="width:34px;height:34px;border-radius:12px;background:linear-gradient(135deg, #2563eb, #1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(37,99,235,0.25);">
                     <span class="material-symbols-outlined" style="font-size:18px;">smart_toy</span>
                 </div>
-                <div style="background:var(--surface);border:1px solid var(--border-color);border-radius:0 14px 14px 14px;padding:14px 18px;font-size:13px;line-height:1.6;box-shadow:var(--shadow-xs);color:var(--text-primary);">
+                <div class="m3-bubble-ai">
                     Hello! I am your <strong>Flixora Sales & Business Intelligence Assistant</strong>.
                     <br><br>
                     You can ask me questions about <strong>leads discovery, website audits, PRD specifications, sales pipeline status, or internal agency knowledge rules</strong>. You can also attach <strong>screenshots or images</strong> to run instant design audits!
@@ -181,14 +182,14 @@
                     {% if msg.sender == 'user' %}
                     <div style="display:flex;justify-content:flex-end;width:100%;">
                         <div style="display:flex;gap:10px;align-items:flex-start;max-width:80%;flex-direction:row-reverse;">
-                            <div style="width:32px;height:32px;border-radius:50%;background:var(--primary-600);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <div style="width:34px;height:34px;border-radius:50%;background:var(--primary-600);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                                 <span class="material-symbols-outlined" style="font-size:16px;">person</span>
                             </div>
-                            <div style="background:var(--primary-50);color:var(--text-primary);border:1px solid var(--primary-200);border-radius:14px 0 14px 14px;padding:12px 18px;font-size:13px;line-height:1.6;box-shadow:var(--shadow-xs);">
+                            <div class="m3-bubble-user">
                                 {% if msg.image_path %}
                                 <div style="margin-bottom:8px;">
                                     <a href="{{ msg.image_path }}" target="_blank">
-                                        <img src="{{ msg.image_path }}" alt="Attachment" style="max-width:280px;max-height:200px;border-radius:8px;object-fit:cover;border:1px solid var(--border-color);display:block;">
+                                        <img src="{{ msg.image_path }}" alt="Attachment" style="max-width:280px;max-height:200px;border-radius:12px;object-fit:cover;border:1px solid rgba(255,255,255,0.2);display:block;">
                                     </a>
                                 </div>
                                 {% endif %}
@@ -198,10 +199,10 @@
                     </div>
                     {% else %}
                     <div style="display:flex;gap:12px;align-items:flex-start;max-width:85%;">
-                        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg, #2563eb, #1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 4px rgba(37,99,235,0.25);">
+                        <div style="width:34px;height:34px;border-radius:12px;background:linear-gradient(135deg, #2563eb, #1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(37,99,235,0.25);">
                             <span class="material-symbols-outlined" style="font-size:18px;">smart_toy</span>
                         </div>
-                        <div style="background:var(--surface);border:1px solid var(--border-color);border-radius:0 14px 14px 14px;padding:14px 18px;font-size:13px;line-height:1.6;box-shadow:var(--shadow-xs);color:var(--text-primary);position:relative;" class="ai-bubble-box">
+                        <div class="m3-bubble-ai ai-bubble-box" style="position:relative; flex:1;">
                             <div style="white-space:pre-wrap;">{{ msg.content }}</div>
                             <div style="display:flex;justify-content:flex-end;margin-top:8px;">
                                 <button type="button" class="btn btn-ghost" onclick="copyMessageText(this)" style="padding:2px 8px;font-size:11px;color:var(--text-tertiary);gap:4px;" title="Copy response">
@@ -242,24 +243,24 @@
                 <!-- Hidden file input -->
                 <input type="file" id="imageInput" accept="image/*" style="display:none;" onchange="handleImageSelected(event)">
 
-                <!-- Floating Input Container -->
-                <div style="border:1px solid var(--border-color);border-radius:18px;background:var(--surface-container);padding:10px 14px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px;transition:border-color 0.15s ease;">
+                <!-- M3 Floating Pill Input Dock -->
+                <div style="border:1.5px solid var(--border-color);border-radius:26px;background:var(--surface-container);padding:10px 16px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px;transition:all 0.2s cubic-bezier(0.2,0,0,1);">
                     
                     <!-- Text Area (Auto-growing) -->
                     <textarea class="form-textarea" id="messageInput" name="message" rows="1"
-                              placeholder="Message Flixora AI (ask about leads, website PRDs, pricing plans, or attach design)..." 
-                              style="width:100%;min-height:38px;max-height:160px;resize:none;border:none;background:transparent;padding:4px 0;font-size:13.5px;color:var(--text-primary);line-height:1.5;outline:none;"
+                              placeholder="Ask Flixora AI anything (leads, PRDs, pricing, website audit, design analysis)..." 
+                              style="width:100%;min-height:38px;max-height:160px;resize:none;border:none;background:transparent;padding:6px 0;font-size:14px;color:var(--text-primary);line-height:1.5;outline:none;"
                               onkeydown="handleTextareaKeyDown(event)"></textarea>
 
-                    <!-- Bottom Controls Toolbar inside Input Bar (ChatGPT style) -->
-                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:4px;">
+                    <!-- Bottom Controls Toolbar inside M3 Dock -->
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:2px;">
                         
                         <!-- Left Tools: Model Switcher Pill & Attachment -->
-                        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                             
                             <!-- Model Selection Pill Dropdown -->
-                            <div class="model-picker-pill">
-                                <span class="material-symbols-outlined" style="font-size:16px;color:var(--primary-600);">neurology</span>
+                            <div class="model-picker-pill" style="border-radius:20px;padding:4px 12px;background:var(--surface);border:1px solid var(--border-color);">
+                                <span class="material-symbols-outlined" style="font-size:16px;color:var(--primary-500);">neurology</span>
                                 <select id="modelSelector" class="model-picker-select">
                                     <option value="">⚡ Auto Router (Best LLM)</option>
                                     
@@ -288,23 +289,23 @@
                                 </select>
                             </div>
 
-                            <!-- Attach Image Button -->
+                            <!-- Attach Image Pill Button -->
                             <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('imageInput').click()" 
-                                    title="Attach image or website mockup" style="padding:4px 8px;border-radius:20px;border:1px solid var(--border-color);background:var(--surface);display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-secondary);">
-                                <span class="material-symbols-outlined" style="font-size:16px;">add_photo_alternate</span>
-                                <span>Attach</span>
+                                    title="Attach image or website mockup" style="padding:4px 12px;border-radius:20px;border:1px solid var(--border-color);background:var(--surface);display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--text-secondary);">
+                                <span class="material-symbols-outlined" style="font-size:16px;color:var(--primary-500);">add_photo_alternate</span>
+                                <span>Attach Mockup</span>
                             </button>
                         </div>
 
-                        <!-- Right: Circular Send Button -->
+                        <!-- Right: M3 Circular FAB Send Button -->
                         <button type="submit" id="sendBtn" class="btn btn-primary" 
-                                style="width:34px;height:34px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(37,99,235,0.3);flex-shrink:0;">
+                                style="width:38px;height:38px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(37,99,235,0.35);flex-shrink:0;">
                             <span class="material-symbols-outlined" style="font-size:18px;">arrow_upward</span>
                         </button>
                     </div>
                 </div>
 
-                <div style="font-size:11px;color:var(--text-tertiary);text-align:center;margin-top:6px;">
+                <div style="font-size:11px;color:var(--text-tertiary);text-align:center;margin-top:8px;">
                     Flixora AI Assistant accesses live leads, website audits, PRD drafts, and agency knowledge base.
                 </div>
             </form>
@@ -500,11 +501,11 @@ function submitQuery(e) {
     }
 
     userBubble.innerHTML = `
-        <div style="display:flex;gap:8px;align-items:flex-start;max-width:80%;flex-direction:row-reverse;">
-            <div style="width:30px;height:30px;border-radius:50%;background:var(--text-secondary);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <div style="display:flex;gap:10px;align-items:flex-start;max-width:80%;flex-direction:row-reverse;">
+            <div style="width:34px;height:34px;border-radius:50%;background:var(--primary-600);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <span class="material-symbols-outlined" style="font-size:16px;">person</span>
             </div>
-            <div style="background:#eff6ff;color:#1e3a8a;border:1px solid #bfdbfe;border-radius:12px 0 12px 12px;padding:12px 16px;font-size:13px;line-height:1.6;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div class="m3-bubble-user">
                 ${imageHtml}
                 <div style="white-space:pre-wrap;">${query ? query : "(Uploaded image for analysis)"}</div>
             </div>
@@ -565,13 +566,13 @@ function submitQuery(e) {
             aiBubble.style.maxWidth = '85%';
 
             aiBubble.innerHTML = `
-                <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg, #2563eb, #1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                    <span class="material-symbols-outlined" style="font-size:16px;">smart_toy</span>
+                <div style="width:34px;height:34px;border-radius:12px;background:linear-gradient(135deg, #2563eb, #1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(37,99,235,0.25);">
+                    <span class="material-symbols-outlined" style="font-size:18px;">smart_toy</span>
                 </div>
-                <div style="background:var(--surface);border:1px solid var(--border-color);border-radius:0 14px 14px 14px;padding:14px 18px;font-size:13px;line-height:1.6;box-shadow:var(--shadow-xs);color:var(--text-primary);position:relative;" class="ai-bubble-box">
+                <div class="m3-bubble-ai ai-bubble-box" style="position:relative; flex:1;">
                     <div style="white-space:pre-wrap;">${data.reply}</div>
-                    <div style="display:flex;justify-content:flex-end;margin-top:6px;">
-                        <button type="button" class="btn btn-ghost" onclick="copyMessageText(this)" style="padding:2px 6px;font-size:11px;color:var(--text-tertiary);" title="Copy response">
+                    <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+                        <button type="button" class="btn btn-ghost" onclick="copyMessageText(this)" style="padding:2px 8px;font-size:11px;color:var(--text-tertiary);gap:4px;" title="Copy response">
                             <span class="material-symbols-outlined" style="font-size:14px;">content_copy</span> Copy
                         </button>
                     </div>
