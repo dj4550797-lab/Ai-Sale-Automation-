@@ -143,8 +143,11 @@ def send_outreach_campaign(campaign_id):
             if not adapter.is_configured() and not test_mode:
                 return {"success": False, "error": "WhatsApp Cloud API is not configured. Please add Phone Number ID and Access Token in Settings -> Integrations."}
             
-            # Fetch lead phone number
-            phone_contact = LeadContact.query.filter_by(lead_id=lead.id, contact_type='phone').first()
+            # Fetch lead phone number (phone or whatsapp contact type)
+            phone_contact = LeadContact.query.filter(
+                (LeadContact.lead_id == lead.id) &
+                (LeadContact.contact_type.in_(['phone', 'whatsapp']))
+            ).first()
             if not phone_contact or not phone_contact.value:
                 return {"success": False, "error": "Lead phone number is Not Available."}
                 
