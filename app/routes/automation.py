@@ -78,18 +78,23 @@ def run_lead_discovery_background(app, location, category, daily_target, job_id,
             db.session.rollback()
             logger.error(f"Error in background automation run {run_id}: {str(e)}")
             try:
-                run.status = 'failed'
-                run.completed_at = datetime.now(timezone.utc)
-                run.error_message = str(e)
-                run.log_output = f"Exception occurred: {str(e)}"
+                run = db.session.get(AutomationRun, run_id)
+                job = db.session.get(AutomationJob, job_id)
+                if run:
+                    run.status = 'failed'
+                    run.completed_at = datetime.now(timezone.utc)
+                    run.error_message = str(e)
+                    run.log_output = f"Exception occurred: {str(e)}"
                 
-                job.failure_count = (job.failure_count or 0) + 1
-                job.last_failure_at = datetime.now(timezone.utc)
-                job.last_error = str(e)
-                job.status = AutomationJobStatus.FAILED
+                if job:
+                    job.failure_count = (job.failure_count or 0) + 1
+                    job.last_failure_at = datetime.now(timezone.utc)
+                    job.last_error = str(e)
+                    job.status = AutomationJobStatus.FAILED
                 
                 db.session.commit()
             except Exception as commit_err:
+                db.session.rollback()
                 logger.error(f"Could not save failure log: {commit_err}")
 
 

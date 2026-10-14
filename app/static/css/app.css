@@ -150,6 +150,9 @@
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    min-width: 0;
+    max-width: calc(100vw - var(--sidebar-width));
+    overflow-x: hidden;
 }
 
 /* ── Top Bar ─────────────────────────────────────────────── */
@@ -267,6 +270,8 @@
     padding: var(--space-6);
     max-width: 1440px;
     width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
 /* ── Grid Layouts ────────────────────────────────────────── */

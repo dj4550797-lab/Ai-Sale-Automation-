@@ -237,43 +237,116 @@ button, input, select, textarea {
     --warning-light: rgba(245, 158, 11, 0.15);
     --error-light: rgba(239, 68, 68, 0.15);
     --info-light: rgba(59, 130, 246, 0.15);
+
+    /* Glassmorphism Tokens */
+    --glass-bg: rgba(17, 24, 39, 0.85);
+    --glass-bg-subtle: rgba(15, 23, 42, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.09);
+    --glass-border-focus: rgba(96, 165, 250, 0.5);
+    --glass-blur: blur(16px);
+    --glass-blur-heavy: blur(24px);
+    --glass-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
 }
 
-[data-theme="dark"] .card,
-[data-theme="dark"] .sidebar,
+/* ── Global Select & Option Readability ───────────────────── */
+select option,
+select optgroup {
+    background-color: var(--surface);
+    color: var(--text-primary);
+    padding: 6px 12px;
+}
+
+[data-theme="dark"] select,
+[data-theme="dark"] option,
+[data-theme="dark"] optgroup {
+    background-color: #111827 !important;
+    color: #f9fafb !important;
+}
+
+[data-theme="dark"] optgroup {
+    color: #60a5fa !important;
+    font-weight: 700 !important;
+    background-color: #0b1120 !important;
+}
+
+/* ── Dark Mode Components & Glassmorphism ────────────────── */
+[data-theme="dark"] .card {
+    background: var(--glass-bg) !important;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-color: var(--glass-border) !important;
+    box-shadow: var(--glass-shadow);
+}
+
+[data-theme="dark"] .kpi-card {
+    background: var(--glass-bg) !important;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-color: var(--glass-border) !important;
+    box-shadow: var(--glass-shadow);
+}
+
+[data-theme="dark"] .sidebar {
+    background: rgba(11, 17, 32, 0.9) !important;
+    backdrop-filter: var(--glass-blur-heavy);
+    -webkit-backdrop-filter: var(--glass-blur-heavy);
+    border-color: rgba(255, 255, 255, 0.07) !important;
+}
+
 [data-theme="dark"] .topbar {
-    background: #111827 !important;
-    border-color: #1f2937 !important;
+    background: rgba(11, 17, 32, 0.85) !important;
+    backdrop-filter: var(--glass-blur-heavy);
+    -webkit-backdrop-filter: var(--glass-blur-heavy);
+    border-color: rgba(255, 255, 255, 0.07) !important;
 }
 
 [data-theme="dark"] .dialog {
-    background: #111827 !important;
+    background: rgba(17, 24, 39, 0.95) !important;
+    backdrop-filter: var(--glass-blur-heavy);
+    -webkit-backdrop-filter: var(--glass-blur-heavy);
     color: #f9fafb !important;
-    border-color: #1f2937 !important;
+    border-color: var(--glass-border) !important;
+    box-shadow: var(--glass-shadow);
 }
 
 [data-theme="dark"] .form-input,
 [data-theme="dark"] .form-select,
-[data-theme="dark"] .form-textarea {
-    background: #0b1120 !important;
+[data-theme="dark"] .form-textarea,
+[data-theme="dark"] .form-control {
+    background: rgba(11, 17, 32, 0.9) !important;
     color: #f9fafb !important;
-    border-color: #374151 !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="dark"] .form-input:focus,
+[data-theme="dark"] .form-select:focus,
+[data-theme="dark"] .form-textarea:focus,
+[data-theme="dark"] .form-control:focus {
+    border-color: var(--primary-500) !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
 }
 
 [data-theme="dark"] .table th {
-    background: #0b1120 !important;
+    background: rgba(11, 17, 32, 0.8) !important;
     color: #9ca3af !important;
-    border-color: #1f2937 !important;
+    border-color: rgba(255, 255, 255, 0.07) !important;
 }
 
 [data-theme="dark"] .table td {
-    border-color: #1f2937 !important;
+    border-color: rgba(255, 255, 255, 0.06) !important;
     color: #f9fafb !important;
 }
 
+[data-theme="dark"] tr:hover td {
+    background: rgba(255, 255, 255, 0.03) !important;
+}
+
 [data-theme="dark"] .dropdown-menu {
-    background: #111827 !important;
-    border-color: #374151 !important;
+    background: rgba(17, 24, 39, 0.95) !important;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: var(--glass-shadow);
 }
 
 [data-theme="dark"] .dropdown-item {
@@ -281,15 +354,20 @@ button, input, select, textarea {
 }
 
 [data-theme="dark"] .dropdown-item:hover {
-    background: #1f2937 !important;
+    background: rgba(59, 130, 246, 0.15) !important;
+    color: #60a5fa !important;
 }
 
 [data-theme="dark"] ::-webkit-scrollbar-thumb {
-    background: #374151;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: var(--radius-full);
 }
 
 [data-theme="dark"] .toast {
-    background: #1f2937 !important;
+    background: rgba(31, 41, 55, 0.95) !important;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     color: #f9fafb !important;
-    border-color: #374151 !important;
+    border-color: var(--glass-border) !important;
+    box-shadow: var(--glass-shadow);
 }

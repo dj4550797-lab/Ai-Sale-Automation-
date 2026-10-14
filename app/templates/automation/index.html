@@ -280,7 +280,7 @@
 </div>
 
 <!-- CONFIGURATION & HISTORY LAYOUT -->
-<div style="display: grid; grid-template-columns: 1fr 2fr; gap: var(--space-6); align-items: start;">
+<div class="automation-grid-layout" style="display: grid; grid-template-columns: minmax(320px, 1fr) minmax(0, 2fr); gap: var(--space-6); align-items: start;">
     
     <!-- SETTINGS PANEL -->
     <div class="card">
@@ -383,13 +383,13 @@
             <div class="card-header">
                 <h3 style="margin: 0; font-size: var(--text-md);">Execution Run Log</h3>
             </div>
-            <div class="card-body" style="padding: 0; overflow: hidden;">
-                <table class="table" style="margin: 0; border: none;">
+            <div class="card-body" style="padding: 0; overflow-x: auto; max-width: 100%;">
+                <table class="table" style="margin: 0; border: none; width: 100%;">
                     <thead>
                         <tr>
-                            <th style="width: 80px;">Status</th>
-                            <th>Time</th>
-                            <th>Duration</th>
+                            <th style="width: 70px;">Status</th>
+                            <th style="width: 100px;">Time</th>
+                            <th style="width: 80px;">Duration</th>
                             <th>Result Message</th>
                             <th style="text-align: right; width: 60px;">Logs</th>
                         </tr>
@@ -399,31 +399,33 @@
                         <tr>
                             <td>
                                 {% if run.status == 'completed' %}
-                                <span style="color: var(--success); font-weight: bold; font-size: 16px;">✓</span>
+                                <span class="badge badge-green" style="font-weight: 700;">✓ Pass</span>
                                 {% else %}
-                                <span style="color: var(--error); font-weight: bold; font-size: 16px;">⚠</span>
+                                <span class="badge badge-red" style="font-weight: 700;">⚠ Alert</span>
                                 {% endif %}
                             </td>
-                            <td style="font-size: var(--text-sm); color: var(--text-secondary);">
+                            <td style="font-size: var(--text-sm); color: var(--text-secondary); white-space: nowrap;">
                                 {{ run.started_at.strftime('%H:%M') }}
                                 <span style="font-size: 10px; color: var(--text-tertiary); display: block;">{{ run.started_at.strftime('%Y-%m-%d') }}</span>
                             </td>
-                            <td style="font-size: var(--text-sm); color: var(--text-secondary);">
+                            <td style="font-size: var(--text-sm); color: var(--text-secondary); white-space: nowrap;">
                                 {% if run.completed_at %}
                                     {{ (run.completed_at - run.started_at).total_seconds()|round(1) }}s
                                 {% else %}
                                     —
                                 {% endif %}
                             </td>
-                            <td style="font-size: var(--text-sm); color: var(--text-secondary);">
+                            <td style="font-size: var(--text-sm); color: var(--text-secondary); max-width: 320px; overflow-wrap: anywhere; word-break: break-word;">
                                 {% if run.status == 'completed' %}
-                                    Discovery completed: {{ run.items_succeeded }} qualified leads saved.
+                                    Discovery completed: <strong>{{ run.items_succeeded }}</strong> qualified leads saved.
                                 {% else %}
-                                    Execution check completed ({{ run.error_message or 'Failure logged' }}).
+                                    <span style="color: var(--error); font-weight: 500;" title="{{ run.error_message or 'Failure logged' }}">
+                                        {{ (run.error_message or 'Failure logged')[:110] }}{% if (run.error_message or '')|length > 110 %}...{% endif %}
+                                    </span>
                                 {% endif %}
                             </td>
                             <td style="text-align: right;">
-                                <button class="btn btn-ghost btn-sm btn-icon" onclick="openLogsDialog('{{ run.log_output|replace('\n', '\\n')|replace("'", "\\'")|escape }}')">
+                                <button class="btn btn-ghost btn-sm btn-icon" title="View execution logs" onclick="openLogsDialog('{{ run.log_output|replace('\n', '\\n')|replace("'", "\\'")|escape }}')">
                                     <span class="material-symbols-outlined" style="font-size: 18px;">receipt_long</span>
                                 </button>
                             </td>

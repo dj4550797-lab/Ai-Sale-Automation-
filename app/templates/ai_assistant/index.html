@@ -4,10 +4,65 @@
 {% block page_title %}AI Assistant Workspace{% endblock %}
 
 {% block content %}
+<style>
+.model-picker-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 3px 10px;
+    box-shadow: var(--shadow-xs);
+    transition: all 0.2s ease;
+}
+.model-picker-pill:hover,
+.model-picker-pill:focus-within {
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+.model-picker-select {
+    border: none;
+    background: transparent;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    outline: none;
+    padding-right: 4px;
+    max-width: 250px;
+}
+.model-picker-select option {
+    background-color: var(--surface) !important;
+    color: var(--text-primary) !important;
+    padding: 6px 10px;
+}
+.model-picker-select optgroup {
+    background-color: var(--surface-dim) !important;
+    color: var(--primary-600) !important;
+    font-weight: 700;
+}
+[data-theme="dark"] .model-picker-pill {
+    background: rgba(31, 41, 55, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+[data-theme="dark"] .model-picker-select {
+    color: #f9fafb !important;
+}
+[data-theme="dark"] .model-picker-select option {
+    background-color: #111827 !important;
+    color: #f9fafb !important;
+}
+[data-theme="dark"] .model-picker-select optgroup {
+    background-color: #0b1120 !important;
+    color: #60a5fa !important;
+}
+</style>
+
 <div style="display:grid;grid-template-columns:300px 1fr;gap:var(--space-4);height:calc(100vh - 140px);align-items:stretch;">
     
     <!-- LEFT SIDEBAR: ChatGPT-style Conversations History -->
-    <div class="card" style="display:flex;flex-direction:column;height:100%;padding:var(--space-3);overflow:hidden;background:#ffffff;border:1px solid var(--border-color);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);">
+    <div class="card" style="display:flex;flex-direction:column;height:100%;padding:var(--space-3);overflow:hidden;background:var(--surface);border:1px solid var(--border-color);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);">
         
         <!-- New Chat Button -->
         <button type="button" class="btn btn-primary" onclick="createNewSession()" 
@@ -28,10 +83,10 @@
                 <div class="session-item {% if active_session and active_session.id == s.id %}active{% endif %}" 
                      id="session-item-{{ s.id }}"
                      onclick="switchSession({{ s.id }})"
-                     style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:var(--radius-md);cursor:pointer;border:1px solid {% if active_session and active_session.id == s.id %}var(--primary-color){% else %}transparent{% endif %};background:{% if active_session and active_session.id == s.id %}rgba(37,99,235,0.08){% else %}transparent{% endif %};transition:all 0.15s ease;">
+                     style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:var(--radius-md);cursor:pointer;border:1px solid {% if active_session and active_session.id == s.id %}var(--primary-600){% else %}transparent{% endif %};background:{% if active_session and active_session.id == s.id %}rgba(37,99,235,0.08){% else %}transparent{% endif %};transition:all 0.15s ease;">
                     <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
-                        <span class="material-symbols-outlined" style="font-size:16px;color:{% if active_session and active_session.id == s.id %}var(--primary-color){% else %}var(--text-tertiary){% endif %};flex-shrink:0;">chat_bubble_outline</span>
-                        <span class="session-title" style="font-size:13px;font-weight:{% if active_session and active_session.id == s.id %}600{% else %}500{% endif %};color:{% if active_session and active_session.id == s.id %}var(--primary-color){% else %}var(--text-primary){% endif %};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="{{ s.title }}">{{ s.title }}</span>
+                        <span class="material-symbols-outlined" style="font-size:16px;color:{% if active_session and active_session.id == s.id %}var(--primary-600){% else %}var(--text-tertiary){% endif %};flex-shrink:0;">chat_bubble_outline</span>
+                        <span class="session-title" style="font-size:13px;font-weight:{% if active_session and active_session.id == s.id %}600{% else %}500{% endif %};color:{% if active_session and active_session.id == s.id %}var(--primary-600){% else %}var(--text-primary){% endif %};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="{{ s.title }}">{{ s.title }}</span>
                     </div>
                     <div style="display:flex;align-items:center;gap:2px;flex-shrink:0;">
                         <button type="button" class="btn btn-ghost" onclick="requestDeleteSession(event, {{ s.id }}, '{{ s.title|replace('\'', '\\\'')|escape }}')" 
@@ -67,7 +122,7 @@
                 ] %}
                 {% for label, query in chips %}
                 <button type="button" class="btn btn-ghost" 
-                        style="text-align:left;font-size:11px;padding:6px 8px;border:1px solid var(--border-color);border-radius:var(--radius-sm);justify-content:flex-start;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#fafafa;"
+                        style="text-align:left;font-size:11px;padding:6px 8px;border:1px solid var(--border-color);border-radius:var(--radius-sm);justify-content:flex-start;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:var(--surface-container);color:var(--text-secondary);"
                         onclick="sendPresetQuery('{{ query|escape }}')">
                     {{ label }}
                 </button>
@@ -203,9 +258,9 @@
                         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
                             
                             <!-- Model Selection Pill Dropdown -->
-                            <div style="display:flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--border-color);border-radius:20px;padding:3px 10px;box-shadow:var(--shadow-xs);">
-                                <span class="material-symbols-outlined" style="font-size:15px;color:var(--primary-color);">neurology</span>
-                                <select id="modelSelector" style="border:none;background:transparent;font-size:12px;font-weight:600;color:var(--text-primary);cursor:pointer;outline:none;padding-right:4px;">
+                            <div class="model-picker-pill">
+                                <span class="material-symbols-outlined" style="font-size:16px;color:var(--primary-600);">neurology</span>
+                                <select id="modelSelector" class="model-picker-select">
                                     <option value="">⚡ Auto Router (Best LLM)</option>
                                     
                                     <optgroup label="🚀 Google AI (Gemini Pro & Flash)">

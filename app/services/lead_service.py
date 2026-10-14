@@ -104,79 +104,104 @@ def run_lead_discovery(location, category, daily_target=20, min_rating=None, req
             if require_website and not item.get('website_url'):
                 continue
                 
-            # Check duplicates
-            verdict = check_for_duplicate(item)
-            if verdict['status'] == 'confirmed_duplicate':
+            # Check duplicates with session safety
+            try:
+                verdict = check_for_duplicate(item)
+            except Exception as dup_err:
+                db.session.rollback()
+                logger.warning(f"Error checking duplicate for {item.get('business_name')}: {dup_err}")
+                verdict = {'status': 'new'}
+
+            if verdict.get('status') == 'confirmed_duplicate':
                 duplicate_count += 1
                 logger.info(f"Skipping duplicate Place ID: {item.get('google_place_id')}")
                 continue
                 
             lead_score = _calculate_lead_score(item)
             
-            if verdict['status'] == 'likely_duplicate':
-                existing_lead = Lead.query.get(verdict['matched_lead_id'])
-                if existing_lead:
-                    existing_lead.rating = item.get('rating')
-                    existing_lead.review_count = item.get('review_count')
-                    existing_lead.lead_score = lead_score
-                    existing_lead.last_action = "Updated via discovery rerun"
-                    db.session.commit()
-                    processed_leads.append(existing_lead)
-                    duplicate_count += 1
+            if verdict.get('status') == 'likely_duplicate':
+                try:
+                    existing_lead = Lead.query.get(verdict['matched_lead_id'])
+                    if existing_lead:
+                        existing_lead.rating = item.get('rating')
+                        existing_lead.review_count = item.get('review_count')
+                        existing_lead.lead_score = lead_score
+                        existing_lead.last_action = "Updated via discovery rerun"
+                        db.session.commit()
+                        processed_leads.append(existing_lead)
+                        duplicate_count += 1
+                except Exception as update_err:
+                    db.session.rollback()
+                    logger.error(f"Error updating duplicate lead: {update_err}")
                 continue
                 
-            # Save new unique lead
-            lead = Lead(
-                business_name=item['business_name'],
-                business_category=item['business_category'],
-                description=item.get('description', ''),
-                address=item['address'],
-                city=item.get('city', ''),
-                state=item.get('state', ''),
-                country=item.get('country', ''),
-                postal_code=item.get('postal_code', ''),
-                website_url=item['website_url'],
-                rating=item['rating'],
-                review_count=item['review_count'],
-                google_place_id=item['google_place_id'],
-                business_hours=item.get('business_hours', ''),
-                lead_score=lead_score,
-                status=LeadStatus.NEW,
-                last_action="Discovered via lead search"
-            )
-            db.session.add(lead)
-            db.session.commit()
-            
-            # Save phone
-            if item.get('phone'):
-                contact = LeadContact(
-                    lead_id=lead.id,
-                    contact_type='phone',
-                    value=item['phone'],
-                    is_primary=True
-                )
-                db.session.add(contact)
-                
-            # Save source
-            source = LeadSource(
-                lead_id=lead.id,
-                source_type='google_places',
-                source_query=f"{category} in {location}",
-                source_location=location,
-                source_category=category
-            )
-            db.session.add(source)
-            db.session.commit()
-            
-            # Auto enrichment and analysis
-            from app.services.pipeline_service import process_lead_pipeline
+            # Save new unique lead with per-lead transaction isolation
             try:
-                process_lead_pipeline(lead.id)
-            except Exception as pipeline_err:
-                logger.error(f"Failed to execute pipeline for lead {lead.id}: {pipeline_err}")
+                # Double check unique google_place_id to prevent Postgres constraint violations
+                place_id = item.get('google_place_id')
+                if place_id:
+                    existing_by_place = Lead.query.filter_by(google_place_id=place_id).first()
+                    if existing_by_place:
+                        duplicate_count += 1
+                        logger.info(f"Skipping already-existing Place ID: {place_id}")
+                        continue
+
+                lead = Lead(
+                    business_name=item['business_name'],
+                    business_category=item['business_category'],
+                    description=item.get('description', ''),
+                    address=item['address'],
+                    city=item.get('city', ''),
+                    state=item.get('state', ''),
+                    country=item.get('country', ''),
+                    postal_code=item.get('postal_code', ''),
+                    website_url=item.get('website_url'),
+                    rating=item.get('rating'),
+                    review_count=item.get('review_count'),
+                    google_place_id=item.get('google_place_id'),
+                    business_hours=item.get('business_hours', ''),
+                    lead_score=lead_score,
+                    status=LeadStatus.NEW,
+                    last_action="Discovered via lead search"
+                )
+                db.session.add(lead)
+                db.session.commit()
                 
-            processed_leads.append(lead)
-            saved_count += 1
+                # Save phone
+                if item.get('phone'):
+                    contact = LeadContact(
+                        lead_id=lead.id,
+                        contact_type='phone',
+                        value=item['phone'],
+                        is_primary=True
+                    )
+                    db.session.add(contact)
+                    
+                # Save source
+                source = LeadSource(
+                    lead_id=lead.id,
+                    source_type='google_places',
+                    source_query=f"{category} in {location}",
+                    source_location=location,
+                    source_category=category
+                )
+                db.session.add(source)
+                db.session.commit()
+                
+                # Auto enrichment and analysis with failure isolation
+                from app.services.pipeline_service import process_lead_pipeline
+                try:
+                    process_lead_pipeline(lead.id)
+                except Exception as pipeline_err:
+                    db.session.rollback()
+                    logger.error(f"Failed to execute pipeline for lead {lead.id}: {pipeline_err}")
+                    
+                processed_leads.append(lead)
+                saved_count += 1
+            except Exception as save_err:
+                db.session.rollback()
+                logger.error(f"Failed to save discovered lead {item.get('business_name')}: {save_err}")
+                continue
             
         if not next_page_token:
             break

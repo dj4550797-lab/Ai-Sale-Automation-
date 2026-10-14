@@ -25,7 +25,7 @@ def process_lead_pipeline(lead_id):
     Enrichment -> Scraping/Analysis -> Scoring -> PRD -> Dossier Compile -> Save
     Includes strict Failure Isolation.
     """
-    lead = Lead.query.get(lead_id)
+    lead = db.session.get(Lead, lead_id)
     if not lead:
         logger.error(f"Lead {lead_id} not found in pipeline processing.")
         return {"success": False, "error": "Lead not found."}
@@ -36,77 +36,91 @@ def process_lead_pipeline(lead_id):
     try:
         enrich_lead_contacts(lead)
     except Exception as e:
-        logger.error(f"Error in lead contact enrichment for {lead.id}: {e}")
+        db.session.rollback()
+        logger.error(f"Error in lead contact enrichment for {lead_id}: {e}")
 
     # Step 2: Website Analysis
     try:
-        if lead.website_url:
-            analyze_lead_website(lead.id)
-        else:
-            # Create skipped/empty analysis record
-            analyze_lead_website(lead.id)
+        lead = db.session.get(Lead, lead_id)
+        if lead and lead.website_url:
+            analyze_lead_website(lead_id)
+        elif lead:
+            analyze_lead_website(lead_id)
     except Exception as e:
-        logger.error(f"Error in website analysis for {lead.id}: {e}")
+        db.session.rollback()
+        logger.error(f"Error in website analysis for {lead_id}: {e}")
 
     # Step 3: Lead Re-scoring & Status Synchronization
     try:
-        analysis = WebsiteAnalysis.query.filter_by(lead_id=lead.id).first()
-        if analysis:
-            # Dynamic re-scoring based on audit verdict
-            if analysis.verdict == WebsiteVerdict.NO_WEBSITE:
-                lead.lead_score = min(lead.lead_score + 10, 100)
-            elif analysis.verdict == WebsiteVerdict.NEEDS_IMPROVEMENT:
-                lead.lead_score = min(lead.lead_score + 5, 100)
-            
-            # Auto-transition status based on qualification
-            if analysis.improvement_needed:
-                lead.status = LeadStatus.WAITING_FOR_DEMO
-            else:
-                lead.status = LeadStatus.DISQUALIFIED
-            db.session.commit()
+        lead = db.session.get(Lead, lead_id)
+        if lead:
+            analysis = WebsiteAnalysis.query.filter_by(lead_id=lead_id).first()
+            if analysis:
+                # Dynamic re-scoring based on audit verdict
+                if analysis.verdict == WebsiteVerdict.NO_WEBSITE:
+                    lead.lead_score = min(lead.lead_score + 10, 100)
+                elif analysis.verdict == WebsiteVerdict.NEEDS_IMPROVEMENT:
+                    lead.lead_score = min(lead.lead_score + 5, 100)
+                
+                # Auto-transition status based on qualification
+                if analysis.improvement_needed:
+                    lead.status = LeadStatus.WAITING_FOR_DEMO
+                else:
+                    lead.status = LeadStatus.DISQUALIFIED
+                db.session.commit()
     except Exception as e:
-        logger.error(f"Error in lead scoring/status sync for {lead.id}: {e}")
+        db.session.rollback()
+        logger.error(f"Error in lead scoring/status sync for {lead_id}: {e}")
 
     # Step 4: PRD Generation
     try:
-        generate_lead_prd(lead.id)
+        generate_lead_prd(lead_id)
     except Exception as e:
-        logger.error(f"Error in PRD generation for {lead.id}: {e}")
+        db.session.rollback()
+        logger.error(f"Error in PRD generation for {lead_id}: {e}")
 
     # Step 5: Complete TXT Dossier Generation & Storage
     try:
-        dossier_content = generate_lead_dossier_text(lead)
-        clean_name = re.sub(r'[^a-zA-Z0-9_-]', '_', lead.business_name.lower())
-        filename = f"LEAD-{lead.id:06d}_{clean_name}.txt"
-        
-        # Check if dossier already exists and delete it to prevent duplicates
-        existing_dossier = UploadedFile.query.filter_by(lead_id=lead.id, file_type='document').filter(UploadedFile.original_filename.like('LEAD-%_*.txt')).first()
-        if existing_dossier:
-            # Resolve absolute path and delete from disk
-            abs_path = os.path.abspath(os.path.join(current_app.root_path, existing_dossier.file_path))
-            if os.path.exists(abs_path):
-                os.remove(abs_path)
-            db.session.delete(existing_dossier)
-            db.session.commit()
+        lead = db.session.get(Lead, lead_id)
+        if lead:
+            dossier_content = generate_lead_dossier_text(lead)
+            clean_name = re.sub(r'[^a-zA-Z0-9_-]', '_', lead.business_name.lower())
+            filename = f"LEAD-{lead.id:06d}_{clean_name}.txt"
+            
+            # Check if dossier already exists and delete it to prevent duplicates
+            existing_dossier = UploadedFile.query.filter_by(lead_id=lead.id, file_type='document').filter(UploadedFile.original_filename.like('LEAD-%_*.txt')).first()
+            if existing_dossier:
+                abs_path = os.path.abspath(os.path.join(current_app.root_path, existing_dossier.file_path))
+                if os.path.exists(abs_path):
+                    try:
+                        os.remove(abs_path)
+                    except Exception:
+                        pass
+                db.session.delete(existing_dossier)
+                db.session.commit()
 
-        save_res = save_generated_file(
-            file_content=dossier_content,
-            original_filename=filename,
-            file_type='document',
-            lead_id=lead.id
-        )
-        if save_res.get('success'):
-            lead.last_action = "Lead complete dossier generated"
-            lead.last_action_at = datetime.now(timezone.utc)
-            db.session.commit()
-            logger.info(f"Dossier TXT saved for lead {lead.id} at {save_res.get('file_path')}")
-        else:
-            logger.error(f"Failed to save dossier TXT for lead {lead.id}: {save_res.get('error')}")
+            save_res = save_generated_file(
+                file_content=dossier_content,
+                original_filename=filename,
+                file_type='document',
+                lead_id=lead.id
+            )
+            lead = db.session.get(Lead, lead_id)
+            if save_res.get('success') and lead:
+                lead.last_action = "Lead complete dossier generated"
+                lead.last_action_at = datetime.now(timezone.utc)
+                db.session.commit()
+                logger.info(f"Dossier TXT saved for lead {lead.id} at {save_res.get('file_path')}")
+            else:
+                logger.error(f"Failed to save dossier TXT for lead {lead_id}: {save_res.get('error')}")
     except Exception as e:
-        logger.error(f"Error generating TXT dossier for {lead.id}: {e}")
+        db.session.rollback()
+        logger.error(f"Error generating TXT dossier for {lead_id}: {e}")
 
-    logger.info(f"Pipeline finished for lead {lead.id}. Status: {lead.status}, Score: {lead.lead_score}")
-    return {"success": True, "lead_id": lead.id}
+    lead = db.session.get(Lead, lead_id)
+    if lead:
+        logger.info(f"Pipeline finished for lead {lead.id}. Status: {lead.status}, Score: {lead.lead_score}")
+    return {"success": True, "lead_id": lead_id}
 
 
 def enrich_lead_contacts(lead):
@@ -222,8 +236,12 @@ def enrich_lead_contacts(lead):
             )
             db.session.add(contact)
 
-    db.session.commit()
-    logger.info(f"Enriched contacts for lead {lead.id} successfully.")
+    try:
+        db.session.commit()
+        logger.info(f"Enriched contacts for lead {lead.id} successfully.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Failed to commit contact enrichment for lead {lead.id}: {e}")
 
 
 def generate_lead_dossier_text(lead):

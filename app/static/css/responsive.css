@@ -3,10 +3,20 @@
    Desktop → Laptop → Tablet → Mobile
    ═══════════════════════════════════════════════════════════ */
 
+/* ── Global Anti-Overflow Protection ──────────────────────── */
+*, *::before, *::after {
+    overflow-wrap: break-word;
+}
+pre, code {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
 /* ── Laptop (≤1280px) ─────────────────────────────────────── */
 @media (max-width: 1280px) {
     .grid-4 { grid-template-columns: repeat(3, 1fr); }
     .grid-kpi { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+    .automation-grid-layout { grid-template-columns: 1fr !important; }
 }
 
 /* ── Tablet (≤1024px) ─────────────────────────────────────── */

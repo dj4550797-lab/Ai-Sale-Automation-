@@ -62,10 +62,12 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-xs);
-    transition: box-shadow var(--transition-base);
+    transition: all var(--transition-base);
+    min-width: 0;
+    max-width: 100%;
 }
-.card:hover { box-shadow: var(--shadow-sm); }
-.card-body { padding: var(--space-6); }
+.card:hover { box-shadow: var(--shadow-md); }
+.card-body { padding: var(--space-6); min-width: 0; max-width: 100%; }
 .card-header {
     padding: var(--space-5) var(--space-6);
     border-bottom: 1px solid var(--border-color);
@@ -91,10 +93,11 @@
     align-items: flex-start;
     gap: var(--space-4);
     transition: all var(--transition-base);
+    min-width: 0;
 }
 .kpi-card:hover {
     box-shadow: var(--shadow-md);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
 }
 .kpi-icon {
     width: 44px;
@@ -187,10 +190,13 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     background: var(--surface);
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
 }
 table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: auto;
 }
 th {
     padding: var(--space-3) var(--space-4);
@@ -207,6 +213,8 @@ td {
     border-bottom: 1px solid var(--border-color);
     font-size: var(--text-base);
     color: var(--text-primary);
+    overflow-wrap: break-word;
+    word-break: normal;
 }
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: var(--gray-50); }
