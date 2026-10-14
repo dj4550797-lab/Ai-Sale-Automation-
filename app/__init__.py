@@ -58,6 +58,10 @@ def create_app(config_name=None):
             db.session.execute(text('SELECT 1'))
             return {"status": "healthy", "database": "connected"}, 200
         except Exception as e:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
             app.logger.error(f"Health check failed: {str(e)}")
             return {"status": "unhealthy", "database": "error", "error": str(e)}, 500
 
@@ -76,7 +80,14 @@ def _init_extensions(app):
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        try:
+            return db.session.get(User, int(user_id))
+        except Exception:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            return None
 
 
 def _register_blueprints(app):
@@ -401,6 +412,7 @@ def _seed_defaults(db):
 def _register_error_handlers(app):
     """Register error page handlers."""
     from flask import render_template
+    from app.extensions import db
 
     @app.errorhandler(404)
     def not_found(e):
@@ -408,25 +420,50 @@ def _register_error_handlers(app):
 
     @app.errorhandler(500)
     def server_error(e):
+        app.logger.error(f"Internal 500 error encountered: {e}", exc_info=True)
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
         return render_template('errors/500.html'), 500
 
     @app.errorhandler(403)
     def forbidden(e):
         return render_template('errors/403.html'), 403
 
+    @app.teardown_request
+    def teardown_request(exception=None):
+        if exception:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+        try:
+            db.session.remove()
+        except Exception:
+            pass
+
 
 def _register_context(app):
     """Register template context processors."""
     from app.models import Notification
     from flask_login import current_user
+    from app.extensions import db
 
     @app.context_processor
     def inject_globals():
         unread_notifications = 0
-        if current_user and current_user.is_authenticated:
-            unread_notifications = Notification.query.filter_by(
-                user_id=current_user.id, is_read=False
-            ).count()
+        try:
+            if current_user and current_user.is_authenticated:
+                unread_notifications = Notification.query.filter_by(
+                    user_id=current_user.id, is_read=False
+                ).count()
+        except Exception:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            unread_notifications = 0
 
         return {
             'app_name': 'Flixora',
