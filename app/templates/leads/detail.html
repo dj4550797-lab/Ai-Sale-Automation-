@@ -380,6 +380,23 @@
                         </form>
                     </div>
 
+                    {% set lead_phone = '' %}
+                    {% for c in lead.contacts %}
+                        {% if c.contact_type in ['phone', 'whatsapp'] and not lead_phone %}
+                            {% set lead_phone = c.value %}
+                        {% endif %}
+                    {% endfor %}
+                    {% if lead_phone %}
+                    {% set clean_ph = lead_phone|replace('+', '')|replace(' ', '')|replace('-', '') %}
+                    {% set sample_pitch = "Hello Team " ~ lead.business_name ~ "! 👋 We prepared an exclusive live website prototype for your business: https://ai-sale-automation.onrender.com/demos/preview/" ~ lead.id ~ " - Would you like to review it?" %}
+                    <div style="margin-top:var(--space-2); margin-bottom:var(--space-2);">
+                        <a href="https://wa.me/{{ clean_ph }}?text={{ (campaign.message_content if campaign and campaign.message_content else sample_pitch)|urlencode }}" target="_blank" class="btn btn-sm" style="width:100%; background:#25D366; color:#fff; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; font-weight:600; padding:8px 12px; box-shadow:0 2px 6px rgba(37,211,102,0.25);">
+                            <span class="material-symbols-outlined" style="font-size:16px;">chat</span>
+                            Open Chat on WhatsApp ({{ lead_phone }})
+                        </a>
+                    </div>
+                    {% endif %}
+
                     <div style="display:flex; gap:var(--space-2);">
                         <form action="{{ url_for('leads.pause_outreach', id=lead.id) }}" method="POST" style="flex:1;">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

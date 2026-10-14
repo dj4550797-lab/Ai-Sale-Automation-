@@ -289,59 +289,66 @@
                 <span class="material-symbols-outlined" style="color: var(--primary-500); font-size: 20px;">tune</span>
                 <h3 style="margin: 0; font-size: 15px; font-weight: 700;">Discovery Parameters</h3>
             </div>
-            <span class="badge badge-secondary" style="font-size: 10px; font-weight: 600;">M3 Outlined</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <button type="button" class="btn btn-secondary btn-sm" id="editParamsBtn" onclick="toggleParamsEdit()" 
+                        style="gap: 5px; border-radius: 18px; font-size: 12px; font-weight: 600; padding: 4px 12px;">
+                    <span class="material-symbols-outlined" id="editParamsIcon" style="font-size: 15px;">edit</span>
+                    <span id="editParamsText">Edit</span>
+                </button>
+                <span class="badge badge-secondary" style="font-size: 10px; font-weight: 600;">M3 Outlined</span>
+            </div>
         </div>
         <div class="card-body" style="padding: 20px;">
-            <form action="{{ url_for('automation.save_settings') }}" method="POST" style="display: flex; flex-direction: column; gap: var(--space-4);">
+            <form id="discoveryParamsForm" action="{{ url_for('automation.save_settings') }}" method="POST" style="display: flex; flex-direction: column; gap: var(--space-4);">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 
                 <!-- 1. Daily Limit Field (M3 Outlined) -->
-                <div class="m3-field">
+                <div class="m3-field" id="field-daily_limit">
                     <label class="m3-field-label">
                         <span class="material-symbols-outlined" style="font-size: 14px; color: var(--primary-500);">speed</span>
                         Daily Lead Limit
                     </label>
-                    <input type="number" class="m3-field-input" name="daily_limit" value="{{ daily_limit }}" min="1" max="100" required>
+                    <input type="number" class="m3-field-input" name="daily_limit" id="input_daily_limit" value="{{ daily_limit }}" min="1" max="100" required disabled>
                     <span class="m3-field-hint">Cap on new qualified leads fetched per day</span>
                 </div>
 
                 <!-- 2. Categories Field (M3 Outlined) -->
-                <div class="m3-field">
+                <div class="m3-field" id="field-category">
                     <label class="m3-field-label">
                         <span class="material-symbols-outlined" style="font-size: 14px; color: var(--primary-500);">category</span>
                         Discovery Categories
                     </label>
-                    <input type="text" class="m3-field-input" name="category" value="{{ category }}" required>
+                    <input type="text" class="m3-field-input" name="category" id="input_category" value="{{ category }}" required disabled>
                     <span class="m3-field-hint">Search niches (comma-separated, e.g. Gym, Salon, Restaurant)</span>
                 </div>
 
                 <!-- 3. Locations Field (M3 Outlined) -->
-                <div class="m3-field">
+                <div class="m3-field" id="field-location">
                     <label class="m3-field-label">
                         <span class="material-symbols-outlined" style="font-size: 14px; color: var(--primary-500);">location_on</span>
                         Discovery Locations
                     </label>
-                    <input type="text" class="m3-field-input" name="location" value="{{ location }}" required>
+                    <input type="text" class="m3-field-input" name="location" id="input_location" value="{{ location }}" required disabled>
                     <span class="m3-field-hint">Target cities (e.g. Pune, Delhi, Mumbai)</span>
                 </div>
 
                 <!-- 4. Schedule Field (M3 Outlined) -->
-                <div class="m3-field">
+                <div class="m3-field" id="field-schedule">
                     <label class="m3-field-label">
                         <span class="material-symbols-outlined" style="font-size: 14px; color: var(--primary-500);">schedule</span>
                         Discovery Schedule
                     </label>
-                    <input type="text" class="m3-field-input" name="schedule" value="{{ schedule }}" placeholder="Daily at 08:00 AM" required>
+                    <input type="text" class="m3-field-input" name="schedule" id="input_schedule" value="{{ schedule }}" placeholder="Daily at 08:00 AM" required disabled>
                     <span class="m3-field-hint">Display label of run schedule</span>
                 </div>
 
                 <!-- 5. Timezone Field (M3 Outlined) -->
-                <div class="m3-field">
+                <div class="m3-field" id="field-timezone">
                     <label class="m3-field-label">
                         <span class="material-symbols-outlined" style="font-size: 14px; color: var(--primary-500);">public</span>
                         Timezone
                     </label>
-                    <select class="m3-field-input" name="timezone" style="cursor: pointer; background: transparent;">
+                    <select class="m3-field-input" name="timezone" id="input_timezone" style="cursor: pointer; background: transparent;" disabled>
                         <option value="Asia/Kolkata" {% if timezone == 'Asia/Kolkata' %}selected{% endif %}>Asia/Kolkata (IST)</option>
                         <option value="UTC" {% if timezone == 'UTC' %}selected{% endif %}>UTC</option>
                         <option value="America/New_York" {% if timezone == 'America/New_York' %}selected{% endif %}>America/New_York (EST)</option>
@@ -350,13 +357,20 @@
                     <span class="m3-field-hint">Timezone applied for daily resets</span>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%; border-radius: 24px; padding: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px;">
-                    <span class="material-symbols-outlined" style="font-size: 18px;">save</span>
-                    Save Configuration
-                </button>
+                <!-- Action Row (Hidden until Edit is clicked) -->
+                <div id="paramsActionRow" style="display: none; align-items: center; gap: 10px; margin-top: 6px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1; border-radius: 24px; padding: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">save</span>
+                        Save Configuration
+                    </button>
+                    <button type="button" class="btn btn-ghost" onclick="toggleParamsEdit()" style="border-radius: 24px; padding: 10px 16px;">
+                        Cancel
+                    </button>
+                </div>
             </form>
         </div>
     </div>
+
 
     <!-- EXECUTION LOGS & RUNS -->
     <div style="display: flex; flex-direction: column; gap: var(--space-6);">
@@ -405,8 +419,58 @@
             </div>
         </div>
 
+        <!-- DISCOVERY RUNS DATE & TIME TIMELINE CHART -->
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="material-symbols-outlined" style="color: var(--primary-500); font-size: 20px;">analytics</span>
+                    <h3 style="margin: 0; font-size: var(--text-md);">Discovery Date & Time Run Timeline</h3>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 11px; display: flex; align-items: center; gap: 4px; color: var(--text-secondary);">
+                        <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--success); display: inline-block;"></span> Completed
+                    </span>
+                    <span style="font-size: 11px; display: flex; align-items: center; gap: 4px; color: var(--text-secondary);">
+                        <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--error); display: inline-block;"></span> Alert
+                    </span>
+                </div>
+            </div>
+            <div class="card-body" style="padding: 20px;">
+                {% if runs %}
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <!-- Activity timeline bar chart -->
+                    <div style="display: flex; align-items: flex-end; gap: 10px; height: 130px; padding-bottom: 24px; border-bottom: 1px solid var(--border-color); position: relative; overflow-x: auto;">
+                        {% for run in runs[:12]|reverse %}
+                        {% set bar_height = [(run.items_succeeded * 6 + 24), 95]|min if run.status == 'completed' else 28 %}
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; min-width: 46px;" 
+                             data-tooltip="{{ run.started_at.strftime('%d %b %H:%M') }} — {{ run.items_succeeded }} leads found ({{ run.status }})">
+                            <span style="font-size: 10px; font-weight: 700; color: {% if run.status == 'completed' %}var(--success){% else %}var(--error){% endif %};">
+                                {{ run.items_succeeded }}
+                            </span>
+                            <div style="width: 100%; max-width: 28px; height: {{ bar_height }}px; border-radius: 6px 6px 0 0; background: {% if run.status == 'completed' %}linear-gradient(180deg, #10b981, #059669){% else %}linear-gradient(180deg, #ef4444, #dc2626){% endif %}; transition: all 0.2s ease; cursor: pointer; box-shadow: var(--shadow-xs);"></div>
+                            <span style="font-size: 9px; font-weight: 600; color: var(--text-tertiary); white-space: nowrap; margin-top: 2px;">
+                                {{ run.started_at.strftime('%d %b') }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-secondary); flex-wrap: wrap; gap: 8px;">
+                        <span>Timeline: Execution runs plotted by timestamp</span>
+                        <span style="font-weight: 600;">Total Discovered Leads: <strong style="color: var(--primary-600);">{{ runs|sum(attribute='items_succeeded') }}</strong></span>
+                    </div>
+                </div>
+                {% else %}
+                <div style="text-align: center; padding: 24px 0; color: var(--text-tertiary); font-size: 13px;">
+                    <span class="material-symbols-outlined" style="font-size: 32px; display: block; margin-bottom: 6px; color: var(--border-color);">bar_chart</span>
+                    No discovery timeline runs recorded yet. Trigger a run to populate date charts.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
         <!-- EXECUTION HISTORY -->
         <div class="card">
+
             <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span class="material-symbols-outlined" style="color: var(--primary-500); font-size: 20px;">history</span>
@@ -577,5 +641,31 @@ function openLogsDialog(logs) {
     document.getElementById('log_output_box').innerText = logs;
     openDialog('logsDetailDialog');
 }
+
+function toggleParamsEdit() {
+    const isEditing = document.getElementById('input_daily_limit').disabled === false;
+    const inputs = ['input_daily_limit', 'input_category', 'input_location', 'input_schedule', 'input_timezone'];
+    
+    inputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = isEditing;
+    });
+
+    const actionRow = document.getElementById('paramsActionRow');
+    const btnText = document.getElementById('editParamsText');
+    const btnIcon = document.getElementById('editParamsIcon');
+
+    if (isEditing) {
+        if (actionRow) actionRow.style.display = 'none';
+        if (btnText) btnText.innerText = 'Edit';
+        if (btnIcon) btnIcon.innerText = 'edit';
+    } else {
+        if (actionRow) actionRow.style.display = 'flex';
+        if (btnText) btnText.innerText = 'Cancel';
+        if (btnIcon) btnIcon.innerText = 'close';
+        document.getElementById('input_daily_limit')?.focus();
+    }
+}
 </script>
 {% endblock %}
+

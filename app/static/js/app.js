@@ -316,7 +316,7 @@ function initConfirmInterceptors() {
     });
 }
 
-// ── Theme Switcher (6 Themes System) ────────────────────────
+// ── Theme Switcher (Multi-Themes System) ─────────────────────
 function initAppTheme() {
     const currentTheme = localStorage.getItem('flixora_theme') || 'light';
     applyTheme(currentTheme);
@@ -327,8 +327,9 @@ function selectTheme(themeName) {
     applyTheme(themeName);
     const themeTitles = {
         'light': 'Clean SaaS (Light)',
-        'dark': 'Glassmorphism (Dark)',
-        'flat': 'Flat Design',
+        'dark': 'Obsidian Dark (Matte)',
+        'glass': 'Liquid Frosted Glassmorphism',
+        'flat': 'Flat UI Design',
         'neo-brutalism': 'Neo-Brutalism',
         'cyberpunk': 'Cyberpunk Neon',
         'synthwave': 'Retro-Futurism / Synthwave'
@@ -351,9 +352,41 @@ function applyTheme(theme) {
     });
 }
 
+// ── Typography Font Selection ──────────────────────────────
+function initAppFont() {
+    const currentFont = localStorage.getItem('flixora_font') || 'inter';
+    applyFont(currentFont);
+}
+
+function selectFont(fontName) {
+    localStorage.setItem('flixora_font', fontName);
+    applyFont(fontName);
+    const fontTitles = {
+        'inter': 'Inter (Clean SaaS)',
+        'outfit': 'Outfit (Geometric Display)',
+        'jakarta': 'Plus Jakarta Sans (Startup)',
+        'space': 'Space Grotesk (Futuristic)',
+        'mono': 'JetBrains Mono (Code/Tech)',
+        'serif': 'Playfair Display (Editorial Serif)'
+    };
+    showToast(`🔤 Font applied: ${fontTitles[fontName] || fontName}`, 'info', 2200);
+}
+
+function applyFont(font) {
+    document.documentElement.setAttribute('data-font', font || 'inter');
+    document.querySelectorAll('.font-card-option').forEach(card => {
+        if (card.dataset.font === font || (!font && card.dataset.font === 'inter')) {
+            card.classList.add('selected');
+        } else {
+            card.classList.remove('selected');
+        }
+    });
+}
+
 // ── Initialize ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     initAppTheme();
+    initAppFont();
     setActiveNav();
     initTabs();
     initDropdowns();
@@ -366,3 +399,4 @@ document.addEventListener('DOMContentLoaded', () => {
         overlay.addEventListener('click', closeSidebar);
     }
 });
+

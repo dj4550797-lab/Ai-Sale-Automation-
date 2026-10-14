@@ -93,6 +93,22 @@
                         </button>
                         {% else %}
                         <!-- Send/Preview button -->
+                        {% set lead_ph = '' %}
+                        {% for c in lead.contacts %}
+                            {% if c.contact_type in ['phone', 'whatsapp'] and not lead_ph %}
+                                {% set lead_ph = c.value %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if campaign.channel == 'whatsapp' and lead_ph %}
+                        {% set clean_ph = lead_ph|replace('+', '')|replace(' ', '')|replace('-', '') %}
+                        <a href="https://wa.me/{{ clean_ph }}?text={{ campaign.message_content|urlencode }}" target="_blank"
+                           class="btn btn-sm"
+                           style="background:#25D366; color:#fff; text-decoration:none; padding:5px 8px; display:inline-flex; align-items:center; border:none;"
+                           title="Open in WhatsApp ({{ lead_ph }})">
+                            <span class="material-symbols-outlined" style="font-size:16px;">chat</span>
+                        </a>
+                        {% endif %}
+
                         <button class="btn btn-primary btn-sm" onclick="openPreviewDialog({{ campaign.id }}, {{ lead.id }}, '{{ lead.business_name|escape }}', '{{ campaign.channel }}', '{{ campaign.message_content|replace('\n', '\\n')|replace("'", "\\'")|escape }}')"
                                 {% if campaign.status in ['replied', 'stopped'] %}style="display:none;"{% endif %}>
                             <span class="material-symbols-outlined" style="font-size:16px;">visibility</span>

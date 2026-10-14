@@ -958,7 +958,7 @@ def compile_demo_html(lead_id):
         logger.warning(f"LLM demo generation unavailable for lead {lead_id} ({llm_err}). Generating premium responsive fallback landing page.")
         html_code = _generate_premium_fallback_demo_html(lead, prd)
 
-    if not html_code or "<html" not in html_code.lower():
+    if not html_code or "<html" not in html_code.lower() or "</html>" not in html_code.lower():
         html_code = _generate_premium_fallback_demo_html(lead, prd)
 
     try:

@@ -96,18 +96,18 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
-     THEMES & APPEARANCE SYSTEM (6 THEMES)
+     THEMES & APPEARANCE SYSTEM (7 THEMES)
      ═══════════════════════════════════════════════════════════ -->
 <div class="card" style="margin-top: var(--space-6);">
     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
         <div>
             <h3 style="margin:0;font-size:var(--text-lg);font-weight:700;">Design Themes & Appearance</h3>
             <p style="font-size:var(--text-xs);color:var(--text-secondary);margin-top:2px;">
-                Choose from 6 visual aesthetics tailored for your workspace and workflows.
+                Choose from 7 visual aesthetics tailored for your workspace and workflows.
             </p>
         </div>
         <span class="badge badge-primary" style="display:flex;align-items:center;gap:4px;">
-            <span class="material-symbols-outlined" style="font-size:14px;">palette</span> 6 Themes
+            <span class="material-symbols-outlined" style="font-size:14px;">palette</span> 7 Themes
         </span>
     </div>
     <div class="card-body">
@@ -129,39 +129,55 @@
                 <div style="font-size:11px;color:var(--text-secondary);">Clean, professional white workspace with royal blue accents.</div>
             </div>
 
-            <!-- 2. Dark Glassmorphism -->
+            <!-- 2. Pure Obsidian Dark -->
             <div class="theme-card-option" data-theme="dark" onclick="selectTheme('dark')">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <strong style="font-size:14px;color:var(--text-primary);">Glassmorphism (Dark)</strong>
-                    <span class="badge badge-primary" style="font-size:10px;">Glass</span>
+                    <strong style="font-size:14px;color:var(--text-primary);">Obsidian Dark</strong>
+                    <span class="badge badge-primary" style="font-size:10px;">Matte Dark</span>
                 </div>
-                <div style="height:60px;border-radius:8px;background:rgba(17,24,39,0.9);border:1px solid rgba(255,255,255,0.15);backdrop-filter:blur(10px);display:flex;align-items:center;padding:8px;gap:8px;">
-                    <div style="width:24px;height:24px;border-radius:6px;background:#3b82f6;box-shadow:0 0 8px rgba(59,130,246,0.5);"></div>
+                <div style="height:60px;border-radius:8px;background:#111827;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;padding:8px;gap:8px;">
+                    <div style="width:24px;height:24px;border-radius:6px;background:#3b82f6;"></div>
                     <div style="flex:1;">
-                        <div style="height:6px;background:#4b5563;border-radius:3px;width:70%;margin-bottom:4px;"></div>
-                        <div style="height:5px;background:#374151;border-radius:3px;width:45%;"></div>
+                        <div style="height:6px;background:#374151;border-radius:3px;width:70%;margin-bottom:4px;"></div>
+                        <div style="height:5px;background:#1f2937;border-radius:3px;width:45%;"></div>
                     </div>
                 </div>
-                <div style="font-size:11px;color:var(--text-secondary);">Translucent frosted glass, ambient depth, low-light eye comfort.</div>
+                <div style="font-size:11px;color:var(--text-secondary);">Deep matte charcoal & slate night mode for high contrast reading.</div>
             </div>
 
-            <!-- 3. Flat Design -->
+            <!-- 3. Liquid Frosted Glassmorphism -->
+            <div class="theme-card-option" data-theme="glass" onclick="selectTheme('glass')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14px;color:var(--text-primary);">Glassmorphism</strong>
+                    <span class="badge" style="background:rgba(99,102,241,0.2);color:#818cf8;border:1px solid rgba(99,102,241,0.4);font-size:10px;">Frosted Glass</span>
+                </div>
+                <div style="height:60px;border-radius:8px;background:radial-gradient(circle,rgba(99,102,241,0.3),rgba(236,72,153,0.2)),#0b0f19;border:1px solid rgba(255,255,255,0.25);backdrop-filter:blur(12px);display:flex;align-items:center;padding:8px;gap:8px;">
+                    <div style="width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);box-shadow:0 0 10px rgba(99,102,241,0.6);"></div>
+                    <div style="flex:1;">
+                        <div style="height:6px;background:rgba(255,255,255,0.3);border-radius:3px;width:70%;margin-bottom:4px;"></div>
+                        <div style="height:5px;background:rgba(255,255,255,0.15);border-radius:3px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Translucent frosted glass, aurora glow background, crystal acrylic panels.</div>
+            </div>
+
+            <!-- 4. Flat Design -->
             <div class="theme-card-option" data-theme="flat" onclick="selectTheme('flat')">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <strong style="font-size:14px;color:var(--text-primary);">Flat Design</strong>
-                    <span class="badge badge-secondary" style="font-size:10px;">Zero Shadow</span>
+                    <strong style="font-size:14px;color:var(--text-primary);">Flat UI Design</strong>
+                    <span class="badge badge-secondary" style="font-size:10px;">Turquoise</span>
                 </div>
-                <div style="height:60px;border-radius:4px;background:#ffffff;border:1px solid #94a3b8;display:flex;align-items:center;padding:8px;gap:8px;">
-                    <div style="width:24px;height:24px;border-radius:3px;background:#2563eb;"></div>
+                <div style="height:60px;border-radius:4px;background:#ecf0f1;border:1.5px solid #bdc3c7;display:flex;align-items:center;padding:8px;gap:8px;">
+                    <div style="width:24px;height:24px;border-radius:3px;background:#1abc9c;"></div>
                     <div style="flex:1;">
-                        <div style="height:6px;background:#64748b;border-radius:0;width:70%;margin-bottom:4px;"></div>
-                        <div style="height:5px;background:#94a3b8;border-radius:0;width:45%;"></div>
+                        <div style="height:6px;background:#2c3e50;border-radius:0;width:70%;margin-bottom:4px;"></div>
+                        <div style="height:5px;background:#bdc3c7;border-radius:0;width:45%;"></div>
                     </div>
                 </div>
-                <div style="font-size:11px;color:var(--text-secondary);">Sharp crisp borders, pure flat color blocks, zero drop shadows.</div>
+                <div style="font-size:11px;color:var(--text-secondary);">Clouds grey backdrop, dark asphalt sidebar, flat turquoise accents.</div>
             </div>
 
-            <!-- 4. Neo-Brutalism -->
+            <!-- 5. Neo-Brutalism -->
             <div class="theme-card-option" data-theme="neo-brutalism" onclick="selectTheme('neo-brutalism')">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                     <strong style="font-size:14px;color:var(--text-primary);">Neo-Brutalism</strong>
@@ -177,7 +193,7 @@
                 <div style="font-size:11px;color:var(--text-secondary);">Heavy black outlines, hard offset drop shadows, energetic pop colors.</div>
             </div>
 
-            <!-- 5. Cyberpunk -->
+            <!-- 6. Cyberpunk -->
             <div class="theme-card-option" data-theme="cyberpunk" onclick="selectTheme('cyberpunk')">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                     <strong style="font-size:14px;color:var(--text-primary);">Cyberpunk</strong>
@@ -193,7 +209,7 @@
                 <div style="font-size:11px;color:var(--text-secondary);">High-tech cyber black, neon cyan & laser magenta futuristic vibes.</div>
             </div>
 
-            <!-- 6. Retro-Futurism / Synthwave -->
+            <!-- 7. Retro-Futurism / Synthwave -->
             <div class="theme-card-option" data-theme="synthwave" onclick="selectTheme('synthwave')">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                     <strong style="font-size:14px;color:var(--text-primary);">Synthwave / Retro</strong>
@@ -212,6 +228,95 @@
         </div>
     </div>
 </div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TYPOGRAPHY & FONT SELECTION SYSTEM
+     ═══════════════════════════════════════════════════════════ -->
+<div class="card" style="margin-top: var(--space-6);">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+            <h3 style="margin:0;font-size:var(--text-lg);font-weight:700;">Typography & System Font</h3>
+            <p style="font-size:var(--text-xs);color:var(--text-secondary);margin-top:2px;">
+                Personalize your workspace reading comfort with 6 premium typography font families.
+            </p>
+        </div>
+        <span class="badge badge-secondary" style="display:flex;align-items:center;gap:4px;">
+            <span class="material-symbols-outlined" style="font-size:14px;">text_fields</span> 6 Fonts
+        </span>
+    </div>
+    <div class="card-body">
+        <div class="font-selector-grid">
+            
+            <!-- Font 1: Inter -->
+            <div class="font-card-option" data-font="inter" onclick="selectFont('inter')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-family:'Inter',sans-serif;font-size:15px;color:var(--text-primary);">Inter</strong>
+                    <span class="badge badge-primary" style="font-size:10px;">Default</span>
+                </div>
+                <div style="font-family:'Inter',sans-serif;font-size:13px;color:var(--text-secondary);line-height:1.4;">
+                    The quick brown fox jumps over the lazy dog. Modern SaaS clarity.
+                </div>
+            </div>
+
+            <!-- Font 2: Outfit -->
+            <div class="font-card-option" data-font="outfit" onclick="selectFont('outfit')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-family:'Outfit',sans-serif;font-size:15px;color:var(--text-primary);">Outfit</strong>
+                    <span class="badge badge-secondary" style="font-size:10px;">Geometric</span>
+                </div>
+                <div style="font-family:'Outfit',sans-serif;font-size:13px;color:var(--text-secondary);line-height:1.4;">
+                    The quick brown fox jumps over the lazy dog. Sleek and balanced.
+                </div>
+            </div>
+
+            <!-- Font 3: Plus Jakarta Sans -->
+            <div class="font-card-option" data-font="jakarta" onclick="selectFont('jakarta')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;color:var(--text-primary);">Jakarta Sans</strong>
+                    <span class="badge badge-secondary" style="font-size:10px;">Tech Startup</span>
+                </div>
+                <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--text-secondary);line-height:1.4;">
+                    The quick brown fox jumps over the lazy dog. Sharp tech aesthetic.
+                </div>
+            </div>
+
+            <!-- Font 4: Space Grotesk -->
+            <div class="font-card-option" data-font="space" onclick="selectFont('space')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-family:'Space Grotesk',sans-serif;font-size:15px;color:var(--text-primary);">Space Grotesk</strong>
+                    <span class="badge badge-secondary" style="font-size:10px;">Futuristic</span>
+                </div>
+                <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;color:var(--text-secondary);line-height:1.4;">
+                    The quick brown fox jumps over the lazy dog. Brutalist futuristic.
+                </div>
+            </div>
+
+            <!-- Font 5: JetBrains Mono -->
+            <div class="font-card-option" data-font="mono" onclick="selectFont('mono')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text-primary);">JetBrains Mono</strong>
+                    <span class="badge badge-secondary" style="font-size:10px;">Code / Terminal</span>
+                </div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-secondary);line-height:1.4;">
+                    The quick brown fox jumps over the lazy dog. Developer monospace.
+                </div>
+            </div>
+
+            <!-- Font 6: Playfair Display -->
+            <div class="font-card-option" data-font="serif" onclick="selectFont('serif')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-family:'Playfair Display',serif;font-size:15px;color:var(--text-primary);">Playfair Display</strong>
+                    <span class="badge badge-secondary" style="font-size:10px;">Editorial Serif</span>
+                </div>
+                <div style="font-family:'Playfair Display',serif;font-size:13px;color:var(--text-secondary);line-height:1.4;">
+                    The quick brown fox jumps over the lazy dog. Luxury elegance.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}

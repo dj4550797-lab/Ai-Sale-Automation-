@@ -165,8 +165,10 @@
     padding: 0 var(--space-6);
     position: sticky;
     top: 0;
-    z-index: var(--z-sticky);
+    z-index: 1000;
+    overflow: visible;
 }
+
 
 .topbar-left {
     display: flex;

@@ -93,15 +93,22 @@ def publish(lead_id):
 
 
 @demos_bp.route('/preview/<int:lead_id>')
-@login_required
 def preview(lead_id):
-    """Render the generated index.html statically for local previewing."""
+    """Render the generated index.html statically for public client previewing."""
     base_upload = current_app.config.get('UPLOAD_FOLDER', 'uploads')
     demo_dir = os.path.join(base_upload, 'demos', str(lead_id))
+    index_file = os.path.join(demo_dir, 'index.html')
     
-    if not os.path.exists(os.path.join(demo_dir, 'index.html')):
-        flash("No generated index.html found. Please compile the website first.", "error")
-        return redirect(url_for('demos.index'))
+    if not os.path.exists(index_file):
+        # Auto-compile on the fly so demo links always render on Render/cloud instances
+        try:
+            from app.services.demo_service import compile_demo_html
+            compile_res = compile_demo_html(lead_id)
+            if not compile_res.get('success') or not os.path.exists(index_file):
+                return "Demo website preview is currently being compiled. Please refresh in a moment.", 404
+        except Exception as err:
+            current_app.logger.error(f"Error compiling demo on the fly for lead {lead_id}: {err}")
+            return "Demo website preview is not available.", 404
         
     return send_from_directory(demo_dir, 'index.html')
 

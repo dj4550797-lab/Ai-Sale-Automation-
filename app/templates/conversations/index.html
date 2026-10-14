@@ -71,18 +71,53 @@
     <div style="background:#fff;border-radius:var(--radius-md);border:1px solid var(--border-color);display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow-sm);">
         {% if active_conv %}
         <!-- Header status bar -->
-        <div style="padding:var(--space-4);border-bottom:1px solid var(--border-color);background:var(--background-light);display:flex;justify-content:space-between;align-items:center;">
+        {% set phone_val = '' %}
+        {% for c in active_conv.lead.contacts %}
+            {% if c.contact_type in ['phone', 'whatsapp'] and not phone_val %}
+                {% set phone_val = c.value %}
+            {% endif %}
+        {% endfor %}
+        {% set clean_phone = phone_val|replace('+', '')|replace(' ', '')|replace('-', '') %}
+        {% set default_wa_pitch = "Hello Team " ~ active_conv.lead.business_name ~ "! 👋 We prepared an exclusive live website preview for your business: https://ai-sale-automation.onrender.com/demos/preview/" ~ active_conv.lead.id ~ " - Would you like to review it?" %}
+        
+        <div style="padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--border-color);background:var(--background-light);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-2);">
             <div>
-                <h3 style="font-size:var(--text-md);font-weight:600;margin:0;">{{ active_conv.lead.business_name }}</h3>
-                <span style="font-size:10px;color:var(--text-secondary);text-transform:capitalize;">
-                    Niche: {{ active_conv.lead.business_category }} | Status: 
+                <div style="display:flex;align-items:center;gap:var(--space-2);">
+                    <h3 style="font-size:var(--text-md);font-weight:700;margin:0;">{{ active_conv.lead.business_name }}</h3>
+                    {% if phone_val %}
+                    <span class="badge badge-gray" style="font-size:10px;display:inline-flex;align-items:center;gap:3px;">
+                        <span class="material-symbols-outlined" style="font-size:12px;color:#25D366;">call</span>
+                        {{ phone_val }}
+                    </span>
+                    {% endif %}
+                </div>
+                <span style="font-size:11px;color:var(--text-secondary);text-transform:capitalize;">
+                    Niche: {{ active_conv.lead.business_category }} &bull; City: {{ active_conv.lead.city }} &bull; AI Mode: 
                     <strong id="status_label" style="color:{% if active_conv.status == 'ai_active' %}var(--success){% else %}var(--primary-color){% endif %};">
                         {{ active_conv.status|upper|replace('_', ' ') }}
                     </strong>
                 </span>
             </div>
             
-            <div style="display: flex; gap: var(--space-2); align-items: center;">
+            <div style="display: flex; gap: var(--space-2); align-items: center; flex-wrap:wrap;">
+                {% if clean_phone %}
+                <a href="https://wa.me/{{ clean_phone }}?text={{ default_wa_pitch|urlencode }}" target="_blank"
+                   class="btn btn-sm"
+                   style="background:#25D366; color:#fff; border:none; display:inline-flex; align-items:center; gap:5px; font-weight:600; text-decoration:none; padding:5px 10px; box-shadow:0 2px 6px rgba(37,211,102,0.25);"
+                   title="Open direct WhatsApp Web/App chat with this lead">
+                    <span class="material-symbols-outlined" style="font-size:16px;">chat</span>
+                    Open WhatsApp Chat
+                </a>
+                {% endif %}
+
+                <a href="/demos/preview/{{ active_conv.lead.id }}" target="_blank"
+                   class="btn btn-secondary btn-sm"
+                   style="display:inline-flex; align-items:center; gap:4px; text-decoration:none; padding:5px 10px;"
+                   title="View generated demo website">
+                    <span class="material-symbols-outlined" style="font-size:16px;">visibility</span>
+                    View Demo Site
+                </a>
+
                 {% if active_conv.status == 'ai_active' %}
                 <button class="btn btn-primary btn-sm" onclick="triggerTakeoverWarning({{ active_conv.id }})">
                     <span class="material-symbols-outlined" style="font-size:16px;margin-right:4px;">back_hand</span>
@@ -106,24 +141,30 @@
         <div id="chat_messages_container" style="flex:1;padding:var(--space-4);overflow-y:auto;background:var(--background-light);display:flex;flex-direction:column;gap:12px;">
             {% for m in messages %}
             <!-- MESSAGE CARD -->
-            <div style="display:flex;flex-direction:column;max-width:70%;
+            <div style="display:flex;flex-direction:column;max-width:75%;
                         {% if m.sender_type == 'client' %}align-self:flex-start;{% else %}align-self:flex-end;align-items:flex-end;{% endif %}">
                 <!-- sender badge -->
-                <span style="font-size:9px;color:var(--text-tertiary);margin-bottom:2px;font-weight:600;">
+                <span style="font-size:9px;color:var(--text-tertiary);margin-bottom:2px;font-weight:600;display:flex;align-items:center;gap:4px;">
                     {% if m.sender_type == 'client' %}
-                        Client
+                        <span class="material-symbols-outlined" style="font-size:12px;color:var(--text-secondary);">person</span>
+                        {{ m.sender_name or 'Client' }}
+                        {% if m.detected_intent %}
+                        <span class="badge badge-gray" style="font-size:8px;padding:1px 4px;">Intent: {{ m.detected_intent }}</span>
+                        {% endif %}
                     {% elif m.sender_type == 'ai' %}
-                        AI Assistant ({{ m.sender_name }})
+                        <span class="material-symbols-outlined" style="font-size:12px;color:var(--primary-color);">smart_toy</span>
+                        AI Autonomous Responder ({{ m.sender_name }})
                     {% else %}
+                        <span class="material-symbols-outlined" style="font-size:12px;color:var(--primary-color);">support_agent</span>
                         Admin ({{ m.sender_name }})
                     {% endif %}
                 </span>
                 <!-- bubble content -->
-                <div style="padding:10px 14px;border-radius:12px;font-size:var(--text-sm);line-height:1.4;box-shadow:var(--shadow-sm);
+                <div style="padding:10px 14px;border-radius:12px;font-size:var(--text-sm);line-height:1.5;box-shadow:var(--shadow-sm);white-space:pre-wrap;
                             {% if m.sender_type == 'client' %}
                                 background:#fff;color:var(--text-primary);border-top-left-radius:0;border:1px solid var(--border-color);
                             {% elif m.sender_type == 'ai' %}
-                                background:rgba(var(--primary-color-rgb), 0.08);color:var(--primary-color);border-top-right-radius:0;border:1px solid rgba(var(--primary-color-rgb), 0.15);
+                                background:rgba(var(--primary-color-rgb), 0.08);color:var(--text-primary);border-top-right-radius:0;border:1px solid rgba(var(--primary-color-rgb), 0.25);
                             {% else %}
                                 background:var(--primary-color);color:#fff;border-top-right-radius:0;
                             {% endif %}">
@@ -137,25 +178,54 @@
         </div>
         
         <!-- Message input footer area -->
-        <div style="padding:var(--space-4);border-top:1px solid var(--border-color);background:#fff;display:flex;flex-direction:column;gap:var(--space-3);">
+        <div style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--border-color);background:#fff;display:flex;flex-direction:column;gap:var(--space-3);">
             
-            <!-- Quick Client Simulator Input -->
-            <div style="display:flex;align-items:center;gap:var(--space-2);background:var(--background-light);padding:6px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-color);">
-                <span class="badge badge-gray" style="font-size:9px;">SIMULATE CLIENT PING</span>
-                <input type="text" id="sim_client_input" style="flex:1;border:none;background:transparent;font-size:var(--text-xs);outline:none;"
-                       placeholder="e.g. How much does this cost? / Do you provide domains?"
-                       onkeypress="if(event.key === 'Enter') submitSimulatedClientMessage()">
-                <button class="btn btn-ghost btn-sm" style="padding:4px 8px;min-width:auto;font-size:11px;"
-                        onclick="submitSimulatedClientMessage()">
-                    Simulate Ping
-                </button>
+            <!-- WhatsApp Client Message Simulator Panel -->
+            <div style="background:var(--background-light);padding:10px 12px;border-radius:var(--radius-md);border:1px solid var(--border-color);display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <span class="badge" style="background:#25D366;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;">WHATSAPP SIMULATOR</span>
+                        <span style="font-size:11px;font-weight:600;color:var(--text-secondary);">Simulate Client Message & Test AI Auto-Reply</span>
+                    </div>
+                    <span style="font-size:10px;color:var(--text-tertiary);">Knowledge Base & Pricing Connected</span>
+                </div>
+                
+                <!-- Quick client query prompts -->
+                <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                    <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px;padding:3px 8px;border-radius:12px;background:#fff;" onclick="quickSimulate('How much does this website cost, and what pricing packages do you offer?')">
+                        💰 Pricing inquiry
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px;padding:3px 8px;border-radius:12px;background:#fff;" onclick="quickSimulate('Can customers book tables directly via WhatsApp on the site?')">
+                        📱 WhatsApp booking feature?
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px;padding:3px 8px;border-radius:12px;background:#fff;" onclick="quickSimulate('How fast can you launch the website for our restaurant?')">
+                        ⚡ Turnaround time?
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px;padding:3px 8px;border-radius:12px;background:#fff;" onclick="quickSimulate('Do you include custom domain and SSL hosting in the price?')">
+                        🌐 Domain & hosting?
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px;padding:3px 8px;border-radius:12px;background:#fff;" onclick="quickSimulate('Can we customize the food menu dishes and color theme?')">
+                        🎨 Customization options?
+                    </button>
+                </div>
+
+                <div style="display:flex;gap:var(--space-2);align-items:center;">
+                    <input type="text" id="sim_client_input" class="form-input" style="flex:1;font-size:var(--text-sm);padding:6px 10px;background:#fff;"
+                           placeholder="Type client message as prospect (e.g. Can we connect our menu?)"
+                           onkeypress="if(event.key === 'Enter') submitSimulatedClientMessage()">
+                    <button class="btn btn-sm" style="background:#25D366;color:#fff;border:none;display:inline-flex;align-items:center;gap:4px;font-weight:600;padding:6px 12px;cursor:pointer;"
+                            onclick="submitSimulatedClientMessage()">
+                        <span class="material-symbols-outlined" style="font-size:16px;">send</span>
+                        Simulate Client Reply
+                    </button>
+                </div>
             </div>
             
             <!-- Manual Admin input -->
             <div style="display:flex;gap:var(--space-2);align-items:flex-end;">
                 <textarea id="admin_reply_text" class="form-input" rows="2" style="resize:none;font-size:var(--text-sm);padding:8px 12px;flex:1;"
-                          placeholder="Type manual admin reply here..."></textarea>
-                <button class="btn btn-primary" onclick="submitAdminReply()" style="height:40px;padding:0 var(--space-4);">
+                          placeholder="Type manual admin reply to send to client thread..."></textarea>
+                <button class="btn btn-primary" onclick="submitAdminReply()" style="height:40px;padding:0 var(--space-4);" title="Send Admin Reply">
                     <span class="material-symbols-outlined">send</span>
                 </button>
             </div>
@@ -277,6 +347,14 @@ function submitAdminReply() {
             alert("Error: " + data.error);
         }
     });
+}
+
+function quickSimulate(promptText) {
+    const input = document.getElementById('sim_client_input');
+    if (input) {
+        input.value = promptText;
+        submitSimulatedClientMessage();
+    }
 }
 
 function submitSimulatedClientMessage() {
