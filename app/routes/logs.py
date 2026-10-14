@@ -23,54 +23,71 @@ def _read_tail_log(filename, lines_count=150):
         'security': 'security.log'
     }
     target_name = allowed_files.get(filename, 'app.log')
-    log_dir = os.path.join(current_app.root_path, '..', 'logs')
-    log_path = os.path.abspath(os.path.join(log_dir, target_name))
-    
-    if not os.path.exists(log_path):
-        return []
-
     try:
+        log_dir = os.path.join(current_app.root_path, '..', 'logs')
+        os.makedirs(log_dir, exist_ok=True)
+        log_path = os.path.abspath(os.path.join(log_dir, target_name))
+        
+        if not os.path.exists(log_path):
+            return []
+
         with open(log_path, 'r', encoding='utf-8', errors='replace') as f:
             lines = f.readlines()
             return [line.strip() for line in lines[-lines_count:]]
     except Exception as e:
-        return [f"Error reading {target_name}: {str(e)}"]
+        return [f"Notice: {target_name} is empty or uninitialized ({str(e)})"]
 
 
 @logs_bp.route('')
 @login_required
 def index():
     """Render the System Activity Logs & Live Server Logs page."""
-    search_query = sanitize_string(request.args.get('search', ''))
-    actor_filter = sanitize_string(request.args.get('actor_type', ''))
-    active_tab = request.args.get('tab', 'live')  # 'live' or 'audit'
-    log_file = request.args.get('file', 'app')
-
-    audit_logs = []
     try:
-        db.session.rollback()
-        query = ActivityLog.query
-        if search_query:
-            query = query.filter(ActivityLog.description.ilike(f"%{search_query}%") | ActivityLog.action.ilike(f"%{search_query}%"))
-        if actor_filter:
-            query = query.filter_by(actor_type=actor_filter)
-        audit_logs = query.order_by(ActivityLog.created_at.desc()).limit(100).all()
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Error querying ActivityLog: {e}")
+        search_query = sanitize_string(request.args.get('search', ''))
+        actor_filter = sanitize_string(request.args.get('actor_type', ''))
+        active_tab = request.args.get('tab', 'live')  # 'live' or 'audit'
+        log_file = request.args.get('file', 'app')
+
         audit_logs = []
+        try:
+            db.session.rollback()
+            query = ActivityLog.query
+            if search_query:
+                query = query.filter(ActivityLog.description.ilike(f"%{search_query}%") | ActivityLog.action.ilike(f"%{search_query}%"))
+            if actor_filter:
+                query = query.filter_by(actor_type=actor_filter)
+            audit_logs = query.order_by(ActivityLog.created_at.desc()).limit(100).all()
+        except Exception as e:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            logger.error(f"Error querying ActivityLog: {e}")
+            audit_logs = []
 
-    live_lines = _read_tail_log(log_file, lines_count=150)
+        live_lines = _read_tail_log(log_file, lines_count=150)
 
-    return render_template(
-        'logs/index.html',
-        logs=audit_logs,
-        live_lines=live_lines,
-        active_tab=active_tab,
-        log_file=log_file,
-        search=search_query,
-        actor_type=actor_filter
-    )
+        return render_template(
+            'logs/index.html',
+            logs=audit_logs,
+            live_lines=live_lines,
+            active_tab=active_tab,
+            log_file=log_file,
+            search=search_query,
+            actor_type=actor_filter
+        )
+    except Exception as err:
+        logger.error(f"Error in logs.index: {err}", exc_info=True)
+        return render_template(
+            'logs/index.html',
+            logs=[],
+            live_lines=[f"System logs temporarily unavailable: {err}"],
+            active_tab='live',
+            log_file='app',
+            search='',
+            actor_type=''
+        )
+
 
 
 @logs_bp.route('/live-stream')
@@ -99,6 +116,10 @@ def clear_file():
         'security': 'security.log'
     }
     log_dir = os.path.join(current_app.root_path, '..', 'logs')
+    try:
+        os.makedirs(log_dir, exist_ok=True)
+    except Exception:
+        pass
     
     if filename == 'all':
         for target in allowed_files.values():
