@@ -1,0 +1,39 @@
+# Flask Core
+Flask==3.1.1
+Flask-Login==0.6.3
+Flask-WTF==1.2.2
+Flask-Migrate==4.1.0
+Flask-SQLAlchemy==3.1.1
+WTForms==3.2.1
+
+# Database
+SQLAlchemy==2.0.36
+alembic==1.14.1
+
+# Server
+gunicorn==23.0.0
+
+# Security
+cryptography==44.0.0
+bcrypt==4.2.1
+
+# Validation
+pydantic==2.10.4
+email-validator==2.2.0
+
+# HTTP
+requests==2.32.3
+httpx==0.28.1
+
+# Scheduling
+APScheduler==3.11.0
+
+# Environment
+python-dotenv==1.0.1
+
+# Utilities
+python-dateutil==2.9.0
+Pillow==11.1.0
+
+# Production Database Driver
+psycopg2-binary==2.9.10

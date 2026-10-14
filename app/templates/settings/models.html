@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Model Management — {{ provider.name }}{% endblock %}
+{% block page_title %}Models: {{ provider.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2);">
+        <a href="{{ url_for('providers.index') }}" style="display:flex;align-items:center;gap:4px;font-size:var(--text-sm);">
+            <span class="material-symbols-outlined" style="font-size:16px;">arrow_back</span>
+            Back to Providers
+        </a>
+    </div>
+    <h1>Model Management</h1>
+    <p>Configure model parameters and capability tags for <strong>{{ provider.name }}</strong>.</p>
+</div>
+
+<div class="section-header">
+    <h3>Models List</h3>
+    <button class="btn btn-primary" onclick="openDialog('addModelDialog')">
+        <span class="material-symbols-outlined">add</span>
+        Add Model
+    </button>
+</div>
+
+<div class="card">
+    <div class="card-body" style="padding:0;">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Display Name</th>
+                        <th>Model ID</th>
+                        <th>Priority</th>
+                        <th>Capabilities</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for model in models %}
+                    <tr>
+                        <td><strong>{{ model.display_name }}</strong></td>
+                        <td style="font-family:monospace;font-size:var(--text-sm);">{{ model.model_id }}</td>
+                        <td>{{ model.priority }}</td>
+                        <td>
+                            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                                {% if model.supports_text %}<span class="badge badge-blue">Text</span>{% endif %}
+                                {% if model.supports_vision %}<span class="badge badge-green">Vision</span>{% endif %}
+                                {% if model.supports_tool_calling %}<span class="badge badge-yellow">Tools</span>{% endif %}
+                                {% if model.supports_structured_output %}<span class="badge badge-purple" style="background:#f3e8ff;color:#6b21a8;">JSON</span>{% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="form-check">
+                                <input type="checkbox" id="toggle-{{ model.id }}" {% if model.is_enabled %}checked{% endif %}
+                                       onclick="toggleModel({{ model.id }})">
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display:flex;gap:var(--space-2);">
+                                <button class="btn btn-sm btn-secondary" onclick='openEditDialog({{ model.to_dict()|tojson }})'>
+                                    Edit
+                                </button>
+                                <form method="POST" action="{{ url_for('models.delete_model', provider_id=provider.id, id=model.id) }}"
+                                      style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this model?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sm btn-danger btn-icon">
+                                        <span class="material-symbols-outlined">delete</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state" style="padding:var(--space-8);">
+                                <span class="material-symbols-outlined empty-state-icon">model_training</span>
+                                <h3>No models added yet</h3>
+                                <p>Add a model configuration to this provider to start routing LLM requests.</p>
+                                <button class="btn btn-primary" onclick="openDialog('addModelDialog')">
+                                    <span class="material-symbols-outlined">add</span>
+                                    Add Model
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Model Dialog (§62) -->
+<div class="dialog-overlay" id="addModelDialog">
+    <div class="dialog">
+        <div class="dialog-header">
+            <h3>Add Model</h3>
+            <p>Register model identifier and select its capabilities.</p>
+        </div>
+        <form method="POST" action="{{ url_for('models.add_model', provider_id=provider.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="dialog-body">
+                <div class="form-group">
+                    <label class="form-label" for="add_model_id">Model ID</label>
+                    <input type="text" class="form-input" id="add_model_id" name="model_id" required 
+                           placeholder="e.g. google/gemini-2.5-pro">
+                    <span class="form-hint">Must match the exact model name expected by the provider API.</span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="add_display_name">Display Name</label>
+                    <input type="text" class="form-input" id="add_display_name" name="display_name" 
+                           placeholder="e.g. Gemini Pro">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="add_priority">Priority</label>
+                    <input type="number" class="form-input" id="add_priority" name="priority" value="10" min="1" max="100">
+                    <span class="form-hint">Lower priority numbers run first in fallback routing.</span>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Capabilities</label>
+                    <div style="display:flex;flex-direction:column;gap:var(--space-2);margin-top:var(--space-2);">
+                        <label class="form-check">
+                            <input type="checkbox" name="supports_text" checked>
+                            <span>Supports Text (Completions)</span>
+                        </label>
+                        <label class="form-check">
+                            <input type="checkbox" name="supports_vision">
+                            <span>Supports Vision (Images)</span>
+                        </label>
+                        <label class="form-check">
+                            <input type="checkbox" name="supports_tool_calling">
+                            <span>Supports Tool Calling</span>
+                        </label>
+                        <label class="form-check">
+                            <input type="checkbox" name="supports_structured_output">
+                            <span>Supports Structured JSON Output</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeDialog('addModelDialog')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add Model</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Model Dialog -->
+<div class="dialog-overlay" id="editModelDialog">
+    <div class="dialog">
+        <div class="dialog-header">
+            <h3>Edit Model</h3>
+            <p>Update model display parameters and capabilities.</p>
+        </div>
+        <form method="POST" id="editModelForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="dialog-body">
+                <div class="form-group">
+                    <label class="form-label">Model ID</label>
+                    <input type="text" class="form-input" id="edit_model_id" disabled>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit_display_name">Display Name</label>
+                    <input type="text" class="form-input" id="edit_display_name" name="display_name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit_priority">Priority</label>
+                    <input type="number" class="form-input" id="edit_priority" name="priority" min="1" max="100">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Capabilities</label>
+                    <div style="display:flex;flex-direction:column;gap:var(--space-2);margin-top:var(--space-2);">
+                        <label class="form-check">
+                            <input type="checkbox" id="edit_supports_text" name="supports_text">
+                            <span>Supports Text (Completions)</span>
+                        </label>
+                        <label class="form-check">
+                            <input type="checkbox" id="edit_supports_vision" name="supports_vision">
+                            <span>Supports Vision (Images)</span>
+                        </label>
+                        <label class="form-check">
+                            <input type="checkbox" id="edit_supports_tool_calling" name="supports_tool_calling">
+                            <span>Supports Tool Calling</span>
+                        </label>
+                        <label class="form-check">
+                            <input type="checkbox" id="edit_supports_structured_output" name="supports_structured_output">
+                            <span>Supports Structured JSON Output</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeDialog('editModelDialog')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Model</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openEditDialog(model) {
+    const form = document.getElementById('editModelForm');
+    form.action = `/settings/llm/providers/{{ provider.id }}/models/${model.id}/edit`;
+    
+    document.getElementById('edit_model_id').value = model.model_id;
+    document.getElementById('edit_display_name').value = model.display_name;
+    document.getElementById('edit_priority').value = model.priority;
+    
+    document.getElementById('edit_supports_text').checked = model.supports_text;
+    document.getElementById('edit_supports_vision').checked = model.supports_vision;
+    document.getElementById('edit_supports_tool_calling').checked = model.supports_tool_calling;
+    document.getElementById('edit_supports_structured_output').checked = model.supports_structured_output;
+    
+    openDialog('editModelDialog');
+}
+
+async function toggleModel(id) {
+    try {
+        const res = await apiFetch(`/settings/llm/providers/{{ provider.id }}/models/${id}/toggle`, { method: 'POST' });
+        showToast(res.message, 'success');
+    } catch (e) {
+        const chk = document.getElementById(`toggle-${id}`);
+        chk.checked = !chk.checked;
+    }
+}
+</script>
+{% endblock %}

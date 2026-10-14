@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}Leads Database — Flixora{% endblock %}
+{% block page_title %}Leads Database{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <div>
+        <h2>Leads Database</h2>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:2px;">
+            Search, filter, and qualify discovered businesses.
+        </p>
+    </div>
+    <a href="{{ url_for('leads.discover') }}" class="btn btn-primary">
+        <span class="material-symbols-outlined">search</span>
+        Discover Leads
+    </a>
+</div>
+
+<!-- Filter Bar -->
+<div class="card" style="margin-bottom:var(--space-6);">
+    <div class="card-body" style="padding:var(--space-4) var(--space-6);">
+        <form method="GET" action="{{ url_for('leads.index') }}" style="display:flex;flex-wrap:wrap;gap:var(--space-4);align-items:flex-end;">
+            <div style="flex:1;min-width:200px;">
+                <label class="form-label" for="search">Search</label>
+                <input type="text" class="form-input" id="search" name="search" 
+                       value="{{ request.args.get('search', '') }}" placeholder="Business name or address...">
+            </div>
+            
+            <div style="width:160px;">
+                <label class="form-label" for="status">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Statuses</option>
+                    {% for status in statuses %}
+                    <option value="{{ status }}" {{ 'selected' if request.args.get('status') == status }}>{{ status|title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="width:180px;">
+                <label class="form-label" for="category">Category</label>
+                <select class="form-select" id="category" name="category">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}" {{ 'selected' if request.args.get('category') == cat }}>{{ cat|title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="width:120px;">
+                <label class="form-label" for="min_rating">Min Rating</label>
+                <select class="form-select" id="min_rating" name="min_rating">
+                    <option value="">Any</option>
+                    <option value="3.0" {{ 'selected' if request.args.get('min_rating') == '3.0' }}>3.0+</option>
+                    <option value="4.0" {{ 'selected' if request.args.get('min_rating') == '4.0' }}>4.0+</option>
+                    <option value="4.5" {{ 'selected' if request.args.get('min_rating') == '4.5' }}>4.5+</option>
+                </select>
+            </div>
+
+            <div style="display:flex;gap:var(--space-2);">
+                <button type="submit" class="btn btn-secondary">
+                    Filter
+                </button>
+                <a href="{{ url_for('leads.index') }}" class="btn btn-ghost" style="padding:10px;">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Leads Table Actions & Title -->
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-3); padding:0 var(--space-1);">
+    <h3 style="font-size:var(--text-md); font-weight:600; margin:0;">Discovered Leads</h3>
+    <button type="button" id="btnDeleteSelected" class="btn btn-danger" style="display:none; gap:6px; align-items:center; padding: 8px 16px; font-size: var(--text-sm);" onclick="confirmDeleteSelected()">
+        <span class="material-symbols-outlined" style="font-size:18px;">delete_sweep</span>
+        Delete Selected (<span id="selectedCount">0</span>)
+    </button>
+</div>
+
+<!-- Leads Table -->
+<div class="card">
+    <div class="card-body" style="padding:0;">
+        <div class="table-container table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40px; padding-left: 16px; text-align: center;">
+                            <input type="checkbox" id="selectAllLeads" onclick="toggleSelectAll(this)" style="cursor:pointer; width:16px; height:16px; accent-color:var(--primary-color);">
+                        </th>
+                        <th>Business</th>
+                        <th>Category</th>
+                        <th>Rating / Reviews</th>
+                        <th>Website</th>
+                        <th>Lead Score</th>
+                        <th>Status</th>
+                        <th>Last Action</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lead in leads %}
+                    <tr>
+                        <td style="padding-left: 16px; text-align: center; vertical-align: middle;">
+                            <input type="checkbox" class="lead-select-checkbox" value="{{ lead.id }}" onclick="checkSelectedLeads()" style="cursor:pointer; width:16px; height:16px; accent-color:var(--primary-color);">
+                        </td>
+                        <td data-label="Business">
+                            <div>
+                                <strong>{{ lead.business_name }}</strong>
+                                <div style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:2px;">{{ lead.address }}</div>
+                            </div>
+                        </td>
+                        <td data-label="Category"><span class="badge badge-gray">{{ lead.business_category|title }}</span></td>
+                        <td data-label="Rating / Reviews">
+                            {% if lead.rating %}
+                            <div style="display:flex;align-items:center;gap:4px;">
+                                <span class="material-symbols-outlined" style="font-size:16px;color:var(--warning);font-fill:1;">star</span>
+                                <span>{{ lead.rating }}</span>
+                                <span style="color:var(--text-tertiary);">({{ lead.review_count }})</span>
+                            </div>
+                            {% else %}
+                            <span style="color:var(--text-tertiary);">No reviews</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Website">
+                            {% if lead.website_url %}
+                            <a href="{{ lead.website_url }}" target="_blank" style="display:flex;align-items:center;gap:4px;font-size:var(--text-sm);">
+                                Link
+                                <span class="material-symbols-outlined" style="font-size:14px;">open_in_new</span>
+                            </a>
+                            {% else %}
+                            <span class="badge badge-red">Missing Website</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Lead Score">
+                            <span class="badge {% if lead.lead_score >= 80 %}badge-red{% elif lead.lead_score >= 60 %}badge-yellow{% else %}badge-blue{% endif %}" style="font-weight:600;">
+                                {{ lead.lead_score }}
+                            </span>
+                        </td>
+                        <td data-label="Status">
+                            <span class="badge {% if lead.status == 'qualified' %}badge-green{% elif lead.status == 'disqualified' %}badge-red{% elif lead.status == 'new' or lead.status == 'discovered' %}badge-blue{% else %}badge-yellow{% endif %}">
+                                {{ lead.status|title }}
+                            </span>
+                        </td>
+                        <td data-label="Last Action" style="font-size:var(--text-sm);color:var(--text-secondary);">{{ lead.last_action or 'Discovered' }}</td>
+                        <td data-label="Actions" style="white-space:nowrap;">
+                            <a href="{{ url_for('leads.detail', id=lead.id) }}" class="btn btn-sm btn-secondary" style="margin-right:4px;">
+                                Details
+                            </a>
+                            <button type="button" class="btn btn-sm btn-danger" style="background:transparent; color:var(--error); border-color:var(--error); padding: 5px 10px;" onclick="confirmDeleteLead({{ lead.id }}, '{{ lead.business_name|replace("'", "\\'")|escape }}', {{ lead.contacts.count() }}, {{ lead.website_analyses.count() }}, {{ lead.prds.count() }}, {{ lead.demos.count() }}, {{ lead.conversations.count() }}, {{ lead.outreach_campaigns.count() }}, {{ lead.followups.count() }}, {{ lead.sales_deals.count() }})">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9">
+                            <div class="empty-state" style="padding:var(--space-12);">
+                                <span class="material-symbols-outlined empty-state-icon">group_off</span>
+                                <h3>No Leads Found</h3>
+                                <p>Try adjusting your search filters or run a new discovery search.</p>
+                                <a href="{{ url_for('leads.discover') }}" class="btn btn-primary">
+                                    <span class="material-symbols-outlined">search</span>
+                                    Discover Leads
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if pagination.pages > 1 %}
+<div style="display:flex;justify-content:center;margin-top:var(--space-6);gap:4px;">
+    {% if pagination.has_prev %}
+    <a href="{{ url_for('leads.index', page=pagination.prev_num, search=request.args.get('search', ''), status=request.args.get('status', ''), category=request.args.get('category', ''), min_rating=request.args.get('min_rating', '')) }}" class="btn btn-secondary btn-sm">Prev</a>
+    {% endif %}
+    
+    <span style="display:flex;align-items:center;padding:0 var(--space-3);font-size:var(--text-sm);color:var(--text-secondary);">
+        Page {{ pagination.page }} of {{ pagination.pages }}
+    </span>
+
+    {% if pagination.has_next %}
+    <a href="{{ url_for('leads.index', page=pagination.next_num, search=request.args.get('search', ''), status=request.args.get('status', ''), category=request.args.get('category', ''), min_rating=request.args.get('min_rating', '')) }}" class="btn btn-secondary btn-sm">Next</a>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Custom Delete Lead Confirmation Modal -->
+<div class="dialog-overlay" id="deleteLeadModal">
+    <div class="dialog" style="max-width: 460px;">
+        <div class="dialog-header">
+            <h3 style="color: var(--error);">Delete Lead?</h3>
+            <p style="margin-top: 4px; font-size: var(--text-sm); color: var(--text-secondary);">
+                This will permanently delete this lead and its associated records.
+            </p>
+        </div>
+        <div class="dialog-body" style="padding-top: var(--space-2);">
+            <div style="background: var(--gray-50); border: 1px solid var(--border-color); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-4);">
+                <div style="margin-bottom: var(--space-2); font-size: var(--text-sm);">
+                    <span style="color: var(--text-secondary);">Business:</span> 
+                    <strong id="delete_business_name" style="color: var(--text-primary);"></strong>
+                </div>
+                <div style="font-size: var(--text-xs); color: var(--text-tertiary);">
+                    Lead ID: <span id="delete_lead_id"></span>
+                </div>
+            </div>
+            
+            <div style="font-size: var(--text-xs); color: var(--text-secondary);">
+                <span style="font-weight: 600; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary);">The following related records will be removed:</span>
+                <ul style="margin: 0; padding-left: var(--space-4); display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px;">
+                    <li>Contacts: <strong id="cnt_contacts">0</strong></li>
+                    <li>Website Analysis: <strong id="cnt_analysis">0</strong></li>
+                    <li>PRD Documents: <strong id="cnt_prds">0</strong></li>
+                    <li>Demo Projects: <strong id="cnt_demos">0</strong></li>
+                    <li>Conversations: <strong id="cnt_conversations">0</strong></li>
+                    <li>Outreach Campaigns: <strong id="cnt_campaigns">0</strong></li>
+                    <li>Follow-Ups: <strong id="cnt_followups">0</strong></li>
+                    <li>Sales Pipeline Deals: <strong id="cnt_deals">0</strong></li>
+                </ul>
+            </div>
+        </div>
+        <div class="dialog-footer" style="border-top: 1px solid var(--border-color); padding-top: var(--space-4);">
+            <button type="button" class="btn btn-secondary" onclick="closeDialog('deleteLeadModal')">Cancel</button>
+            <form id="delete_form" method="POST" style="display: inline; margin: 0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-danger">Delete Lead</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDeleteLead(id, name, contacts, analysis, prds, demos, conversations, campaigns, followups, deals) {
+    document.getElementById('delete_lead_id').innerText = id;
+    document.getElementById('delete_business_name').innerText = name;
+    document.getElementById('delete_form').action = `/leads/${id}/delete`;
+    
+    document.getElementById('cnt_contacts').innerText = contacts;
+    document.getElementById('cnt_analysis').innerText = analysis;
+    document.getElementById('cnt_prds').innerText = prds;
+    document.getElementById('cnt_demos').innerText = demos;
+    document.getElementById('cnt_conversations').innerText = conversations;
+    document.getElementById('cnt_campaigns').innerText = campaigns;
+    document.getElementById('cnt_followups').innerText = followups;
+    document.getElementById('cnt_deals').innerText = deals;
+
+    openDialog('deleteLeadModal');
+}
+
+function toggleSelectAll(master) {
+    const checkboxes = document.querySelectorAll('.lead-select-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = master.checked;
+    });
+    checkSelectedLeads();
+}
+
+function checkSelectedLeads() {
+    const checkboxes = document.querySelectorAll('.lead-select-checkbox');
+    const checked = Array.from(checkboxes).filter(cb => cb.checked);
+    const deleteBtn = document.getElementById('btnDeleteSelected');
+    const countSpan = document.getElementById('selectedCount');
+    
+    if (checked.length > 0) {
+        deleteBtn.style.display = 'inline-flex';
+        countSpan.innerText = checked.length;
+    } else {
+        deleteBtn.style.display = 'none';
+        countSpan.innerText = '0';
+        // Deselect select all master checkbox if nothing is checked
+        document.getElementById('selectAllLeads').checked = false;
+    }
+}
+
+function confirmDeleteSelected() {
+    const checkboxes = document.querySelectorAll('.lead-select-checkbox');
+    const checked = Array.from(checkboxes).filter(cb => cb.checked);
+    if (checked.length === 0) return;
+    
+    document.getElementById('delete_selected_count').innerText = checked.length;
+    
+    const form = document.getElementById('delete_selected_form');
+    // Remove old hidden inputs
+    const oldInputs = form.querySelectorAll('input[name="lead_ids[]"]');
+    oldInputs.forEach(input => input.remove());
+    
+    // Append selected IDs
+    checked.forEach(cb => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'lead_ids[]';
+        input.value = cb.value;
+        form.appendChild(input);
+    });
+    
+    openDialog('deleteSelectedLeadsModal');
+}
+</script>
+
+<!-- Delete Selected Leads Confirmation Modal -->
+<div class="dialog-overlay" id="deleteSelectedLeadsModal">
+    <div class="dialog" style="max-width: 450px;">
+        <div class="dialog-header">
+            <h3 style="color: var(--error);">Delete Selected Leads?</h3>
+            <p style="margin-top: 4px; font-size: var(--text-sm); color: var(--text-secondary);">
+                This will permanently delete the selected leads and all their associated records.
+            </p>
+        </div>
+        <div class="dialog-body" style="padding-top: var(--space-2);">
+            <div style="background: var(--gray-50); border: 1px solid var(--border-color); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); font-size: var(--text-sm);">
+                <div>
+                    <span style="color: var(--text-secondary);">Number of Leads Selected:</span> 
+                    <strong id="delete_selected_count" style="color: var(--error);">0</strong>
+                </div>
+            </div>
+            <p style="font-size: var(--text-xs); color: var(--text-tertiary); margin-top: var(--space-3); line-height: 1.4;">
+                Warning: This action is irreversible. All contacts, website analyses, PRDs, demos, outreach campaigns, and message histories linked to these selected leads will be cascade-deleted.
+            </p>
+        </div>
+        <div class="dialog-footer" style="border-top: 1px solid var(--border-color); padding-top: var(--space-4);">
+            <button type="button" class="btn btn-secondary" onclick="closeDialog('deleteSelectedLeadsModal')">Cancel</button>
+            <form id="delete_selected_form" action="{{ url_for('leads.delete_multiple') }}" method="POST" style="display: inline; margin: 0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-danger">Delete Selected Leads</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

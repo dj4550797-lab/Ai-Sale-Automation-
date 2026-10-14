@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}PRD Drafts — Flixora{% endblock %}
+{% block page_title %}PRD Management{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <div>
+        <h2>PRD Drafts</h2>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:2px;">
+            Manage, review, and approve website Product Requirements Documents.
+        </p>
+    </div>
+</div>
+
+<!-- Search Bar -->
+<div class="card" style="margin-bottom:var(--space-6);">
+    <div class="card-body" style="padding:var(--space-4) var(--space-6);">
+        <form method="GET" action="{{ url_for('prds.index') }}" style="display:flex;gap:var(--space-4);align-items:flex-end;">
+            <div style="flex:1;min-width:200px;">
+                <label class="form-label" for="search">Search</label>
+                <input type="text" class="form-input" id="search" name="search" 
+                       value="{{ request.args.get('search', '') }}" placeholder="Search by business or PRD title...">
+            </div>
+            <button type="submit" class="btn btn-secondary">Search</button>
+            <a href="{{ url_for('prds.index') }}" class="btn btn-ghost">Clear</a>
+        </form>
+    </div>
+</div>
+
+<!-- PRDs Table -->
+<div class="card">
+    <div class="card-body" style="padding:0;">
+        <div class="table-container table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Business</th>
+                        <th>PRD Title</th>
+                        <th>Status</th>
+                        <th>Type</th>
+                        <th>Version</th>
+                        <th>Last Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in prds %}
+                    <tr>
+                        <td data-label="Business">
+                            <strong>{{ p.lead.business_name }}</strong>
+                            <div style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:2px;">{{ p.lead.business_category|title }}</div>
+                        </td>
+                        <td data-label="PRD Title">
+                            <strong>{{ p.title }}</strong>
+                        </td>
+                        <td data-label="Status">
+                            {% if p.status == 'approved' %}
+                            <span class="badge badge-success">Approved</span>
+                            {% elif p.status == 'under_review' %}
+                            <span class="badge badge-warning">Under Review</span>
+                            {% elif p.status == 'rejected' %}
+                            <span class="badge badge-error">Rejected</span>
+                            {% elif p.status == 'changes_requested' %}
+                            <span class="badge badge-error">Changes Requested</span>
+                            {% else %}
+                            <span class="badge badge-gray">{{ p.status|upper }}</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Type">
+                            {% if p.is_improvement %}
+                            <span class="badge badge-gray">Improvement PRD</span>
+                            {% else %}
+                            <span class="badge badge-primary">New Website PRD</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Version">
+                            <span class="badge badge-gray" style="font-weight:600;">v{{ p.current_version }}</span>
+                        </td>
+                        <td data-label="Last Updated">
+                            {{ p.updated_at.strftime('%Y-%m-%d %H:%M') if p.updated_at else '-' }}
+                        </td>
+                        <td data-label="Actions" style="white-space:nowrap;">
+                            <a href="{{ url_for('prds.detail', id=p.id) }}" class="btn btn-sm btn-secondary" style="margin-right:4px;">
+                                View
+                            </a>
+                            <a href="{{ url_for('leads.download_prd', id=p.lead_id) }}" class="btn btn-sm btn-secondary" style="margin-right:4px;">
+                                Download
+                            </a>
+                            <button type="button" class="btn btn-sm btn-danger" style="background:transparent; color:var(--error); border-color:var(--error); padding: 5px 10px;" onclick="confirmDeletePRD({{ p.id }}, '{{ p.lead.business_name|replace("'", "\\'")|escape }}', '{{ p.title|replace("'", "\\'")|escape }}', {{ p.current_version }})">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center" style="padding:var(--space-8);">
+                            <div style="color:var(--text-tertiary);display:flex;flex-direction:column;align-items:center;gap:var(--space-2);">
+                                <span class="material-symbols-outlined" style="font-size:48px;">description</span>
+                                <p>No PRDs generated yet.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Paginator -->
+        {% if pagination and pagination.pages > 1 %}
+        <div style="display:flex;justify-content:center;padding:var(--space-4);">
+            <div style="display:flex;gap:var(--space-1);">
+                {% for p in pagination.iter_pages() %}
+                    {% if p %}
+                        <a href="{{ url_for('prds.index', page=p, search=request.args.get('search','')) }}" 
+                           class="btn {% if p == pagination.page %}btn-primary{% else %}btn-ghost{% endif %}" 
+                           style="padding:6px 12px;min-width:36px;text-align:center;">{{ p }}</a>
+                    {% else %}
+                        <span style="padding:6px 12px;">...</span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete PRD Confirmation Modal -->
+<div class="dialog-overlay" id="deletePRDModal">
+    <div class="dialog" style="max-width: 450px;">
+        <div class="dialog-header">
+            <h3 style="color: var(--error);">Delete PRD?</h3>
+            <p style="margin-top: 4px; font-size: var(--text-sm); color: var(--text-secondary);">
+                This will permanently delete this PRD and its associated PRD versions.
+            </p>
+        </div>
+        <div class="dialog-body" style="padding-top: var(--space-2);">
+            <div style="background: var(--gray-50); border: 1px solid var(--border-color); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); font-size: var(--text-sm);">
+                <div style="margin-bottom: var(--space-2);">
+                    <span style="color: var(--text-secondary);">Business:</span> 
+                    <strong id="delete_prd_business" style="color: var(--text-primary);"></strong>
+                </div>
+                <div style="margin-bottom: var(--space-2);">
+                    <span style="color: var(--text-secondary);">PRD:</span> 
+                    <span id="delete_prd_title" style="font-weight: 500;"></span>
+                </div>
+                <div>
+                    <span style="color: var(--text-secondary);">Version:</span> 
+                    <span id="delete_prd_version" class="badge badge-gray" style="font-weight: 600;"></span>
+                </div>
+            </div>
+            <p style="font-size: var(--text-xs); color: var(--text-tertiary); margin-top: var(--space-3); line-height: 1.4;">
+                Warning: Deleting a PRD does not delete the associated Lead record, but all version history snapshots of this PRD will be removed.
+            </p>
+        </div>
+        <div class="dialog-footer" style="border-top: 1px solid var(--border-color); padding-top: var(--space-4);">
+            <button type="button" class="btn btn-secondary" onclick="closeDialog('deletePRDModal')">Cancel</button>
+            <form id="delete_prd_form" method="POST" style="display: inline; margin: 0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-danger">Delete PRD</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDeletePRD(id, business, title, version) {
+    document.getElementById('delete_prd_business').innerText = business;
+    document.getElementById('delete_prd_title').innerText = title;
+    document.getElementById('delete_prd_version').innerText = 'v' + version;
+    document.getElementById('delete_prd_form').action = `/prds/${id}/delete`;
+    
+    openDialog('deletePRDModal');
+}
+</script>
+{% endblock %}

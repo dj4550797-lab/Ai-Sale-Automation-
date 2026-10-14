@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Follow-Up Scheduler — Flixora{% endblock %}
+{% block page_title %}Follow-Up Scheduler{% endblock %}
+
+{% block content %}
+<div class="section-header" style="margin-bottom:var(--space-6);">
+    <div>
+        <h2>Follow-Up Queue Logs</h2>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:2px;">
+            Monitor scheduled reminders, counts, and active stop conditions mapping replies (§49, §50, §51).
+        </p>
+    </div>
+    <button class="btn btn-primary" onclick="triggerFollowupsCron()">
+        <span class="material-symbols-outlined">restart_alt</span>
+        Trigger Cron Job
+    </button>
+</div>
+
+<div class="card" style="padding:0;overflow:hidden;">
+    <table class="table" style="margin:0;">
+        <thead>
+            <tr>
+                <th>Prospect Lead</th>
+                <th>Attempt Number</th>
+                <th>Outreach Channel</th>
+                <th>Scheduled Date / Sent At</th>
+                <th>Status</th>
+                <th>Details / Stop Reason</th>
+                <th style="text-align:right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fup in followups %}
+            <tr>
+                <td style="font-weight:500;">
+                    {{ fup.lead.business_name }}
+                    <span style="font-size:10px;color:var(--text-tertiary);display:block;font-weight:normal;margin-top:2px;">
+                        Lead Status: <span style="text-transform:uppercase;">{{ fup.lead.status }}</span>
+                    </span>
+                </td>
+                <td>
+                    <span class="badge badge-gray" style="font-weight:600;">
+                        Follow-Up {{ fup.followup_number }}
+                    </span>
+                </td>
+                <td>
+                    <span style="text-transform:uppercase;font-size:var(--text-xs);font-weight:600;color:var(--text-secondary);display:flex;align-items:center;gap:4px;">
+                        <span class="material-symbols-outlined" style="font-size:16px;">
+                            {% if fup.channel == 'email' %}mail{% elif fup.channel == 'whatsapp' %}chat{% else %}photo_camera{% endif %}
+                        </span>
+                        {{ fup.channel }}
+                    </span>
+                </td>
+                <td style="font-size:var(--text-sm);color:var(--text-secondary);">
+                    {% if fup.status.name == 'SENT' %}
+                        <span style="color:var(--success);">Sent: {{ fup.sent_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    {% else %}
+                        <span>Due: {{ fup.scheduled_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if fup.status.name == 'SCHEDULED' %}
+                    <span class="badge badge-gray">Scheduled</span>
+                    {% elif fup.status.name == 'SENT' %}
+                    <span class="badge badge-success">Sent</span>
+                    {% elif fup.status.name == 'CANCELLED' %}
+                    <span class="badge badge-error">Cancelled</span>
+                    {% else %}
+                    <span class="badge badge-gray">{{ fup.status.name|title }}</span>
+                    {% endif %}
+                </td>
+                <td style="font-size:var(--text-xs);color:var(--text-secondary);line-height:1.4;max-width:300px;">
+                    {% if fup.status.name == 'CANCELLED' %}
+                        <span style="color:var(--error);font-weight:500;">{{ fup.stop_reason }}</span>
+                    {% elif fup.message_content %}
+                        <p style="margin:0;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="{{ fup.message_content }}">
+                            "{{ fup.message_content }}"
+                        </p>
+                    {% else %}
+                        <span style="color:var(--text-tertiary);">Pending queue run.</span>
+                    {% endif %}
+                </td>
+                <td style="text-align:right;">
+                    <button type="button" class="btn btn-sm btn-danger" style="background:transparent; color:var(--error); border-color:var(--error); padding: 5px 10px;" onclick="confirmDeleteFollowup({{ fup.id }}, '{{ fup.lead.business_name|replace("'", "\\'")|escape }}', {{ fup.followup_number }}, '{{ fup.channel }}')">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" style="text-align:center;padding:var(--space-8);color:var(--text-tertiary);">
+                    No scheduled follow-up attempts.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Loader Spinner Overlay -->
+<div class="dialog-overlay" id="cronLoadingSpinner" style="background:rgba(0,0,0,0.5);z-index:9999;">
+    <div class="card" style="padding:var(--space-6);max-width:260px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;margin:auto;box-shadow:var(--shadow-lg);">
+        <div class="spinner" style="width:36px;height:36px;border-width:4px;"></div>
+        <strong style="font-size:var(--text-sm);">Running Cron evaluations...</strong>
+        <p style="font-size:11px;color:var(--text-tertiary);margin:0;">Scanning scheduled dates and validating stop criteria.</p>
+    </div>
+</div>
+
+<script>
+function triggerFollowupsCron() {
+    openDialog('cronLoadingSpinner');
+    
+    fetch("{{ url_for('followups.trigger_cron') }}", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token() }}"
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        closeDialog('cronLoadingSpinner');
+        if (data.success) {
+            alert(data.message);
+            window.location.reload();
+        } else {
+            alert("Cron run failed: " + data.error);
+        }
+    })
+    .catch(err => {
+        closeDialog('cronLoadingSpinner');
+        alert("Request Error: " + err);
+    });
+}
+
+function confirmDeleteFollowup(id, business, followupNumber, channel) {
+    document.getElementById('delete_followup_business').innerText = business;
+    document.getElementById('delete_followup_num').innerText = followupNumber;
+    document.getElementById('delete_followup_channel').innerText = channel.toUpperCase();
+    document.getElementById('delete_followup_form').action = `/followups/${id}/delete`;
+    
+    openDialog('deleteFollowupModal');
+}
+</script>
+
+<!-- Delete Followup Confirmation Modal -->
+<div class="dialog-overlay" id="deleteFollowupModal">
+    <div class="dialog" style="max-width: 450px;">
+        <div class="dialog-header">
+            <h3 style="color: var(--error);">Delete Follow-Up Attempt?</h3>
+            <p style="margin-top: 4px; font-size: var(--text-sm); color: var(--text-secondary);">
+                This will permanently remove this scheduled follow-up attempt record.
+            </p>
+        </div>
+        <div class="dialog-body" style="padding-top: var(--space-2);">
+            <div style="background: var(--gray-50); border: 1px solid var(--border-color); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); font-size: var(--text-sm);">
+                <div style="margin-bottom: var(--space-2);">
+                    <span style="color: var(--text-secondary);">Business:</span> 
+                    <strong id="delete_followup_business" style="color: var(--text-primary);"></strong>
+                </div>
+                <div style="margin-bottom: var(--space-2);">
+                    <span style="color: var(--text-secondary);">Follow-Up:</span> 
+                    <span class="badge badge-gray" style="font-weight: 600;">Attempt #<span id="delete_followup_num"></span></span>
+                </div>
+                <div>
+                    <span style="color: var(--text-secondary);">Channel:</span> 
+                    <span id="delete_followup_channel" style="font-weight: 500; text-transform: uppercase;"></span>
+                </div>
+            </div>
+            <p style="font-size: var(--text-xs); color: var(--text-tertiary); margin-top: var(--space-3); line-height: 1.4;">
+                Warning: Deleting a follow-up attempt does not delete the associated Lead or outreach campaign record, but it will cancel this scheduled action.
+            </p>
+        </div>
+        <div class="dialog-footer" style="border-top: 1px solid var(--border-color); padding-top: var(--space-4);">
+            <button type="button" class="btn btn-secondary" onclick="closeDialog('deleteFollowupModal')">Cancel</button>
+            <form id="delete_followup_form" method="POST" style="display: inline; margin: 0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-danger">Delete Follow-Up</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,581 @@
+{% extends "base.html" %}
+
+{% block title %}Integrations — Flixora{% endblock %}
+{% block page_title %}Integrations{% endblock %}
+
+{% block content %}
+<style>
+/* Integration Cards and Sections */
+.integration-section-title {
+    font-size: var(--text-md);
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-4);
+    margin-top: var(--space-6);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+.integration-section-title::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border-color);
+}
+.integration-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-5);
+}
+@media (max-width: 768px) {
+    .integration-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.integration-card {
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all var(--transition-base);
+}
+.integration-card:hover {
+    box-shadow: var(--shadow-sm);
+    border-color: var(--primary-300);
+}
+.integration-header {
+    padding: var(--space-5) var(--space-6);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-4);
+}
+.integration-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.integration-body-form {
+    padding: var(--space-5) var(--space-6);
+    background: var(--surface-dim);
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+}
+.integration-footer {
+    padding: var(--space-4) var(--space-6);
+    background: var(--surface-dim);
+    border-top: 1px solid var(--border-color);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+}
+</style>
+
+<div class="page-header" style="margin-bottom: var(--space-6);">
+    <h1>API & Integrations</h1>
+    <p style="color: var(--text-secondary);">Configure API keys, webhooks, and SMTP details for messaging, discovery, and LLM services.</p>
+</div>
+
+<!-- 1. DISCOVERY SECTION -->
+<div class="integration-section-title">Discovery Services</div>
+<div class="integration-grid">
+    
+    <!-- Google Maps API Card -->
+    <div class="integration-card" id="card-google_maps">
+        <div class="integration-header">
+            <div class="integration-icon" style="background: var(--primary-50); color: var(--primary-600);">
+                <span class="material-symbols-outlined" style="font-size: 24px;">map</span>
+            </div>
+            <div style="flex: 1;">
+                <h3 style="margin: 0; font-size: var(--text-md); font-weight: 600;">Google Maps Platform</h3>
+                <p style="margin: var(--space-1) 0 0 0; font-size: var(--text-sm); color: var(--text-secondary);">Scrapes new business leads daily using Places API (New).</p>
+                <div style="margin-top: var(--space-2);">
+                    {% if integrations_status.google_maps.configured %}
+                        <span class="badge badge-green">Configured</span>
+                        {% if integrations_status.google_maps.is_valid %}
+                            <span class="badge badge-green" style="margin-left: 4px;">Valid Connection</span>
+                        {% elif integrations_status.google_maps.is_valid is none %}
+                            <span class="badge badge-gray" style="margin-left: 4px;">Not tested</span>
+                        {% else %}
+                            <span class="badge badge-red" style="margin-left: 4px;">Invalid Connection</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge badge-gray">Not configured</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Collapsible Configuration Form -->
+        <div class="integration-body-form" id="form-google_maps" style="display: none;">
+            <p style="font-size: var(--text-xs); color: var(--text-secondary); line-height: 1.4; margin-bottom: var(--space-4);">
+                <strong>How to get your key:</strong> Go to
+                <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color: var(--primary-600); text-decoration: underline;">Google Cloud Console</a>.
+                Create an API Key and enable <strong>Places API (New)</strong>.
+            </p>
+            {% if integrations_status.google_maps.configured %}
+            <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); font-family: monospace; font-size: var(--text-xs); background: var(--surface); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                <span class="material-symbols-outlined" style="font-size: 14px; color: var(--success);">vpn_key</span>
+                <span>{{ integrations_status.google_maps.display }}</span>
+            </div>
+            {% endif %}
+            <div class="form-group" style="margin: 0;">
+                <label class="form-label" for="google_maps_key">Google API Key</label>
+                <input type="password" id="google_maps_key" class="form-control" placeholder="AIzaSy...">
+            </div>
+            <div style="margin-top: var(--space-4); display: flex; gap: var(--space-2);">
+                <button class="btn btn-primary btn-sm" onclick="saveIntegration('google_maps', this)">
+                    <span class="material-symbols-outlined" style="font-size: 14px;">save</span> Save Credentials
+                </button>
+            </div>
+        </div>
+
+        <div class="integration-footer">
+            <button class="btn btn-sm btn-secondary" onclick="toggleForm('google_maps')">Configure</button>
+            {% if integrations_status.google_maps.configured %}
+            <button class="btn btn-sm btn-secondary" onclick="testConnection({{ integrations_status.google_maps.id }}, this)">Test Connection</button>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<!-- 2. COMMUNICATION SECTION -->
+<div class="integration-section-title">Communication Channels</div>
+<div class="integration-grid">
+
+    <!-- WhatsApp Business API Card -->
+    <div class="integration-card" id="card-whatsapp">
+        <div class="integration-header">
+            <div class="integration-icon" style="background: #e8fcf0; color: #25D366;">
+                <span class="material-symbols-outlined" style="font-size: 24px;">chat</span>
+            </div>
+            <div style="flex: 1;">
+                <h3 style="margin: 0; font-size: var(--text-md); font-weight: 600;">Meta WhatsApp Business</h3>
+                <p style="margin: var(--space-1) 0 0 0; font-size: var(--text-sm); color: var(--text-secondary);">Direct client outreach and conversation auto-replies via Cloud API.</p>
+                <div style="margin-top: var(--space-2);">
+                    {% if integrations_status.whatsapp.configured %}
+                        <span class="badge badge-green">Configured</span>
+                        {% if integrations_status.whatsapp.is_valid %}
+                            <span class="badge badge-green" style="margin-left: 4px;">Valid Connection</span>
+                        {% else %}
+                            <span class="badge badge-gray" style="margin-left: 4px;">Not tested</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge badge-gray">Not configured</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Collapsible Configuration Form -->
+        <div class="integration-body-form" id="form-whatsapp" style="display: none;">
+            <p style="font-size: var(--text-xs); color: var(--text-secondary); line-height: 1.4; margin-bottom: var(--space-4);">
+                <strong>How to configure:</strong> Create a Meta App at
+                <a href="https://developers.facebook.com/" target="_blank" style="color: var(--primary-600); text-decoration: underline;">Meta for Developers</a>.
+                Get WhatsApp Phone ID and Permanent Token.
+            </p>
+            {% if integrations_status.whatsapp.configured %}
+            <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); font-family: monospace; font-size: var(--text-xs); background: var(--surface); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                <span class="material-symbols-outlined" style="font-size: 14px; color: var(--success);">vpn_key</span>
+                <span>Token: {{ integrations_status.whatsapp.display }}</span>
+            </div>
+            {% endif %}
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-bottom: var(--space-3);">
+                <div class="form-group" style="margin: 0;">
+                    <label class="form-label" for="whatsapp_phone_id">Phone Number ID</label>
+                    <input type="text" id="whatsapp_phone_id" class="form-control" placeholder="e.g. 1234567890">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label class="form-label" for="whatsapp_token">Access Token</label>
+                    <input type="password" id="whatsapp_token" class="form-control" placeholder="EAAG...">
+                </div>
+            </div>
+            <div class="form-group" style="margin: 0;">
+                <label class="form-label" for="whatsapp_verify">Webhook Verification Token</label>
+                <input type="text" id="whatsapp_verify" class="form-control" placeholder="verify-token-string">
+                <span class="form-hint">Matches webhook config verify parameter inside Meta developers console.</span>
+            </div>
+
+            <div style="margin-top: var(--space-4); display: flex; gap: var(--space-2);">
+                <button class="btn btn-primary btn-sm" onclick="saveWhatsApp(this)">
+                    <span class="material-symbols-outlined" style="font-size: 14px;">save</span> Save Configuration
+                </button>
+            </div>
+        </div>
+
+        <div class="integration-footer">
+            <button class="btn btn-sm btn-secondary" onclick="toggleForm('whatsapp')">Configure</button>
+            {% if integrations_status.whatsapp.configured %}
+            <button class="btn btn-sm btn-secondary" onclick="testConnection({{ integrations_status.whatsapp.id }}, this)">Test Connection</button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Instagram Card -->
+    <div class="integration-card" id="card-instagram">
+        <div class="integration-header">
+            <div class="integration-icon" style="background: #fff0f5; color: #E1306C;">
+                <span class="material-symbols-outlined" style="font-size: 24px;">photo_camera</span>
+            </div>
+            <div style="flex: 1;">
+                <h3 style="margin: 0; font-size: var(--text-md); font-weight: 600;">Instagram Graph API</h3>
+                <p style="margin: var(--space-1) 0 0 0; font-size: var(--text-sm); color: var(--text-secondary);">Direct message client outreach via Instagram Graph API integration.</p>
+                <div style="margin-top: var(--space-2);">
+                    {% if integrations_status.instagram.configured %}
+                        <span class="badge badge-green">Configured</span>
+                    {% else %}
+                        <span class="badge badge-gray">Not configured</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Collapsible Configuration Form -->
+        <div class="integration-body-form" id="form-instagram" style="display: none;">
+            {% if integrations_status.instagram.configured %}
+            <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); font-family: monospace; font-size: var(--text-xs); background: var(--surface); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                <span class="material-symbols-outlined" style="font-size: 14px; color: var(--success);">vpn_key</span>
+                <span>Token: {{ integrations_status.instagram.display }}</span>
+            </div>
+            {% endif %}
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-bottom: 0;">
+                <div class="form-group" style="margin: 0;">
+                    <label class="form-label" for="instagram_page_id">Instagram Business ID</label>
+                    <input type="text" id="instagram_page_id" class="form-control" placeholder="1784140...">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label class="form-label" for="instagram_token">Page Access Token</label>
+                    <input type="password" id="instagram_token" class="form-control" placeholder="EAAG...">
+                </div>
+            </div>
+
+            <div style="margin-top: var(--space-4); display: flex; gap: var(--space-2);">
+                <button class="btn btn-primary btn-sm" onclick="saveInstagram(this)">
+                    <span class="material-symbols-outlined" style="font-size: 14px;">save</span> Save Configuration
+                </button>
+            </div>
+        </div>
+
+        <div class="integration-footer">
+            <button class="btn btn-sm btn-secondary" onclick="toggleForm('instagram')">Configure</button>
+            {% if integrations_status.instagram.configured %}
+            <button class="btn btn-sm btn-secondary" onclick="testConnection({{ integrations_status.instagram.id }}, this)">Test Connection</button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- SMTP Email Card -->
+    <div class="integration-card" id="card-email_smtp">
+        <div class="integration-header">
+            <div class="integration-icon" style="background: var(--warning-light); color: var(--warning);">
+                <span class="material-symbols-outlined" style="font-size: 24px;">mail</span>
+            </div>
+            <div style="flex: 1;">
+                <h3 style="margin: 0; font-size: var(--text-md); font-weight: 600;">Email Gateway (SMTP)</h3>
+                <p style="margin: var(--space-1) 0 0 0; font-size: var(--text-sm); color: var(--text-secondary);">Outbound email campaign outreach using custom SMTP gateways.</p>
+                <div style="margin-top: var(--space-2);">
+                    {% if integrations_status.email_smtp.configured %}
+                        <span class="badge badge-green">Configured</span>
+                        {% if integrations_status.email_smtp.is_valid %}
+                            <span class="badge badge-green" style="margin-left: 4px;">Valid Connection</span>
+                        {% else %}
+                            <span class="badge badge-gray" style="margin-left: 4px;">Not tested</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge badge-gray">Not configured</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Collapsible Configuration Form -->
+        <div class="integration-body-form" id="form-email_smtp" style="display: none;">
+            {% if integrations_status.email_smtp.configured %}
+            <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); font-family: monospace; font-size: var(--text-xs); background: var(--surface); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                <span class="material-symbols-outlined" style="font-size: 14px; color: var(--success);">vpn_key</span>
+                <span>Configured Gateway User: {{ integrations_status.email_smtp.display }}</span>
+            </div>
+            {% endif %}
+            
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: var(--space-3); margin-bottom: var(--space-3);">
+                <div class="form-group" style="margin: 0;">
+                    <label class="form-label" for="smtp_host">SMTP Server Host</label>
+                    <input type="text" id="smtp_host" class="form-control" placeholder="smtp.gmail.com">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label class="form-label" for="smtp_port">Port</label>
+                    <input type="number" id="smtp_port" class="form-control" placeholder="587" value="587">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label class="form-label" for="smtp_tls">Enable TLS</label>
+                    <select id="smtp_tls" class="form-control">
+                        <option value="true" selected>Yes (Secure)</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-3); margin-bottom: 0;">
+                <div class="form-group" style="margin: 0;">
+                    <label class="form-label" for="smtp_user">Login User / Email</label>
+                    <input type="text" id="smtp_user" class="form-control" placeholder="username@domain.com">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label class="form-label" for="smtp_pass">Password</label>
+                    <input type="password" id="smtp_pass" class="form-control" placeholder="••••••••">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label class="form-label" for="smtp_from">Display "From" Email</label>
+                    <input type="email" id="smtp_from" class="form-control" placeholder="noreply@domain.com">
+                </div>
+            </div>
+
+            <div style="margin-top: var(--space-4); display: flex; gap: var(--space-2);">
+                <button class="btn btn-primary btn-sm" onclick="saveSMTP(this)">
+                    <span class="material-symbols-outlined" style="font-size: 14px;">save</span> Save Configuration
+                </button>
+            </div>
+        </div>
+
+        <div class="integration-footer">
+            <button class="btn btn-sm btn-secondary" onclick="toggleForm('email_smtp')">Configure</button>
+            {% if integrations_status.email_smtp.configured %}
+            <button class="btn btn-sm btn-secondary" onclick="testConnection({{ integrations_status.email_smtp.id }}, this)">Test Connection</button>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<!-- 3. AI SERVICES SECTION -->
+<div class="integration-section-title">AI Providers & Models</div>
+<div class="integration-grid" style="margin-bottom: var(--space-6);">
+    {% for provider in providers %}
+    <div class="integration-card">
+        <div class="integration-header">
+            <div class="integration-icon" style="background: var(--primary-50); color: var(--primary-600);">
+                <span class="material-symbols-outlined" style="font-size: 24px;">psychology</span>
+            </div>
+            <div style="flex: 1;">
+                <h3 style="margin: 0; font-size: var(--text-md); font-weight: 600;">{{ provider.name }}</h3>
+                <p style="margin: var(--space-1) 0 0 0; font-size: var(--text-sm); color: var(--text-secondary);">
+                    Protocol: {{ provider.protocol }} | Priority Order: {{ provider.priority }}
+                </p>
+                <div style="margin-top: var(--space-2);">
+                    {% if provider.is_enabled %}
+                        <span class="badge badge-green">Active</span>
+                        <span class="badge badge-green" style="margin-left: 4px;">● {{ provider.status|title }}</span>
+                    {% else %}
+                        <span class="badge badge-gray">Disabled</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="integration-footer">
+            <a href="{{ url_for('providers.index') }}" class="btn btn-sm btn-primary">
+                <span class="material-symbols-outlined" style="font-size: 14px;">settings</span> Manage Settings
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <div class="card" style="grid-column: 1 / -1; text-align: center; padding: var(--space-6);">
+        <span class="material-symbols-outlined" style="font-size: 32px; color: var(--text-tertiary);">hub</span>
+        <p style="color: var(--text-secondary); margin-top: var(--space-2);">No LLM providers configured yet.</p>
+        <a href="{{ url_for('providers.index') }}" class="btn btn-sm btn-primary" style="margin-top: var(--space-3);">Configure LLM Providers</a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleForm(service) {
+    const form = document.getElementById(`form-${service}`);
+    if (form.style.display === 'none' || form.style.display === '') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
+    }
+}
+
+async function testConnection(credId, btn) {
+    const origText = btn.innerHTML;
+    btn.innerHTML = 'Testing...';
+    btn.disabled = true;
+
+    try {
+        const res = await apiFetch(`/api/credentials/${credId}/test`, { method: 'POST' });
+        if (res.success) {
+            showToast(`Connection check succeeded! Latency is ${res.latency_ms}ms`, 'success');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showToast(`Connection failed: ${res.error || 'Server error'}`, 'error');
+        }
+    } catch (e) {
+        showToast('Verification request failed.', 'error');
+    } finally {
+        btn.innerHTML = origText;
+        btn.disabled = false;
+    }
+}
+
+async function saveIntegration(service, btn) {
+    let apiKey = '';
+    if (service === 'google_maps') {
+        apiKey = document.getElementById('google_maps_key').value.trim();
+    }
+    if (!apiKey) { showToast('Please enter an API key.', 'error'); return; }
+
+    btn.disabled = true;
+    const origText = btn.innerHTML;
+    btn.innerHTML = 'Saving...';
+    try {
+        const res = await apiFetch('/api/credentials', {
+            method: 'POST',
+            body: JSON.stringify({ service_name: service, credential_type: 'api_key', api_key: apiKey })
+        });
+        if (res.success) {
+            showToast('Credential saved securely!', 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(res.error || 'Save failed.', 'error');
+        }
+    } catch (e) {
+        showToast('Save failed.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = origText;
+    }
+}
+
+async function saveWhatsApp(btn) {
+    const phoneId = document.getElementById('whatsapp_phone_id').value.trim();
+    const token = document.getElementById('whatsapp_token').value.trim();
+    const verify = document.getElementById('whatsapp_verify').value.trim();
+    if (!token) { showToast('Please enter an access token.', 'error'); return; }
+
+    btn.disabled = true;
+    const origText = btn.innerHTML;
+    btn.innerHTML = 'Saving...';
+    try {
+        const res = await apiFetch('/api/credentials', {
+            method: 'POST',
+            body: JSON.stringify({ service_name: 'whatsapp', credential_type: 'api_key', api_key: token })
+        });
+        if (phoneId) {
+            await apiFetch('/api/credentials', {
+                method: 'POST',
+                body: JSON.stringify({ service_name: 'whatsapp_phone_id', credential_type: 'config', api_key: phoneId })
+            });
+        }
+        if (verify) {
+            await apiFetch('/api/credentials', {
+                method: 'POST',
+                body: JSON.stringify({ service_name: 'whatsapp_verify_token', credential_type: 'config', api_key: verify })
+            });
+        }
+        if (res.success) {
+            showToast('WhatsApp configuration saved!', 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(res.error || 'Save failed.', 'error');
+        }
+    } catch (e) {
+        showToast('Save failed.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = origText;
+    }
+}
+
+async function saveInstagram(btn) {
+    const pageId = document.getElementById('instagram_page_id').value.trim();
+    const token = document.getElementById('instagram_token').value.trim();
+    if (!token) { showToast('Please enter an access token.', 'error'); return; }
+
+    btn.disabled = true;
+    const origText = btn.innerHTML;
+    btn.innerHTML = 'Saving...';
+    try {
+        const res = await apiFetch('/api/credentials', {
+            method: 'POST',
+            body: JSON.stringify({ service_name: 'instagram', credential_type: 'api_key', api_key: token })
+        });
+        if (pageId) {
+            await apiFetch('/api/credentials', {
+                method: 'POST',
+                body: JSON.stringify({ service_name: 'instagram_page_id', credential_type: 'config', api_key: pageId })
+            });
+        }
+        if (res.success) {
+            showToast('Instagram configuration saved!', 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(res.error || 'Save failed.', 'error');
+        }
+    } catch (e) {
+        showToast('Save failed.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = origText;
+    }
+}
+
+async function saveSMTP(btn) {
+    const host = document.getElementById('smtp_host').value.trim();
+    const port = document.getElementById('smtp_port').value.trim();
+    const user = document.getElementById('smtp_user').value.trim();
+    const pass = document.getElementById('smtp_pass').value.trim();
+    const from = document.getElementById('smtp_from').value.trim();
+    const tls = document.getElementById('smtp_tls').value;
+
+    if (!host || !user || !pass) {
+        showToast('Host, username, and password are required.', 'error');
+        return;
+    }
+
+    btn.disabled = true;
+    const origText = btn.innerHTML;
+    btn.innerHTML = 'Saving...';
+    try {
+        const res = await apiFetch('/api/credentials', {
+            method: 'POST',
+            body: JSON.stringify({ service_name: 'email_smtp', credential_type: 'api_key', api_key: pass })
+        });
+        const configs = [
+            { service_name: 'email_smtp_host', credential_type: 'config', api_key: host },
+            { service_name: 'email_smtp_port', credential_type: 'config', api_key: port || '587' },
+            { service_name: 'email_smtp_user', credential_type: 'config', api_key: user },
+            { service_name: 'email_smtp_from', credential_type: 'config', api_key: from || user },
+            { service_name: 'email_smtp_tls', credential_type: 'config', api_key: tls },
+        ];
+        for (const c of configs) {
+            await apiFetch('/api/credentials', { method: 'POST', body: JSON.stringify(c) });
+        }
+
+        if (res.success) {
+            showToast('SMTP configuration saved!', 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            showToast(res.error || 'Save failed.', 'error');
+        }
+    } catch (e) {
+        showToast('Save failed.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = origText;
+    }
+}
+</script>
+{% endblock %}
