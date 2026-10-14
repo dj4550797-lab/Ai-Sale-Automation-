@@ -16,6 +16,8 @@ class OutreachCampaign(db.Model):
 
     channel = db.Column(db.String(30), nullable=False)  # whatsapp, instagram, email
     message_content = db.Column(db.Text, default='')
+    media_url = db.Column(db.String(500), default=None)
+    media_type = db.Column(db.String(20), default=None)  # image, video
     status = db.Column(db.String(30), default=OutreachStatus.READY, index=True)
 
     scheduled_at = db.Column(db.DateTime(timezone=True))

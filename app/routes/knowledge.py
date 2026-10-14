@@ -23,6 +23,15 @@ def index():
     
     entries = list_kb_entries(category=category_filter if category_filter else None)
     
+    # Auto-seed if database is freshly initialized or empty
+    if not entries and not category_filter:
+        try:
+            from app.seeds.seed_data import seed_knowledge_and_pricing
+            seed_knowledge_and_pricing(db)
+            entries = list_kb_entries()
+        except Exception as e:
+            db.session.rollback()
+    
     # Organize entries by category for index view tab layout
     categorized_entries = {cat: [] for cat in KBCategory.ALL}
     for entry in entries:

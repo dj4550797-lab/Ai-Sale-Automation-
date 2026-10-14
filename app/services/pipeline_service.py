@@ -123,15 +123,33 @@ def enrich_lead_contacts(lead):
         logger.warn(f"Failed to scrape website for contact enrichment: {scrape_res.get('error')}")
         return
 
+    # Auto-fill city, state, country, postal code from address if missing
+    if lead.address and (not lead.city or not lead.state or not lead.country):
+        from app.integrations.maps.google_places import parse_address_text
+        parsed_addr = parse_address_text(lead.address)
+        if not lead.city and parsed_addr.get('city'):
+            lead.city = parsed_addr['city']
+        if not lead.state and parsed_addr.get('state'):
+            lead.state = parsed_addr['state']
+        if not lead.country and parsed_addr.get('country'):
+            lead.country = parsed_addr['country']
+        if not lead.postal_code and parsed_addr.get('postal_code'):
+            lead.postal_code = parsed_addr['postal_code']
+
+    # Auto-fill description from meta_description if missing
+    if scrape_res.get('meta_description') and not lead.description:
+        lead.description = scrape_res['meta_description']
+
     # Extract & Save Emails
     detected_emails = scrape_res.get('detected_emails', [])
     for email in detected_emails:
-        existing = LeadContact.query.filter_by(lead_id=lead.id, contact_type='email', value=email).first()
+        clean_email = email.strip()
+        existing = LeadContact.query.filter_by(lead_id=lead.id, contact_type='email', value=clean_email).first()
         if not existing:
             contact = LeadContact(
                 lead_id=lead.id,
                 contact_type='email',
-                value=email,
+                value=clean_email,
                 is_primary=True
             )
             db.session.add(contact)
@@ -139,7 +157,6 @@ def enrich_lead_contacts(lead):
     # Extract & Save Phone Numbers
     detected_phones = scrape_res.get('detected_phones', [])
     for phone in detected_phones:
-        # Clean phone
         clean_phone = phone.strip()
         existing = LeadContact.query.filter_by(lead_id=lead.id, contact_type='phone', value=clean_phone).first()
         if not existing:
@@ -162,22 +179,33 @@ def enrich_lead_contacts(lead):
             )
             db.session.add(contact)
 
-    # Extract & Save Socials (Instagram & Facebook)
+    # Extract & Save Socials (Instagram, Facebook, LinkedIn, YouTube, Twitter)
     detected_socials = scrape_res.get('detected_socials', [])
     for social in detected_socials:
+        social_clean = social.strip()
+        social_lower = social_clean.lower()
         platform = 'other'
-        if 'instagram.com' in social.lower():
+        if 'instagram.com' in social_lower:
             platform = 'instagram'
-        elif 'facebook.com' in social.lower():
+        elif 'facebook.com' in social_lower:
             platform = 'facebook'
+        elif 'linkedin.com' in social_lower:
+            platform = 'linkedin'
+        elif 'youtube.com' in social_lower or 'youtu.be' in social_lower:
+            platform = 'youtube'
+        elif 'twitter.com' in social_lower or 'x.com' in social_lower:
+            platform = 'twitter'
             
-        existing = SocialProfile.query.filter_by(lead_id=lead.id, platform=platform, profile_url=social).first()
+        existing = SocialProfile.query.filter_by(lead_id=lead.id, platform=platform, profile_url=social_clean).first()
         if not existing:
+            username = social_clean.rstrip('/').rsplit('/', 1)[-1] or platform
+            if '?' in username:
+                username = username.split('?')[0]
             profile = SocialProfile(
                 lead_id=lead.id,
                 platform=platform,
-                profile_url=social,
-                username=social.rsplit('/', 1)[-1] or platform
+                profile_url=social_clean,
+                username=username
             )
             db.session.add(profile)
 
@@ -237,9 +265,19 @@ def generate_lead_dossier_text(lead):
     lines.append(f"Category: {lead.business_category or 'Not found'}")
     lines.append(f"Description: {lead.description or 'Not found'}")
     lines.append(f"Address: {lead.address or 'Not found'}")
-    lines.append(f"City: {lead.city or 'Not found'}")
-    lines.append(f"State: {lead.state or 'Not found'}")
-    lines.append(f"Country: {lead.country or 'Not found'}")
+    city_val = lead.city
+    state_val = lead.state
+    country_val = lead.country
+    if (not city_val or not state_val or not country_val) and lead.address:
+        from app.integrations.maps.google_places import parse_address_text
+        parsed = parse_address_text(lead.address)
+        city_val = city_val or parsed.get('city')
+        state_val = state_val or parsed.get('state')
+        country_val = country_val or parsed.get('country')
+
+    lines.append(f"City: {city_val or 'Not found'}")
+    lines.append(f"State: {state_val or 'Not found'}")
+    lines.append(f"Country: {country_val or 'Not found'}")
     lines.append(f"Phone: {phone_contact.value if (phone_contact and phone_contact.value) else 'Not found'}")
     lines.append(f"Email: {email_contact.value if (email_contact and email_contact.value) else 'Not found'}")
     lines.append(f"Website: {lead.website_url or 'Not found'}")

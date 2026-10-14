@@ -315,6 +315,15 @@
                         <label class="form-label">Manual Demo URL</label>
                         <input type="url" name="demo_url" class="form-control" value="{{ demo.demo_url if demo else '' }}" placeholder="https://my-custom-demo.vercel.app" required>
                     </div>
+                    <div class="form-group" style="margin-bottom:var(--space-4);">
+                        <label class="form-label">Media Attachment (Optional Image/Video URL)</label>
+                        <input type="url" name="media_url" class="form-control" placeholder="https://example.com/preview.jpg or .mp4">
+                        <span style="font-size:var(--text-xs); color:var(--text-secondary);">Sent as rich media attachment on WhatsApp</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:var(--space-2); margin-bottom:var(--space-4);">
+                        <input type="checkbox" id="auto_outreach" name="auto_outreach" value="1">
+                        <label for="auto_outreach" style="font-size:var(--text-xs); color:var(--text-secondary); cursor:pointer; margin:0;">Auto-send WhatsApp outreach pitch once verified</label>
+                    </div>
                     <button type="submit" class="btn btn-primary" style="width:100%;">Save & Verify Demo URL</button>
                 </form>
 

@@ -153,7 +153,56 @@ def chat(id):
             "success": False,
             "error": str(e)
         }), 500
+@prds_bp.route('/<int:id>/update-content', methods=['POST'])
+@login_required
+def update_content(id):
+    """Directly update PRD section contents from the editor and create a new version."""
+    prd = PRD.query.get_or_404(id)
+    
+    title = sanitize_string(request.form.get('title', prd.title))
+    if title:
+        prd.title = title
+        
+    fields = [
+        'business_overview', 'business_analysis', 'website_goal',
+        'target_audience', 'design_direction', 'site_structure',
+        'functional_requirements', 'content_requirements',
+        'cta_strategy', 'technical_requirements'
+    ]
+    
+    snapshot = {"title": prd.title}
+    for f in fields:
+        val = request.form.get(f)
+        if val is not None:
+            setattr(prd, f, val.strip())
+        snapshot[f] = getattr(prd, f)
 
+    next_version = prd.current_version + 1
+    prd.current_version = next_version
+    prd.updated_at = datetime.now(timezone.utc)
+    
+    version_entry = PRDVersion(
+        prd_id=prd.id,
+        version=next_version,
+        author_type='admin',
+        author_id=current_user.id,
+        change_summary="Direct manual edit from PRD Editor",
+        content_snapshot=snapshot
+    )
+    db.session.add(version_entry)
+    
+    try:
+        db.session.commit()
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({"success": True, "version": next_version, "message": "PRD saved successfully."})
+        flash(f"PRD updated successfully (saved as v{next_version}).", "success")
+    except Exception as e:
+        db.session.rollback()
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+            return jsonify({"success": False, "error": str(e)}), 500
+        flash(f"Error saving PRD: {str(e)}", "error")
+
+    return redirect(url_for('prds.detail', id=prd.id, version=next_version))
 
 @prds_bp.route('/<int:id>/delete', methods=['POST'])
 @login_required

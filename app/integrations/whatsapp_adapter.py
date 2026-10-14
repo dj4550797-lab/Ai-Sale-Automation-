@@ -93,17 +93,18 @@ class WhatsAppAdapter:
 
     def send_text_message(self, recipient_phone, message_text):
         """Send standard WhatsApp text message to target phone number."""
+        clean_phone = recipient_phone.replace('+', '').replace(' ', '').strip()
         if not self.is_configured():
-            return {"success": False, "error": "WhatsApp API is not configured."}
+            if current_app and current_app.config.get('TEST_MODE'):
+                logger.info(f"[TEST MODE] Simulated WhatsApp text message to {clean_phone}: {message_text[:80]}")
+                return {"success": True, "message_id": f"sim_text_{clean_phone[-4:]}"}
+            return {"success": False, "error": "WhatsApp API is not configured. Please add Phone Number ID and Access Token in Settings -> Integrations."}
 
         url = f"https://graph.facebook.com/v20.0/{self.phone_number_id}/messages"
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json"
         }
-        
-        # Clean phone format
-        clean_phone = recipient_phone.replace('+', '').replace(' ', '').strip()
         
         payload = {
             "messaging_product": "whatsapp",
@@ -126,4 +127,84 @@ class WhatsAppAdapter:
                 return {"success": False, "error": f"WhatsApp API Error {response.status_code}: {response.text}"}
         except Exception as e:
             logger.error(f"WhatsApp API exception: {str(e)}")
+            return {"success": False, "error": str(e)}
+
+    def send_image_message(self, recipient_phone, image_url, caption=None):
+        """Send WhatsApp image attachment message to target phone number."""
+        clean_phone = recipient_phone.replace('+', '').replace(' ', '').strip()
+        if not self.is_configured():
+            if current_app and current_app.config.get('TEST_MODE'):
+                logger.info(f"[TEST MODE] Simulated WhatsApp image message to {clean_phone}: {image_url}")
+                return {"success": True, "message_id": f"sim_img_{clean_phone[-4:]}"}
+            return {"success": False, "error": "WhatsApp API is not configured. Please add credentials in Settings."}
+
+        url = f"https://graph.facebook.com/v20.0/{self.phone_number_id}/messages"
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json"
+        }
+
+        image_data = {"link": image_url}
+        if caption:
+            image_data["caption"] = caption
+
+        payload = {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": clean_phone,
+            "type": "image",
+            "image": image_data
+        }
+
+        try:
+            response = requests.post(url, headers=headers, json=payload, timeout=15)
+            if response.status_code in [200, 201]:
+                res_data = response.json()
+                msg_id = res_data.get('messages', [{}])[0].get('id', '')
+                return {"success": True, "message_id": msg_id}
+            else:
+                logger.error(f"WhatsApp Image Send Error: {response.text}")
+                return {"success": False, "error": f"WhatsApp API Error {response.status_code}: {response.text}"}
+        except Exception as e:
+            logger.error(f"WhatsApp Image Exception: {str(e)}")
+            return {"success": False, "error": str(e)}
+
+    def send_video_message(self, recipient_phone, video_url, caption=None):
+        """Send WhatsApp video attachment message to target phone number."""
+        clean_phone = recipient_phone.replace('+', '').replace(' ', '').strip()
+        if not self.is_configured():
+            if current_app and current_app.config.get('TEST_MODE'):
+                logger.info(f"[TEST MODE] Simulated WhatsApp video message to {clean_phone}: {video_url}")
+                return {"success": True, "message_id": f"sim_vid_{clean_phone[-4:]}"}
+            return {"success": False, "error": "WhatsApp API is not configured. Please add credentials in Settings."}
+
+        url = f"https://graph.facebook.com/v20.0/{self.phone_number_id}/messages"
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json"
+        }
+
+        video_data = {"link": video_url}
+        if caption:
+            video_data["caption"] = caption
+
+        payload = {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": clean_phone,
+            "type": "video",
+            "video": video_data
+        }
+
+        try:
+            response = requests.post(url, headers=headers, json=payload, timeout=20)
+            if response.status_code in [200, 201]:
+                res_data = response.json()
+                msg_id = res_data.get('messages', [{}])[0].get('id', '')
+                return {"success": True, "message_id": msg_id}
+            else:
+                logger.error(f"WhatsApp Video Send Error: {response.text}")
+                return {"success": False, "error": f"WhatsApp API Error {response.status_code}: {response.text}"}
+        except Exception as e:
+            logger.error(f"WhatsApp Video Exception: {str(e)}")
             return {"success": False, "error": str(e)}

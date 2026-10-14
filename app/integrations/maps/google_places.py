@@ -2,12 +2,57 @@
 Flixora AI Sales Automation Agent — Google Places API Integration
 
 Uses Places API (New) endpoints Text Search and Place Details with field masking.
+Extracts normalized business identity including address components (city, state, country, postal code).
 """
+import re
 import requests
 from app.integrations.maps.base import BusinessDataProvider
 from app.utils.logger import get_logger
 
 logger = get_logger('integrations')
+
+
+def parse_address_text(addr):
+    """Fallback parser to accurately extract city, state, country, and postal code from formatted address."""
+    if not addr:
+        return {'city': '', 'state': '', 'country': '', 'postal_code': ''}
+
+    parts = [p.strip() for p in addr.split(',') if p.strip()]
+    country = ''
+    postal_code = ''
+    state = ''
+    city = ''
+
+    # Country detection from trailing token
+    if parts:
+        last = parts[-1]
+        known_countries = ['india', 'usa', 'united states', 'uk', 'united kingdom', 'australia', 'canada', 'uae', 'singapore']
+        if last.lower() in known_countries:
+            country = last
+            parts = parts[:-1]
+
+    # Postal / PIN code detection
+    pin_match = re.search(r'\b(\d{5,6}(?:-\d{4})?)\b', addr)
+    if pin_match:
+        postal_code = pin_match.group(1)
+
+    # State detection from last remaining token
+    if parts:
+        state_part = parts[-1]
+        state_part_clean = re.sub(r'\b\d{5,6}(?:-\d{4})?\b', '', state_part).strip(' -')
+        state = state_part_clean
+        parts = parts[:-1]
+
+    # City detection from preceding token
+    if parts:
+        city = parts[-1]
+
+    return {
+        'city': city,
+        'state': state,
+        'country': country or 'India',
+        'postal_code': postal_code
+    }
 
 
 class GooglePlacesProvider(BusinessDataProvider):
@@ -20,10 +65,9 @@ class GooglePlacesProvider(BusinessDataProvider):
         headers = {
             "Content-Type": "application/json",
             "X-Goog-Api-Key": self.api_key,
-            # Strict field masks to reduce data payload and transaction cost (§15)
             "X-Goog-FieldMask": (
                 "places.id,places.displayName,places.primaryType,"
-                "places.formattedAddress,places.nationalPhoneNumber,"
+                "places.formattedAddress,places.addressComponents,places.nationalPhoneNumber,"
                 "places.websiteUri,places.rating,places.userRatingCount,"
                 "places.editorialSummary,places.regularOpeningHours,"
                 "nextPageToken"
@@ -32,7 +76,7 @@ class GooglePlacesProvider(BusinessDataProvider):
 
         payload = {
             "textQuery": f"{category} in {location}",
-            "pageSize": min(limit, 20)  # Places API page size limit
+            "pageSize": min(limit, 20)
         }
         if page_token:
             payload["pageToken"] = page_token
@@ -50,7 +94,9 @@ class GooglePlacesProvider(BusinessDataProvider):
             results = []
             for p in places:
                 normalized = self._normalize_place_data(p)
-                normalized['business_category'] = category
+                # Keep category clean
+                if category and category.lower() != normalized.get('business_name', '').lower():
+                    normalized['business_category'] = category
                 results.append(normalized)
 
             return results, next_page_token
@@ -65,7 +111,7 @@ class GooglePlacesProvider(BusinessDataProvider):
         headers = {
             "X-Goog-Api-Key": self.api_key,
             "X-Goog-FieldMask": (
-                "id,displayName,primaryType,formattedAddress,"
+                "id,displayName,primaryType,formattedAddress,addressComponents,"
                 "nationalPhoneNumber,websiteUri,rating,userRatingCount,"
                 "editorialSummary,regularOpeningHours"
             )
@@ -95,10 +141,43 @@ class GooglePlacesProvider(BusinessDataProvider):
         weekday_desc = hours_data.get('weekdayDescriptions', []) if isinstance(hours_data, dict) else []
         business_hours = ", ".join(weekday_desc) if weekday_desc else ''
         
+        formatted_address = p.get('formattedAddress', '')
+        
+        # Parse components from addressComponents if available
+        city = ''
+        state = ''
+        country = ''
+        postal_code = ''
+        components = p.get('addressComponents', [])
+        
+        for comp in components:
+            types = comp.get('types', [])
+            text = comp.get('longText') or comp.get('shortText') or ''
+            if any(t in types for t in ['locality', 'sublocality_level_1', 'sublocality']) and not city:
+                city = text
+            elif 'administrative_area_level_1' in types:
+                state = text
+            elif 'country' in types:
+                country = text
+            elif 'postal_code' in types:
+                postal_code = text
+
+        # Fallback to string parser if any component is missing
+        if not city or not state or not country or not postal_code:
+            parsed = parse_address_text(formatted_address)
+            city = city or parsed['city']
+            state = state or parsed['state']
+            country = country or parsed['country']
+            postal_code = postal_code or parsed['postal_code']
+
         return {
             'business_name': business_name,
             'business_category': p.get('primaryType', 'business'),
-            'address': p.get('formattedAddress', ''),
+            'address': formatted_address,
+            'city': city,
+            'state': state,
+            'country': country,
+            'postal_code': postal_code,
             'phone': p.get('nationalPhoneNumber', ''),
             'website_url': p.get('websiteUri', ''),
             'rating': p.get('rating'),

@@ -3,6 +3,7 @@ Flixora AI Sales Automation Agent — Leads Routes
 
 Drives Lead Discovery configuration form, list query pagination, and detail pages.
 """
+from datetime import datetime, timezone
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, send_from_directory
 from flask_login import login_required
 
@@ -315,10 +316,32 @@ def save_demo_url(id):
     else:
         demo.demo_url = demo_url
         demo.url_valid = url_valid
-        demo.url_reachable = url_valid
+    lead.last_action = "Demo URL saved"
+    lead.last_action_at = datetime.now(timezone.utc)
+    if lead.status == LeadStatus.WAITING_FOR_DEMO:
+        lead.status = LeadStatus.QUALIFIED
         
     db.session.commit()
     
+    # Auto outreach if requested
+    auto_outreach = request.form.get('auto_outreach') == '1'
+    media_url = request.form.get('media_url', '').strip() or None
+    media_type = request.form.get('media_type', '').strip() or None
+    if auto_outreach and url_valid:
+        from app.services.outreach_service import create_outreach_campaign, send_outreach_campaign
+        camp_res = create_outreach_campaign(id, channel='whatsapp', media_url=media_url, media_type=media_type)
+        if camp_res.get('success'):
+            send_res = send_outreach_campaign(camp_res['campaign_id'])
+            if send_res.get('success'):
+                flash("Demo URL saved, verified, and WhatsApp pitch sent automatically!", "success")
+                return redirect(url_for('leads.detail', id=id))
+            else:
+                flash(f"Demo URL verified, but auto-outreach failed: {send_res.get('error')}", "warning")
+                return redirect(url_for('leads.detail', id=id))
+        else:
+            flash(f"Demo URL verified, but pitch preparation failed: {camp_res.get('error')}", "warning")
+            return redirect(url_for('leads.detail', id=id))
+            
     if url_valid:
         flash("Demo URL saved and verified successfully.", "success")
     else:
@@ -411,7 +434,9 @@ def start_outreach(id):
         return redirect(url_for('leads.detail', id=id))
         
     from app.services.outreach_service import create_outreach_campaign, send_outreach_campaign
-    res = create_outreach_campaign(id, channel='whatsapp')
+    media_url = request.form.get('media_url', '').strip() or None
+    media_type = request.form.get('media_type', '').strip() or None
+    res = create_outreach_campaign(id, channel='whatsapp', media_url=media_url, media_type=media_type)
     if not res.get('success'):
         flash(f"Failed to prepare outreach message: {res.get('error')}", "error")
         return redirect(url_for('leads.detail', id=id))

@@ -58,8 +58,15 @@ def create_app(config_name=None):
             db.session.execute(text('SELECT 1'))
             return {"status": "healthy", "database": "connected"}, 200
         except Exception as e:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
             app.logger.error(f"Health check failed: {str(e)}")
             return {"status": "unhealthy", "database": "error", "error": str(e)}, 500
+
+    # Auto-run lightweight startup migrations and seeding
+    _run_startup_migrations(app)
 
     return app
 
@@ -76,7 +83,79 @@ def _init_extensions(app):
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        try:
+            return db.session.get(User, int(user_id))
+        except Exception:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            return None
+
+
+def _run_startup_migrations(flask_app):
+    """Run lightweight schema updates and ensure missing tables/columns exist."""
+    from app.utils.logger import get_logger
+    logger = get_logger('system')
+    with flask_app.app_context():
+        from app.extensions import db
+        import app.models  # noqa
+        from sqlalchemy import text
+
+        try:
+            db.create_all()
+        except Exception as e:
+            logger.warning(f"Startup create_all notice: {e}")
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+
+        # Safe ALTER statements for newly added columns across tables
+        migration_statements = [
+            "ALTER TABLE outreach_campaigns ADD COLUMN media_url VARCHAR(500) DEFAULT NULL",
+            "ALTER TABLE outreach_campaigns ADD COLUMN media_type VARCHAR(20) DEFAULT NULL",
+            "ALTER TABLE leads ADD COLUMN business_hours VARCHAR(500) DEFAULT ''",
+            "ALTER TABLE leads ADD COLUMN google_place_id VARCHAR(300)",
+            "ALTER TABLE messages ADD COLUMN detected_intent VARCHAR(100) DEFAULT ''",
+            "ALTER TABLE messages ADD COLUMN confidence FLOAT DEFAULT 0.0",
+            "ALTER TABLE messages ADD COLUMN sales_stage VARCHAR(50) DEFAULT ''",
+            "ALTER TABLE automation_runs DROP CONSTRAINT IF EXISTS automation_runs_lock_key_key",
+        ]
+        for stmt in migration_statements:
+            try:
+                db.session.execute(text(stmt))
+                db.session.commit()
+            except Exception:
+                try:
+                    db.session.rollback()
+                except Exception:
+                    pass
+
+        # Ensure admin user exists
+        try:
+            from app.services.auth_service import create_admin_user
+            create_admin_user(
+                username=flask_app.config.get('ADMIN_USERNAME', 'admin'),
+                email=flask_app.config.get('ADMIN_EMAIL', 'admin@flixora.com'),
+                password=flask_app.config.get('ADMIN_PASSWORD', 'admin123'),
+                display_name='Admin',
+            )
+        except Exception:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+
+        # Ensure default settings, LLMs, knowledge base, and pricing plans exist
+        try:
+            _seed_defaults(db)
+        except Exception as e:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            logger.warning(f"Startup defaults seed notice: {e}")
 
 
 def _register_blueprints(app):
@@ -125,6 +204,41 @@ def _register_commands(app):
             db.session.execute(text("ALTER TABLE messages ADD COLUMN sales_stage VARCHAR(50) DEFAULT ''"))
             db.session.commit()
             click.echo("Migrated: Added 'sales_stage' to 'messages' table.")
+        except Exception:
+            db.session.rollback()
+
+        try:
+            db.session.execute(text("ALTER TABLE leads ADD COLUMN business_hours VARCHAR(500) DEFAULT ''"))
+            db.session.commit()
+            click.echo("Migrated: Added 'business_hours' to 'leads' table.")
+        except Exception:
+            db.session.rollback()
+
+        try:
+            db.session.execute(text("ALTER TABLE leads ADD COLUMN google_place_id VARCHAR(300)"))
+            db.session.commit()
+            click.echo("Migrated: Added 'google_place_id' to 'leads' table.")
+        except Exception:
+            db.session.rollback()
+
+        try:
+            db.session.execute(text("ALTER TABLE outreach_campaigns ADD COLUMN media_url VARCHAR(500) DEFAULT NULL"))
+            db.session.commit()
+            click.echo("Migrated: Added 'media_url' to 'outreach_campaigns' table.")
+        except Exception:
+            db.session.rollback()
+
+        try:
+            db.session.execute(text("ALTER TABLE outreach_campaigns ADD COLUMN media_type VARCHAR(20) DEFAULT NULL"))
+            db.session.commit()
+            click.echo("Migrated: Added 'media_type' to 'outreach_campaigns' table.")
+        except Exception:
+            db.session.rollback()
+
+        try:
+            db.session.execute(text("UPDATE automation_runs SET lock_key = 'run_' || id WHERE lock_key = '' OR lock_key IS NULL"))
+            db.session.execute(text("UPDATE automation_runs SET status = 'failed' WHERE status = 'running'"))
+            db.session.commit()
         except Exception:
             db.session.rollback()
 
@@ -191,14 +305,14 @@ def _seed_defaults(db):
         db.session.add(openrouter)
         db.session.commit()
 
-        # Seed dummy credential (masking sk-or-v1-...)
-        dummy_key = "sk-or-v1-dummy-openrouter-key-replace-me"
+        # Seed credential (use environment variable if available, else placeholder)
+        initial_openrouter_key = os.environ.get('OPENROUTER_API_KEY', '').strip() or "sk-or-v1-dummy-openrouter-key-replace-me"
         cred = APICredential(
             provider_id=openrouter.id,
             credential_type='api_key',
             service_name='openrouter primary',
-            encrypted_value=encrypt_value(dummy_key),
-            last_four=dummy_key[-4:]
+            encrypted_value=encrypt_value(initial_openrouter_key),
+            last_four=initial_openrouter_key[-4:]
         )
         db.session.add(cred)
 
@@ -228,24 +342,24 @@ def _seed_defaults(db):
         gname = f'Google AI Studio fallback {i}'
         existing_g = LLMProvider.query.filter_by(name=gname).first()
         if not existing_g:
+            initial_gemini_key = os.environ.get('GOOGLE_AI_API_KEY', '').strip() if i == 1 else ''
+            gemini_key_val = initial_gemini_key or f"dummy-google-ai-studio-key-{i}-replace-me"
             gprov = LLMProvider(
                 name=gname,
                 protocol=LLMProtocol.GEMINI,
-                status=ProviderStatus.DISABLED,
+                status=ProviderStatus.HEALTHY if initial_gemini_key else ProviderStatus.DISABLED,
                 priority=i + 1,  # priority 2, 3, 4
                 is_enabled=True
             )
             db.session.add(gprov)
             db.session.commit()
 
-            # Seed dummy key
-            gkey = f"dummy-google-ai-studio-key-{i}-replace-me"
             gcred = APICredential(
                 provider_id=gprov.id,
                 credential_type='api_key',
                 service_name=gname.lower(),
-                encrypted_value=encrypt_value(gkey),
-                last_four=gkey[-4:]
+                encrypted_value=encrypt_value(gemini_key_val),
+                last_four=gemini_key_val[-4:]
             )
             db.session.add(gcred)
 
@@ -374,12 +488,26 @@ def _seed_defaults(db):
         )
         db.session.add_all([model1, model2])
 
-    db.session.commit()
+    # 5. Seed Knowledge Base and Pricing Plans
+    try:
+        from app.seeds.seed_data import seed_knowledge_and_pricing
+        seed_knowledge_and_pricing(db)
+    except Exception as e:
+        from app.utils.logger import get_logger
+        get_logger('system').warning(f"Could not seed knowledge base / pricing: {e}")
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        from app.utils.logger import get_logger
+        get_logger('system').warning(f"Could not commit seeded defaults: {e}")
 
 
 def _register_error_handlers(app):
     """Register error page handlers."""
     from flask import render_template
+    from app.extensions import db
 
     @app.errorhandler(404)
     def not_found(e):
@@ -387,25 +515,50 @@ def _register_error_handlers(app):
 
     @app.errorhandler(500)
     def server_error(e):
+        app.logger.error(f"Internal 500 error encountered: {e}", exc_info=True)
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
         return render_template('errors/500.html'), 500
 
     @app.errorhandler(403)
     def forbidden(e):
         return render_template('errors/403.html'), 403
 
+    @app.teardown_request
+    def teardown_request(exception=None):
+        if exception:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+        try:
+            db.session.remove()
+        except Exception:
+            pass
+
 
 def _register_context(app):
     """Register template context processors."""
     from app.models import Notification
     from flask_login import current_user
+    from app.extensions import db
 
     @app.context_processor
     def inject_globals():
         unread_notifications = 0
-        if current_user and current_user.is_authenticated:
-            unread_notifications = Notification.query.filter_by(
-                user_id=current_user.id, is_read=False
-            ).count()
+        try:
+            if current_user and current_user.is_authenticated:
+                unread_notifications = Notification.query.filter_by(
+                    user_id=current_user.id, is_read=False
+                ).count()
+        except Exception:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            unread_notifications = 0
 
         return {
             'app_name': 'Flixora',

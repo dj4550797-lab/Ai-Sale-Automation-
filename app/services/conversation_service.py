@@ -231,8 +231,20 @@ def generate_chatbot_reply(conversation_id, user_message):
         ai_msg = add_message(conversation_id, 'ai', reply_content, sender_name=agent_name)
         return ai_msg
     except Exception as e:
-        logger.error(f"Error generating chatbot reply: {e}")
-        return None
+        logger.warning(f"Error generating chatbot reply via LLM ({e}). Using intelligent sales responder.")
+        user_lower = user_message.lower()
+        if any(w in user_lower for w in ['price', 'cost', 'rate', 'how much', 'pricing', 'charges']):
+            reply_content = f"Hello! Our website design packages start from ₹14,999 (Basic Showcase) to ₹34,999 (Full Business Automation & Lead Engine), including mobile optimization, SSL security, and WhatsApp integration. Would you like us to walk you through the options for {lead.business_name}?"
+        elif any(w in user_lower for w in ['demo', 'link', 'sample', 'preview', 'portfolio']):
+            demo = lead.demo_projects.first()
+            demo_url = demo.demo_url if demo and demo.demo_url else "our live showcase"
+            reply_content = f"You can preview your prototype concept right here: {demo_url}. Let me know if you would like any adjustments to the branding or features!"
+        elif any(w in user_lower for w in ['yes', 'interested', 'sure', 'ok', 'call', 'talk', 'meeting']):
+            reply_content = f"That sounds great! I will have our team coordinator reach out. What is the best time today for a quick 5-minute conversation?"
+        else:
+            reply_content = f"Thank you for getting back to us! We specialize in high-performance web development and automation for businesses like {lead.business_name}. Let us know if you'd like to review your concept or have any specific questions!"
+        ai_msg = add_message(conversation_id, 'ai', reply_content, sender_name=agent_name)
+        return ai_msg
 
 
 def toggle_takeover_status(conversation_id, active, admin_user_id):

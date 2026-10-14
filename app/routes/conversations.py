@@ -174,16 +174,33 @@ def webhook():
         if messages:
             msg_obj = messages[0]
             from_phone = msg_obj.get('from', '')
-            msg_body = msg_obj.get('text', {}).get('body', '')
+            msg_type = msg_obj.get('type', 'text')
+            if msg_type == 'text':
+                msg_body = msg_obj.get('text', {}).get('body', '')
+            elif msg_type == 'image':
+                caption = msg_obj.get('image', {}).get('caption', '')
+                msg_body = f"[Image received] {caption}".strip()
+            elif msg_type == 'video':
+                caption = msg_obj.get('video', {}).get('caption', '')
+                msg_body = f"[Video received] {caption}".strip()
+            elif msg_type == 'audio':
+                msg_body = "[Audio message received]"
+            elif msg_type == 'document':
+                filename = msg_obj.get('document', {}).get('filename', 'document')
+                msg_body = f"[Document received: {filename}]"
+            else:
+                msg_body = msg_obj.get('text', {}).get('body', '') or f"[{msg_type} received]"
             
             if from_phone and msg_body:
                 # 1. Resolve lead by phone number
-                from app.models import LeadContact, Lead
+                from app.models import LeadContact, Lead, OutreachCampaign, OutreachEvent
+                from app.constants import OutreachStatus
                 clean_phone = from_phone.replace('+', '').replace(' ', '').strip()
+                last_10 = clean_phone[-10:] if len(clean_phone) >= 10 else clean_phone
                 contact = LeadContact.query.filter_by(contact_type='phone').filter(
                     (LeadContact.value == clean_phone) | 
                     (LeadContact.value == f"+{clean_phone}") |
-                    (LeadContact.value.like(f"%{clean_phone[-10:]}%"))
+                    (LeadContact.value.like(f"%{last_10}%"))
                 ).first()
                 
                 if contact:
@@ -194,15 +211,25 @@ def webhook():
                         if conv:
                             # 3. Save incoming client message
                             # (This automatically triggers LLM intent detection and sales stage sync)
-                            sender_name = value.get('contacts', [{}])[0].get('profile', {}).get('name', 'Client')
+                            sender_name = value.get('contacts', [{}])[0].get('profile', {}).get('name', lead.business_name or 'Client')
                             client_msg = add_message(conv.id, 'client', msg_body, sender_name=sender_name)
                             
-                            # 4. Trigger auto response if AI is active
+                            # 4. Sync outreach campaign status to REPLIED
+                            camp = OutreachCampaign.query.filter_by(lead_id=lead.id, channel='whatsapp').first()
+                            if camp:
+                                camp.status = OutreachStatus.REPLIED
+                                camp.replied_at = datetime.now(timezone.utc)
+                                evt = OutreachEvent(campaign_id=camp.id, event_type='replied', details=f"Client WhatsApp message: {msg_body[:100]}")
+                                db.session.add(evt)
+                                db.session.commit()
+                            
+                            # 5. Trigger auto response if AI is active
                             from app.constants import ConversationStatus
                             if conv.status == ConversationStatus.AI_ACTIVE:
                                 ai_msg = generate_chatbot_reply(conv.id, msg_body)
                                 if ai_msg:
-                                    adapter.send_text_message(from_phone, ai_msg.content)
+                                    send_res = adapter.send_text_message(from_phone, ai_msg.content)
+                                    logger.info(f"AI auto replied back to {from_phone}: {send_res}")
                                     
                 else:
                     logger.warning(f"Incoming WhatsApp message from unknown phone number: {from_phone}")

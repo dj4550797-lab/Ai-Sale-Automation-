@@ -134,3 +134,13 @@ def download_file(file_id):
     directory = os.path.dirname(abs_path)
     filename = os.path.basename(abs_path)
     return send_from_directory(directory, filename, as_attachment=True, download_name=uploaded_file.original_filename)
+
+
+@files_bp.route('/assistant/<filename>')
+def serve_assistant_file(filename):
+    """Serve uploaded assistant chat media."""
+    import os
+    from flask import current_app, send_from_directory
+    upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'assistant')
+    return send_from_directory(upload_dir, filename)
+

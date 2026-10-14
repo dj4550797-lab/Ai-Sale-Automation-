@@ -53,7 +53,12 @@ def run_lead_discovery(location, category, daily_target=20, min_rating=None, req
     start_utc = start_local.astimezone(timezone.utc).replace(tzinfo=None)
     
     leads_today = Lead.query.filter(Lead.created_at >= start_utc).count()
-    remaining_capacity = max(0, daily_limit - leads_today)
+    
+    # If caller specifies an explicit target count, use it directly (e.g. manual discovery or forced run)
+    if daily_target and daily_target > 0:
+        remaining_capacity = daily_target
+    else:
+        remaining_capacity = max(0, daily_limit - leads_today)
     
     if remaining_capacity <= 0:
         logger.info(f"Daily lead target reached today ({leads_today}/{daily_limit}). Skipping discovery.")
@@ -126,6 +131,10 @@ def run_lead_discovery(location, category, daily_target=20, min_rating=None, req
                 business_category=item['business_category'],
                 description=item.get('description', ''),
                 address=item['address'],
+                city=item.get('city', ''),
+                state=item.get('state', ''),
+                country=item.get('country', ''),
+                postal_code=item.get('postal_code', ''),
                 website_url=item['website_url'],
                 rating=item['rating'],
                 review_count=item['review_count'],

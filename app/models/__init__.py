@@ -31,6 +31,7 @@ from app.models.knowledge_base import KnowledgeBase
 from app.models.uploaded_file import UploadedFile
 from app.models.notification import Notification
 from app.models.activity_log import ActivityLog
+from app.models.assistant_chat import AssistantSession, AssistantMessage
 
 __all__ = [
     'User', 'Setting',
@@ -48,4 +49,5 @@ __all__ = [
     'PerformanceEvent', 'CorrectionRule',
     'KnowledgeBase', 'UploadedFile',
     'Notification', 'ActivityLog',
+    'AssistantSession', 'AssistantMessage',
 ]

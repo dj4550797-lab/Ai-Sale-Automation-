@@ -18,7 +18,11 @@ function closeSidebar() {
     overlay.classList.remove('visible');
 }
 
-// ── Toast Notifications ─────────────────────────────────────
+// ── Toast Notifications & Alert Override ────────────────────
+window.alert = function(message) {
+    showToast(message, 'info');
+};
+
 function showToast(message, type = 'info', duration = 4000) {
     const container = document.querySelector('.toast-container') || createToastContainer();
     
@@ -54,6 +58,56 @@ function createToastContainer() {
     container.className = 'toast-container';
     document.body.appendChild(container);
     return container;
+}
+
+// ── In-App Confirmation Modal (No Chrome Popups) ────────────
+function showFlixoraConfirm({ title = 'Please Confirm', message = 'Are you sure you want to proceed?', confirmText = 'Confirm', isDanger = true, onConfirm }) {
+    let overlay = document.getElementById('globalConfirmModal');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'dialog-overlay';
+        overlay.id = 'globalConfirmModal';
+        overlay.innerHTML = `
+            <div class="dialog" style="max-width: 440px; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl);">
+                <div class="dialog-header" style="padding: var(--space-5) var(--space-6) var(--space-3); border-bottom: 1px solid var(--border-color);">
+                    <h3 id="globalConfirmTitle" style="font-size: var(--text-lg); font-weight: 600; margin: 0; color: var(--text-primary);">${title}</h3>
+                </div>
+                <div class="dialog-body" style="padding: var(--space-4) var(--space-6);">
+                    <p id="globalConfirmMsg" style="color: var(--text-secondary); font-size: var(--text-sm); line-height: 1.5; margin: 0;"></p>
+                </div>
+                <div class="dialog-footer" style="padding: var(--space-3) var(--space-6) var(--space-5); display: flex; justify-content: flex-end; gap: var(--space-3); border-top: 1px solid var(--border-color);">
+                    <button class="btn btn-secondary btn-sm" id="globalConfirmCancel">Cancel</button>
+                    <button class="btn btn-sm" id="globalConfirmSubmit">${confirmText}</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    }
+
+    document.getElementById('globalConfirmTitle').textContent = title;
+    document.getElementById('globalConfirmMsg').textContent = message;
+    
+    const submitBtn = document.getElementById('globalConfirmSubmit');
+    submitBtn.textContent = confirmText;
+    submitBtn.className = isDanger ? 'btn btn-danger btn-sm' : 'btn btn-primary btn-sm';
+
+    const cancelBtn = document.getElementById('globalConfirmCancel');
+    
+    const close = () => {
+        closeDialog('globalConfirmModal');
+        cancelBtn.onclick = null;
+        submitBtn.onclick = null;
+    };
+    
+    cancelBtn.onclick = close;
+    submitBtn.onclick = () => {
+        close();
+        if (typeof onConfirm === 'function') {
+            onConfirm();
+        }
+    };
+
+    openDialog('globalConfirmModal');
 }
 
 // ── Dialog Management ───────────────────────────────────────
@@ -204,12 +258,102 @@ function setActiveNav() {
     });
 }
 
+// ── Intercept Delete & Confirm Actions (Zero Chrome Popups) ──
+function initConfirmInterceptors() {
+    // 1. Intercept forms using data-confirm
+    document.addEventListener('submit', function(e) {
+        const form = e.target;
+        if (form.dataset.skipConfirm === 'true') {
+            form.dataset.skipConfirm = 'false';
+            return;
+        }
+        const confirmMsg = form.getAttribute('data-confirm');
+        if (confirmMsg) {
+            e.preventDefault();
+            showFlixoraConfirm({
+                title: 'Please Confirm',
+                message: confirmMsg,
+                confirmText: 'Yes, Delete',
+                isDanger: true,
+                onConfirm: () => {
+                    form.dataset.skipConfirm = 'true';
+                    form.submit();
+                }
+            });
+        }
+    });
+
+    // 2. Auto-upgrade any inline onsubmit/onclick that uses confirm()
+    document.querySelectorAll('form[onsubmit*="confirm("], a[onclick*="confirm("], button[onclick*="confirm("]').forEach(el => {
+        const attrName = el.hasAttribute('onsubmit') ? 'onsubmit' : 'onclick';
+        const rawAttr = el.getAttribute(attrName) || '';
+        const match = rawAttr.match(/confirm\(['"](.*?)['"]\)/);
+        const msg = match ? match[1] : 'Are you sure you want to proceed?';
+
+        if (el.tagName === 'FORM') {
+            el.removeAttribute('onsubmit');
+            el.setAttribute('data-confirm', msg);
+        } else {
+            el.removeAttribute('onclick');
+            el.addEventListener('click', function(e) {
+                e.preventDefault();
+                showFlixoraConfirm({
+                    title: 'Please Confirm',
+                    message: msg,
+                    confirmText: 'Proceed',
+                    isDanger: true,
+                    onConfirm: () => {
+                        if (el.tagName === 'A') {
+                            window.location.href = el.href;
+                        } else if (el.form) {
+                            el.form.dataset.skipConfirm = 'true';
+                            el.form.submit();
+                        }
+                    }
+                });
+            });
+        }
+    });
+}
+
+// ── Theme Switcher (Dark / Light Mode) ──────────────────────
+function initAppTheme() {
+    const currentTheme = localStorage.getItem('flixora_theme') || 'light';
+    applyTheme(currentTheme);
+}
+
+function toggleAppTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const nextTheme = isDark ? 'light' : 'dark';
+    localStorage.setItem('flixora_theme', nextTheme);
+    applyTheme(nextTheme);
+    showToast(nextTheme === 'dark' ? '🌙 Dark Mode Activated' : '☀️ Light Mode Activated', 'info', 2000);
+}
+
+function applyTheme(theme) {
+    if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+    }
+    const icon = document.getElementById('themeToggleIcon');
+    if (icon) {
+        icon.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
+    }
+    const btn = document.getElementById('themeToggleBtn');
+    if (btn) {
+        btn.setAttribute('data-tooltip', theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode');
+    }
+}
+
 // ── Initialize ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+    initAppTheme();
     setActiveNav();
     initTabs();
     initDropdowns();
     initFlashMessages();
+    initConfirmInterceptors();
 
     // Sidebar overlay click
     const overlay = document.querySelector('.sidebar-overlay');

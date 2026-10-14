@@ -1,100 +1,352 @@
 {% extends "base.html" %}
 
 {% block title %}AI Assistant — Flixora{% endblock %}
-{% block page_title %}AI Assistant{% endblock %}
+{% block page_title %}AI Assistant Workspace{% endblock %}
 
 {% block content %}
-<div style="display:grid;grid-template-columns:260px 1fr;gap:var(--space-6);height:calc(100vh - 160px);align-items:stretch;">
+<div style="display:grid;grid-template-columns:300px 1fr;gap:var(--space-4);height:calc(100vh - 140px);align-items:stretch;">
     
-    <!-- LEFT SIDEBAR: Suggested Metric Quick Query Chips -->
-    <div style="display:flex;flex-direction:column;gap:var(--space-4);">
-        <div class="card" style="padding:var(--space-4);height:100%;">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:var(--space-3);color:var(--primary-color);">
-                <span class="material-symbols-outlined" style="font-size:20px;">info</span>
-                <strong style="font-size:var(--text-sm);">Suggested Queries</strong>
+    <!-- LEFT SIDEBAR: ChatGPT-style Conversations History -->
+    <div class="card" style="display:flex;flex-direction:column;height:100%;padding:var(--space-3);overflow:hidden;background:#ffffff;border:1px solid var(--border-color);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);">
+        
+        <!-- New Chat Button -->
+        <button type="button" class="btn btn-primary" onclick="createNewSession()" 
+                style="width:100%;justify-content:center;gap:8px;padding:10px 14px;margin-bottom:var(--space-3);font-weight:600;border-radius:var(--radius-md);">
+            <span class="material-symbols-outlined" style="font-size:18px;">add_circle</span>
+            New Chat
+        </button>
+        
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-2);padding:0 6px;">
+            <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-tertiary);">Recent Chats</span>
+            <span class="badge badge-secondary" style="font-size:11px;padding:2px 6px;">{{ sessions|length }}</span>
+        </div>
+
+        <!-- Scrollable Session List -->
+        <div id="sessionList" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;padding-right:2px;">
+            {% if sessions %}
+                {% for s in sessions %}
+                <div class="session-item {% if active_session and active_session.id == s.id %}active{% endif %}" 
+                     id="session-item-{{ s.id }}"
+                     onclick="switchSession({{ s.id }})"
+                     style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:var(--radius-md);cursor:pointer;border:1px solid {% if active_session and active_session.id == s.id %}var(--primary-color){% else %}transparent{% endif %};background:{% if active_session and active_session.id == s.id %}rgba(37,99,235,0.08){% else %}transparent{% endif %};transition:all 0.15s ease;">
+                    <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
+                        <span class="material-symbols-outlined" style="font-size:16px;color:{% if active_session and active_session.id == s.id %}var(--primary-color){% else %}var(--text-tertiary){% endif %};flex-shrink:0;">chat_bubble_outline</span>
+                        <span class="session-title" style="font-size:13px;font-weight:{% if active_session and active_session.id == s.id %}600{% else %}500{% endif %};color:{% if active_session and active_session.id == s.id %}var(--primary-color){% else %}var(--text-primary){% endif %};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="{{ s.title }}">{{ s.title }}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:2px;flex-shrink:0;">
+                        <button type="button" class="btn btn-ghost" onclick="requestDeleteSession(event, {{ s.id }}, '{{ s.title|replace('\'', '\\\'')|escape }}')" 
+                                style="padding:4px;font-size:14px;color:var(--text-tertiary);border-radius:var(--radius-sm);" title="Delete chat">
+                            <span class="material-symbols-outlined" style="font-size:16px;">delete</span>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="padding:var(--space-6) var(--space-2);text-align:center;color:var(--text-tertiary);font-size:var(--text-xs);">
+                    <span class="material-symbols-outlined" style="font-size:32px;display:block;margin-bottom:8px;opacity:0.6;">chat</span>
+                    No chat history yet.<br>Click "New Chat" to begin!
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Quick Prompts Drawer -->
+        <div style="border-top:1px solid var(--border-color);padding-top:var(--space-3);margin-top:var(--space-2);">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:var(--space-2);color:var(--text-secondary);">
+                <span class="material-symbols-outlined" style="font-size:15px;color:var(--warning);">lightbulb</span>
+                <strong style="font-size:11px;text-transform:uppercase;letter-spacing:0.04em;">Quick Insights</strong>
             </div>
             
-            <div style="display:flex;flex-direction:column;gap:var(--space-2);">
+            <div style="display:flex;flex-direction:column;gap:4px;max-height:160px;overflow-y:auto;">
                 {% set chips = [
                     ("Leads found today", "How many leads were discovered today?"),
                     ("Pending PRDs", "Show pending PRD drafts."),
                     ("Deals won this month", "How many deals have we won this month?"),
                     ("Pricing Plans Lookup", "Show active pricing plans."),
-                    ("Provider Status Health", "What is the status of our LLM providers?"),
-                    ("Automation Runs", "Show automation cron jobs status."),
-                    ("Best Lead Categories", "Which business categories have we discovered?")
+                    ("Agency Knowledge Base", "What guidelines are stored in our Knowledge Base?"),
+                    ("LLM System Health", "What is the status of our LLM providers?")
                 ] %}
-                
                 {% for label, query in chips %}
                 <button type="button" class="btn btn-ghost" 
-                        style="text-align:left;font-size:var(--text-xs);padding:8px 12px;border:1px solid var(--border-color);border-radius:var(--radius-sm);justify-content:flex-start;line-height:1.3;"
+                        style="text-align:left;font-size:11px;padding:6px 8px;border:1px solid var(--border-color);border-radius:var(--radius-sm);justify-content:flex-start;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#fafafa;"
                         onclick="sendPresetQuery('{{ query|escape }}')">
                     {{ label }}
                 </button>
                 {% endfor %}
             </div>
         </div>
-    </div>
-
-    <!-- RIGHT: Fullscreen Chat Box Canvas -->
-    <div class="card" style="display:flex;flex-direction:column;height:100%;padding:0;overflow:hidden;">
-        <!-- Chat Header -->
-        <div class="card-header" style="background:var(--surface-dim);padding:var(--space-4) var(--space-6);border-bottom:1px solid var(--border-color);flex-shrink:0;">
-            <div style="display:flex;align-items:center;gap:var(--space-3);">
-                <div style="width:36px;height:36px;border-radius:50%;background:var(--primary-color);color:#fff;display:flex;align-items:center;justify-content:center;">
-                    <span class="material-symbols-outlined">smart_toy</span>
+    </div>    <!-- RIGHT: ChatGPT-Style Conversation Canvas -->
+    <div class="card" style="display:flex;flex-direction:column;height:100%;padding:0;overflow:hidden;border:1px solid var(--border-color);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);background:var(--surface);">
+        
+        <!-- Header: Active Session Meta & New Chat Action -->
+        <div style="padding:12px var(--space-5);border-bottom:1px solid var(--border-color);background:var(--surface);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);">
+            <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+                <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg, #2563eb, #1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(37,99,235,0.3);flex-shrink:0;">
+                    <span class="material-symbols-outlined" style="font-size:18px;">auto_awesome</span>
                 </div>
-                <div>
-                    <h3 style="font-size:var(--text-md);font-weight:600;margin:0;">Dashboard Sales Assistant</h3>
-                    <div style="display:flex;align-items:center;gap:4px;margin-top:2px;">
-                        <div style="width:6px;height:6px;border-radius:50%;background:var(--success);"></div>
-                        <span style="font-size:10px;color:var(--text-tertiary);">AI Online & Ready</span>
+                <div style="min-width:0;">
+                    <h3 id="currentSessionTitle" style="font-size:14px;font-weight:700;margin:0;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                        {{ active_session.title if active_session else "New Conversation" }}
+                    </h3>
+                    <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+                        <span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--success);font-weight:600;">
+                            <span class="material-symbols-outlined" style="font-size:12px;">check_circle</span> Auto-Saved
+                        </span>
+                        <span style="font-size:10px;color:var(--text-tertiary);">•</span>
+                        <span style="font-size:11px;color:var(--text-secondary);">Flixora CRM & Intelligence Agent</span>
                     </div>
                 </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="createNewSession()" title="Start new conversation thread" style="gap:6px;font-weight:500;">
+                    <span class="material-symbols-outlined" style="font-size:16px;">add</span>
+                    New Chat
+                </button>
             </div>
         </div>
         
         <!-- Chat Feed Area -->
-        <div id="assistantFeed" style="flex:1;overflow-y:auto;padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-4);background:var(--background-light);">
+        <div id="assistantFeed" style="flex:1;overflow-y:auto;padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-4);background:var(--surface-dim);">
             
-            <!-- AI Welcome Bubble -->
-            <div style="display:flex;gap:var(--space-3);align-items:flex-start;max-width:80%;">
-                <div style="width:28px;height:28px;border-radius:50%;background:var(--primary-color);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">
-                    <span class="material-symbols-outlined" style="font-size:16px;">smart_toy</span>
+            <!-- Default Welcome Bubble -->
+            <div style="display:flex;gap:12px;align-items:flex-start;max-width:85%;">
+                <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg, #2563eb, #1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 4px rgba(37,99,235,0.25);">
+                    <span class="material-symbols-outlined" style="font-size:18px;">smart_toy</span>
                 </div>
-                <div style="background:#fff;border:1px solid var(--border-color);border-radius:0 var(--radius-md) var(--radius-md) var(--radius-md);padding:10px var(--space-4);font-size:var(--text-sm);line-height:1.5;box-shadow:var(--shadow-sm);">
-                    Hello! I am your sales assistant. Ask me questions about lead records, pricing plans, website analysis results, deals pipeline, or system health logs!
+                <div style="background:var(--surface);border:1px solid var(--border-color);border-radius:0 14px 14px 14px;padding:14px 18px;font-size:13px;line-height:1.6;box-shadow:var(--shadow-xs);color:var(--text-primary);">
+                    Hello! I am your <strong>Flixora Sales & Business Intelligence Assistant</strong>.
+                    <br><br>
+                    You can ask me questions about <strong>leads discovery, website audits, PRD specifications, sales pipeline status, or internal agency knowledge rules</strong>. You can also attach <strong>screenshots or images</strong> to run instant design audits!
                 </div>
             </div>
+
+            <!-- Existing Stored Messages -->
+            {% if initial_messages %}
+                {% for msg in initial_messages %}
+                    {% if msg.sender == 'user' %}
+                    <div style="display:flex;justify-content:flex-end;width:100%;">
+                        <div style="display:flex;gap:10px;align-items:flex-start;max-width:80%;flex-direction:row-reverse;">
+                            <div style="width:32px;height:32px;border-radius:50%;background:var(--primary-600);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <span class="material-symbols-outlined" style="font-size:16px;">person</span>
+                            </div>
+                            <div style="background:var(--primary-50);color:var(--text-primary);border:1px solid var(--primary-200);border-radius:14px 0 14px 14px;padding:12px 18px;font-size:13px;line-height:1.6;box-shadow:var(--shadow-xs);">
+                                {% if msg.image_path %}
+                                <div style="margin-bottom:8px;">
+                                    <a href="{{ msg.image_path }}" target="_blank">
+                                        <img src="{{ msg.image_path }}" alt="Attachment" style="max-width:280px;max-height:200px;border-radius:8px;object-fit:cover;border:1px solid var(--border-color);display:block;">
+                                    </a>
+                                </div>
+                                {% endif %}
+                                <div style="white-space:pre-wrap;">{{ msg.content }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div style="display:flex;gap:12px;align-items:flex-start;max-width:85%;">
+                        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg, #2563eb, #1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 4px rgba(37,99,235,0.25);">
+                            <span class="material-symbols-outlined" style="font-size:18px;">smart_toy</span>
+                        </div>
+                        <div style="background:var(--surface);border:1px solid var(--border-color);border-radius:0 14px 14px 14px;padding:14px 18px;font-size:13px;line-height:1.6;box-shadow:var(--shadow-xs);color:var(--text-primary);position:relative;" class="ai-bubble-box">
+                            <div style="white-space:pre-wrap;">{{ msg.content }}</div>
+                            <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+                                <button type="button" class="btn btn-ghost" onclick="copyMessageText(this)" style="padding:2px 8px;font-size:11px;color:var(--text-tertiary);gap:4px;" title="Copy response">
+                                    <span class="material-symbols-outlined" style="font-size:14px;">content_copy</span> Copy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
             
         </div>
         
-        <!-- Chat Loading indicator -->
-        <div id="assistantLoading" style="display:none;align-items:center;gap:8px;padding:var(--space-2) var(--space-6);background:var(--surface-dim);font-size:var(--text-xs);color:var(--text-secondary);border-top:1px solid var(--border-color);flex-shrink:0;">
-            <div class="spinner" style="width:12px;height:12px;border-width:2px;"></div>
-            <span>Assistant is fetching analytics and formulating answer...</span>
+        <!-- Live Loading Indicator with Animated Dots -->
+        <div id="assistantLoading" style="display:none;align-items:center;gap:10px;padding:8px var(--space-5);background:var(--surface-container);font-size:12px;color:var(--text-secondary);border-top:1px solid var(--border-color);flex-shrink:0;">
+            <div class="spinner" style="width:14px;height:14px;border-width:2px;border-color:var(--primary-color);border-top-color:transparent;"></div>
+            <span>Flixora AI is processing context and querying intelligence tools...</span>
         </div>
 
-        <!-- Chat Input Form -->
-        <div style="padding:var(--space-4) var(--space-6);background:var(--surface-dim);border-top:1px solid var(--border-color);flex-shrink:0;">
-            <form id="assistantForm" onsubmit="submitQuery(event)" style="display:flex;gap:var(--space-3);">
-                <input type="text" class="form-input" id="messageInput" name="message" required autocomplete="off"
-                       placeholder="Type your dashboard statistics question here..." style="font-size:var(--text-sm);padding:12px 16px;">
-                <button type="submit" class="btn btn-primary" style="padding:0 var(--space-6);display:flex;align-items:center;gap:6px;">
-                    <span class="material-symbols-outlined">send</span>
-                    Send
-                </button>
+        <!-- Image Attachment Preview Bar -->
+        <div id="imagePreviewBar" style="display:none;align-items:center;gap:12px;padding:8px var(--space-5);background:var(--surface-container);border-top:1px solid var(--border-color);flex-shrink:0;">
+            <div style="position:relative;display:inline-block;">
+                <img id="imagePreviewThumb" src="" alt="Preview" style="width:48px;height:48px;border-radius:6px;object-fit:cover;border:1px solid var(--border-color);">
+                <button type="button" onclick="clearSelectedImage()" 
+                        style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;">✕</button>
+            </div>
+            <div style="font-size:12px;color:var(--text-secondary);">
+                <span id="imagePreviewName" style="font-weight:600;display:block;color:var(--text-primary);">filename.jpg</span>
+                <span style="font-size:11px;color:var(--text-tertiary);">Ready for Multimodal Vision inspection</span>
+            </div>
+        </div>
+
+        <!-- ChatGPT-Style Floating Input Bar with Integrated Model Picker -->
+        <div style="padding:14px var(--space-6) 16px;background:var(--surface);border-top:1px solid var(--border-color);flex-shrink:0;">
+            <form id="assistantForm" onsubmit="submitQuery(event)">
+                
+                <!-- Hidden file input -->
+                <input type="file" id="imageInput" accept="image/*" style="display:none;" onchange="handleImageSelected(event)">
+
+                <!-- Floating Input Container -->
+                <div style="border:1px solid var(--border-color);border-radius:18px;background:var(--surface-container);padding:10px 14px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px;transition:border-color 0.15s ease;">
+                    
+                    <!-- Text Area (Auto-growing) -->
+                    <textarea class="form-textarea" id="messageInput" name="message" rows="1"
+                              placeholder="Message Flixora AI (ask about leads, website PRDs, pricing plans, or attach design)..." 
+                              style="width:100%;min-height:38px;max-height:160px;resize:none;border:none;background:transparent;padding:4px 0;font-size:13.5px;color:var(--text-primary);line-height:1.5;outline:none;"
+                              onkeydown="handleTextareaKeyDown(event)"></textarea>
+
+                    <!-- Bottom Controls Toolbar inside Input Bar (ChatGPT style) -->
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:4px;">
+                        
+                        <!-- Left Tools: Model Switcher Pill & Attachment -->
+                        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                            
+                            <!-- Model Selection Pill Dropdown -->
+                            <div style="display:flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--border-color);border-radius:20px;padding:3px 10px;box-shadow:var(--shadow-xs);">
+                                <span class="material-symbols-outlined" style="font-size:15px;color:var(--primary-color);">neurology</span>
+                                <select id="modelSelector" style="border:none;background:transparent;font-size:12px;font-weight:600;color:var(--text-primary);cursor:pointer;outline:none;padding-right:4px;">
+                                    <option value="">⚡ Auto Router (Best LLM)</option>
+                                    
+                                    <optgroup label="🚀 Google AI (Gemini Pro & Flash)">
+                                        <option value="gemini-2.0-flash">Google Gemini 2.0 Flash (Fast & Vision)</option>
+                                        <option value="gemini-1.5-pro">Google Gemini 1.5 Pro (Google AI Pro Tier)</option>
+                                        <option value="gemini-1.5-flash">Google Gemini 1.5 Flash</option>
+                                        <option value="gemini-2.5-flash">Google Gemini 2.5 Flash</option>
+                                    </optgroup>
+                                    
+                                    <optgroup label="🎁 Free Models (OpenRouter Free Tier)">
+                                        <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash Exp [Free]</option>
+                                        <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B Instruct [Free]</option>
+                                        <option value="deepseek/deepseek-r1:free">DeepSeek R1 Reasoning [Free]</option>
+                                        <option value="mistralai/mistral-7b-instruct:free">Mistral 7B Instruct [Free]</option>
+                                        <option value="qwen/qwen-2.5-coder-32b-instruct:free">Qwen 2.5 Coder 32B [Free]</option>
+                                    </optgroup>
+                                    
+                                    {% if models %}
+                                    <optgroup label="⚙️ Configured Provider Models">
+                                        {% for m in models %}
+                                        <option value="{{ m.model_id }}">{{ m.display_name or m.model_id }}</option>
+                                        {% endfor %}
+                                    </optgroup>
+                                    {% endif %}
+                                </select>
+                            </div>
+
+                            <!-- Attach Image Button -->
+                            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('imageInput').click()" 
+                                    title="Attach image or website mockup" style="padding:4px 8px;border-radius:20px;border:1px solid var(--border-color);background:var(--surface);display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-secondary);">
+                                <span class="material-symbols-outlined" style="font-size:16px;">add_photo_alternate</span>
+                                <span>Attach</span>
+                            </button>
+                        </div>
+
+                        <!-- Right: Circular Send Button -->
+                        <button type="submit" id="sendBtn" class="btn btn-primary" 
+                                style="width:34px;height:34px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(37,99,235,0.3);flex-shrink:0;">
+                            <span class="material-symbols-outlined" style="font-size:18px;">arrow_upward</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div style="font-size:11px;color:var(--text-tertiary);text-align:center;margin-top:6px;">
+                    Flixora AI Assistant accesses live leads, website audits, PRD drafts, and agency knowledge base.
+                </div>
             </form>
         </div>
     </div>
 </div>
 
+<!-- CUSTOM IN-APP DELETE MODAL (ZERO NATIVE BROWSER POPUPS) -->
+<div id="deleteModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.6);backdrop-filter:blur(3px);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:var(--surface);border-radius:12px;padding:24px;width:90%;max-width:400px;box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);border:1px solid var(--border-color);">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+            <div style="width:40px;height:40px;border-radius:50%;background:#fee2e2;color:#ef4444;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <span class="material-symbols-outlined" style="font-size:22px;">delete</span>
+            </div>
+            <div>
+                <h4 style="margin:0;font-size:16px;font-weight:700;color:var(--text-primary);">Delete Conversation?</h4>
+                <p style="margin:2px 0 0 0;font-size:12px;color:var(--text-secondary);">This action cannot be undone.</p>
+            </div>
+        </div>
+        <p id="deleteModalText" style="font-size:13px;color:var(--text-secondary);margin:0 0 20px 0;line-height:1.5;">
+            Are you sure you want to delete this conversation thread?
+        </p>
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()" style="border-radius:6px;padding:8px 16px;">Cancel</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteBtn" style="border-radius:6px;padding:8px 16px;background:#ef4444;color:#fff;border:none;">Delete Chat</button>
+        </div>
+    </div>
+</div>
+
+<!-- IN-APP TOAST CONTAINER -->
+<div id="customToast" style="display:none;position:fixed;bottom:24px;right:24px;padding:12px 18px;border-radius:8px;font-size:13px;font-weight:500;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);z-index:10000;align-items:center;gap:8px;">
+    <span id="customToastIcon" class="material-symbols-outlined" style="font-size:18px;">info</span>
+    <span id="customToastText">Notification</span>
+</div>
+
 <script>
+let currentSessionId = {{ active_session.id if active_session else "null" }};
+let selectedImageFile = null;
+let pendingDeleteSessionId = null;
 const feed = document.getElementById('assistantFeed');
-const chatHistory = [];
+
+function handleTextareaKeyDown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById('assistantForm').dispatchEvent(new Event('submit'));
+    }
+}
+
+function showInAppToast(text, type = 'info') {
+    const toast = document.getElementById('customToast');
+    const toastText = document.getElementById('customToastText');
+    const toastIcon = document.getElementById('customToastIcon');
+    
+    toastText.innerText = text;
+    if (type === 'success') {
+        toast.style.background = '#10b981';
+        toast.style.color = '#ffffff';
+        toastIcon.innerText = 'check_circle';
+    } else if (type === 'error') {
+        toast.style.background = '#ef4444';
+        toast.style.color = '#ffffff';
+        toastIcon.innerText = 'error';
+    } else {
+        toast.style.background = '#1e293b';
+        toast.style.color = '#ffffff';
+        toastIcon.innerText = 'info';
+    }
+    
+    toast.style.display = 'flex';
+    setTimeout(() => {
+        toast.style.display = 'none';
+    }, 3500);
+}
 
 function scrollBottom() {
     feed.scrollTop = feed.scrollHeight;
+}
+scrollBottom();
+
+function handleImageSelected(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    selectedImageFile = file;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        document.getElementById('imagePreviewThumb').src = evt.target.result;
+        document.getElementById('imagePreviewName').innerText = file.name;
+        document.getElementById('imagePreviewBar').style.display = 'flex';
+    };
+    reader.readAsDataURL(file);
+}
+
+function clearSelectedImage() {
+    selectedImageFile = null;
+    document.getElementById('imageInput').value = '';
+    document.getElementById('imagePreviewBar').style.display = 'none';
 }
 
 function sendPresetQuery(query) {
@@ -102,42 +354,129 @@ function sendPresetQuery(query) {
     document.getElementById('assistantForm').dispatchEvent(new Event('submit'));
 }
 
+function createNewSession() {
+    fetch("{{ url_for('ai_assistant.create_session') }}", {
+        method: "POST",
+        headers: { "X-CSRFToken": "{{ csrf_token() }}" }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = "{{ url_for('ai_assistant.index') }}?session_id=" + data.session.id;
+        } else {
+            showInAppToast("Could not create conversation: " + (data.error || "Unknown"), "error");
+        }
+    })
+    .catch(err => showInAppToast("Network error: " + err, "error"));
+}
+
+function switchSession(sessionId) {
+    if (sessionId === currentSessionId) return;
+    window.location.href = "{{ url_for('ai_assistant.index') }}?session_id=" + sessionId;
+}
+
+function requestDeleteSession(e, sessionId, sessionTitle) {
+    e.stopPropagation();
+    pendingDeleteSessionId = sessionId;
+    document.getElementById('deleteModalText').innerText = `Are you sure you want to permanently delete "${sessionTitle}"?`;
+    document.getElementById('deleteModal').style.display = 'flex';
+    document.getElementById('confirmDeleteBtn').onclick = executeDeleteSession;
+}
+
+function closeDeleteModal() {
+    pendingDeleteSessionId = null;
+    document.getElementById('deleteModal').style.display = 'none';
+}
+
+function executeDeleteSession() {
+    if (!pendingDeleteSessionId) return;
+    const sId = pendingDeleteSessionId;
+    closeDeleteModal();
+
+    fetch("{{ url_for('ai_assistant.index') }}/session/" + sId + "/delete", {
+        method: "POST",
+        headers: { "X-CSRFToken": "{{ csrf_token() }}" }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showInAppToast("Conversation deleted.", "success");
+            if (currentSessionId === sId) {
+                window.location.href = "{{ url_for('ai_assistant.index') }}";
+            } else {
+                const item = document.getElementById('session-item-' + sId);
+                if (item) item.remove();
+            }
+        } else {
+            showInAppToast(data.error || "Failed to delete chat.", "error");
+        }
+    })
+    .catch(err => showInAppToast("Network error: " + err, "error"));
+}
+
+function copyMessageText(btn) {
+    const parentBox = btn.closest('.ai-bubble-box');
+    if (!parentBox) return;
+    const text = parentBox.querySelector('div').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+        btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:14px;">done</span> Copied!`;
+        setTimeout(() => {
+            btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:14px;">content_copy</span> Copy`;
+        }, 2000);
+    });
+}
+
 function submitQuery(e) {
     e.preventDefault();
     const input = document.getElementById('messageInput');
     const query = input.value.trim();
-    if (!query) return;
+    if (!query && !selectedImageFile) return;
 
-    // Push to history
-    chatHistory.push({sender: 'user', content: query});
-
-    // 1. Append User Bubble
+    // 1. Render User Bubble immediately
     const userBubble = document.createElement('div');
     userBubble.style.display = 'flex';
     userBubble.style.justifyContent = 'flex-end';
     userBubble.style.width = '100%';
-    
+
+    let imageHtml = '';
+    if (selectedImageFile) {
+        const previewUrl = document.getElementById('imagePreviewThumb').src;
+        imageHtml = `<div style="margin-bottom:8px;"><img src="${previewUrl}" style="max-width:260px;max-height:180px;border-radius:6px;object-fit:cover;border:1px solid var(--border-color);display:block;"></div>`;
+    }
+
     userBubble.innerHTML = `
         <div style="display:flex;gap:8px;align-items:flex-start;max-width:80%;flex-direction:row-reverse;">
-            <div style="width:28px;height:28px;border-radius:50%;background:var(--text-secondary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">
+            <div style="width:30px;height:30px;border-radius:50%;background:var(--text-secondary);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <span class="material-symbols-outlined" style="font-size:16px;">person</span>
             </div>
-            <div style="background:var(--primary-light);color:var(--primary-color);border:1px solid var(--primary-border);border-radius:var(--radius-md) 0 var(--radius-md) var(--radius-md);padding:10px var(--space-4);font-size:var(--text-sm);line-height:1.5;box-shadow:var(--shadow-sm);white-space:pre-wrap;">${query}</div>
+            <div style="background:#eff6ff;color:#1e3a8a;border:1px solid #bfdbfe;border-radius:12px 0 12px 12px;padding:12px 16px;font-size:13px;line-height:1.6;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                ${imageHtml}
+                <div style="white-space:pre-wrap;">${query ? query : "(Uploaded image for analysis)"}</div>
+            </div>
         </div>
     `;
     feed.appendChild(userBubble);
     scrollBottom();
-    
-    // Reset input and show loading spinner
+
+    // Reset input fields
     input.value = '';
     input.disabled = true;
+    document.getElementById('sendBtn').disabled = true;
     document.getElementById('assistantLoading').style.display = 'flex';
 
-    // 2. AJAX Post Request
+    // 2. Prepare Multipart Form Data
     const formData = new FormData();
-    formData.append('message', query);
-    formData.append('history', JSON.stringify(chatHistory.slice(-10)));
+    if (query) formData.append('message', query);
+    if (currentSessionId) formData.append('session_id', currentSessionId);
+    if (selectedImageFile) formData.append('image', selectedImageFile);
 
+    // Selected Model
+    const selectedModel = document.getElementById('modelSelector').value;
+    if (selectedModel) formData.append('model', selectedModel);
+
+    clearSelectedImage();
+
+    // 3. Send Post Request
     fetch("{{ url_for('ai_assistant.message') }}", {
         method: "POST",
         body: formData,
@@ -147,42 +486,53 @@ function submitQuery(e) {
     })
     .then(r => r.json())
     .then(data => {
-        // Hide loader & enable input
         document.getElementById('assistantLoading').style.display = 'none';
         input.disabled = false;
+        document.getElementById('sendBtn').disabled = false;
         input.focus();
 
         if (data.success) {
-            chatHistory.push({sender: 'assistant', content: data.reply});
-            // Append AI Bubble with formatted reply
+            currentSessionId = data.session_id;
+            if (data.session_title) {
+                document.getElementById('currentSessionTitle').innerText = data.session_title;
+                const activeItem = document.getElementById('session-item-' + currentSessionId);
+                if (activeItem) {
+                    const titleSpan = activeItem.querySelector('.session-title');
+                    if (titleSpan) titleSpan.innerText = data.session_title;
+                }
+            }
+
+            // Render Assistant Bubble
             const aiBubble = document.createElement('div');
             aiBubble.style.display = 'flex';
             aiBubble.style.gap = '12px';
             aiBubble.style.alignItems = 'flex-start';
-            aiBubble.style.maxWidth = '80%';
-            
-            // Format system lines
-            let replyText = data.reply.replace(/\n/g, '<br>');
+            aiBubble.style.maxWidth = '85%';
 
             aiBubble.innerHTML = `
-                <div style="width:28px;height:28px;border-radius:50%;background:var(--primary-color);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">
+                <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg, #2563eb, #1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                     <span class="material-symbols-outlined" style="font-size:16px;">smart_toy</span>
                 </div>
-                <div style="background:#fff;border:1px solid var(--border-color);border-radius:0 var(--radius-md) var(--radius-md) var(--radius-md);padding:10px var(--space-4);font-size:var(--text-sm);line-height:1.5;box-shadow:var(--shadow-sm);color:var(--text-primary);">
-                    ${replyText}
-                    ${data.tool_called && data.tool_called !== 'none' ? `<div style="font-size:10px;color:var(--text-tertiary);margin-top:var(--space-2);border-top:1px dashed var(--border-color);padding-top:4px;">Dispatched database metric: ${data.tool_called}</div>` : ''}
+                <div style="background:var(--surface);border:1px solid var(--border-color);border-radius:0 14px 14px 14px;padding:14px 18px;font-size:13px;line-height:1.6;box-shadow:var(--shadow-xs);color:var(--text-primary);position:relative;" class="ai-bubble-box">
+                    <div style="white-space:pre-wrap;">${data.reply}</div>
+                    <div style="display:flex;justify-content:flex-end;margin-top:6px;">
+                        <button type="button" class="btn btn-ghost" onclick="copyMessageText(this)" style="padding:2px 6px;font-size:11px;color:var(--text-tertiary);" title="Copy response">
+                            <span class="material-symbols-outlined" style="font-size:14px;">content_copy</span> Copy
+                        </button>
+                    </div>
                 </div>
             `;
             feed.appendChild(aiBubble);
             scrollBottom();
         } else {
-            alert("Error: " + data.error);
+            showInAppToast(data.error || "Failed to get response from AI assistant.", "error");
         }
     })
     .catch(err => {
         document.getElementById('assistantLoading').style.display = 'none';
         input.disabled = false;
-        alert("Request failed: " + err);
+        document.getElementById('sendBtn').disabled = false;
+        showInAppToast("Server connection error: " + err, "error");
     });
 }
 </script>

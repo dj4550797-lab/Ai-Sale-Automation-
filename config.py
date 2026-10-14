@@ -13,12 +13,14 @@ class Config:
     """Base configuration."""
 
     # Flask
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-change-me')
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-change-me').strip('\'" \t\n\r')
     
     # Database
     _database_url = os.environ.get('DATABASE_URL')
-    if _database_url and _database_url.startswith('postgres://'):
-        _database_url = _database_url.replace('postgres://', 'postgresql://', 1)
+    if _database_url:
+        _database_url = _database_url.strip('\'" \t\n\r')
+        if _database_url.startswith('postgres://'):
+            _database_url = _database_url.replace('postgres://', 'postgresql://', 1)
     
     SQLALCHEMY_DATABASE_URI = _database_url or f'sqlite:///{os.path.join(BASE_DIR, "instance", "flixora.db")}'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -34,10 +36,10 @@ class Config:
     WTF_CSRF_TIME_LIMIT = 3600  # 1 hour
 
     # Encryption
-    ENCRYPTION_KEY = os.environ.get('ENCRYPTION_KEY', '')
+    ENCRYPTION_KEY = os.environ.get('ENCRYPTION_KEY', '').strip('\'" \t\n\r')
 
-    # Test Mode
-    TEST_MODE = os.environ.get('TEST_MODE', 'true').lower() in ('true', '1', 'yes')
+    # Test Mode (False by default for live scraping and production operation)
+    TEST_MODE = os.environ.get('TEST_MODE', 'false').strip('\'" \t\n\r').lower() in ('true', '1', 'yes')
 
     # Uploads
     UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
@@ -46,13 +48,13 @@ class Config:
     ALLOWED_DOC_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt', 'md'}
 
     # Logging
-    LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
+    LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO').strip('\'" \t\n\r')
     LOG_DIR = os.path.join(BASE_DIR, 'logs')
 
     # Default Admin
-    ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
-    ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@flixora.com')
-    ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin')
+    ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin').strip('\'" \t\n\r')
+    ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@flixora.com').strip('\'" \t\n\r')
+    ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin').strip('\'" \t\n\r')
 
     # Rate Limiting
     LOGIN_RATE_LIMIT = 5  # attempts per window
@@ -83,6 +85,7 @@ class ProductionConfig(Config):
 class TestingConfig(Config):
     """Testing configuration."""
     TESTING = True
+    TEST_MODE = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     WTF_CSRF_ENABLED = False
     LOGIN_RATE_LIMIT = 100

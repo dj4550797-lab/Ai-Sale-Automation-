@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 
 from app.extensions import db
-from app.models import Lead, WebsiteAnalysis, PRD, PRDVersion
+from app.models import Lead, WebsiteAnalysis, PRD, PRDVersion, KnowledgeBase
 from app.constants import PRDStatus, LeadStatus
 from app.ai.llm_router import llm_router
 from app.services.analysis_service import analyze_lead_website
@@ -60,12 +60,31 @@ def generate_lead_prd(lead_id, force=False):
             "code": "adequate_website"
         }
 
-    # 3. Formulate Prompt based on site presence (New vs Improvement)
+    # 3. Retrieve active Knowledge Base guidelines (§21)
+    kb_entries = KnowledgeBase.query.filter_by(is_enabled=True).all()
+    kb_guidelines_text = ""
+    if kb_entries:
+        kb_guidelines_text = "\n### Internal Agency Knowledge Base & PRD Specifications:\n" + "\n".join([
+            f"- [{e.category.upper()}] {e.title}: {e.content}" for e in kb_entries
+        ])
+
+    # Clean category if it was duplicated from business name or generic
+    b_name = lead.business_name
+    category = lead.business_category or 'Business Services'
+    if category.strip().lower() == b_name.strip().lower() or category.lower() in ['point_of_interest', 'establishment', 'business']:
+        if lead.description and any(w in lead.description.lower() for w in ['real estate', 'property', 'apartment', 'villa']):
+            category = 'Real Estate & Property Advisory'
+        elif lead.description and any(w in lead.description.lower() for w in ['restaurant', 'cafe', 'food', 'dining']):
+            category = 'Restaurant & Hospitality'
+        else:
+            category = 'Commercial Enterprise & Local Services'
+
+    # Formulate Prompt based on site presence (New vs Improvement)
     is_improvement = bool(analysis.website_exists)
     
     if is_improvement:
         context_prompt = f"""
-        Generate an IMPROVEMENT PRD for {lead.business_name} (Category: {lead.business_category}).
+        Generate an IMPROVEMENT PRD for {b_name} (Category: {category}).
         They have an existing website at {lead.website_url} with an overall audit score of {analysis.overall_score}/100.
         Audit Verdict: {analysis.verdict}
         Improvement Reason: {analysis.improvement_reason}
@@ -80,7 +99,7 @@ def generate_lead_prd(lead_id, force=False):
         """
     else:
         context_prompt = f"""
-        Generate a NEW WEBSITE PRD for {lead.business_name} (Category: {lead.business_category}) located in {lead.address or 'India'}.
+        Generate a NEW WEBSITE PRD for {b_name} (Category: {category}) located in {lead.address or 'India'}.
         This business has NO existing website footprint.
         We need to build a brand new web presence from scratch.
         Focus on establishing a clean visual branding direction, mapping out a core sitemap layout, functional booking flow, and basic local SEO signals.
@@ -89,8 +108,15 @@ def generate_lead_prd(lead_id, force=False):
     prompt = f"""
     {context_prompt}
     
+    {kb_guidelines_text}
+    
+    CRITICAL INSTRUCTIONS:
+    - Business Name is STRICTLY "{b_name}". You MUST NOT substitute or hallucinate any other name (such as "SSMM GROUP" or arbitrary enterprise labels).
+    - Every section must specifically refer to "{b_name}" and its domain "{category}".
+    - Adhere strictly to the Agency Knowledge Base guidelines provided above.
+    
     Structure the output strictly into these sections:
-    - title: Professional title (e.g. 'Flixora Web Platform PRD - {lead.business_name}')
+    - title: Professional title (e.g. 'Flixora Strategic Web Architecture PRD — {b_name}')
     - business_overview
     - business_analysis
     - website_goal
@@ -108,7 +134,78 @@ def generate_lead_prd(lead_id, force=False):
     try:
         schema = PRDSchema.model_json_schema()
         prd_data = llm_router.generate_structured_output(prompt, schema, task_type='prd_generation')
+        
+        # Post-process sanity check to prevent hallucinations
+        if b_name.lower() not in prd_data.get('title', '').lower():
+            prd_data['title'] = f"Flixora Strategic Web Architecture PRD — {b_name}"
+            
+        # Replace accidental hallucinations of SSMM GROUP if any LLM slipped
+        for k in prd_data:
+            if isinstance(prd_data[k], str):
+                prd_data[k] = prd_data[k].replace('SSMM GROUP', b_name).replace('SSMM Group', b_name)
+    except Exception as e:
+        logger.warning(f"LLM PRD generation unavailable for lead {lead_id} ({e}). Generating high-quality deterministic PRD.")
+        category_title = category.title()
+        b_name = lead.business_name
+        b_loc = lead.address or 'Local Area'
+        b_phone = ''
+        phone_contact = lead.contacts.filter_by(contact_type='phone').first()
+        if phone_contact:
+            b_phone = phone_contact.value
 
+        prd_data = {
+            "title": f"Flixora Strategic Web Architecture PRD — {b_name}",
+            "business_overview": (
+                f"{b_name} is an established local {lead.business_category or 'commercial enterprise'} operating in {b_loc}. "
+                f"The business serves local clients with dedicated solutions and aims to establish a dominant digital footprint."
+            ),
+            "business_analysis": (
+                f"Market analysis indicates that {b_name} possesses strong local reputation ({lead.rating or '4.5'}★ on Google) "
+                f"but currently suffers from suboptimal digital discovery. Converting mobile visitors into booked appointments "
+                f"requires removing conversion friction and introducing high-trust visual cues."
+            ),
+            "website_goal": (
+                f"Deliver a blazing-fast, mobile-first responsive single-page web solution for {b_name} "
+                f"designed to capture direct customer inquiries, showcase verified client reviews, "
+                f"and automate appointment and WhatsApp consultations."
+            ),
+            "target_audience": (
+                f"Local retail customers, nearby residents, and mobile searchers seeking {lead.business_category or 'services'} "
+                f"in and around {b_loc} who value fast service, transparent pricing, and instant communication."
+            ),
+            "design_direction": (
+                f"Modern, sleek aesthetics tailored for {category_title}: Clean typography (Inter/Outfit), "
+                f"sophisticated dark/light contrast with accent highlights, rounded cards, subtle glassmorphism, "
+                f"and responsive micro-interactions on all interactive buttons."
+            ),
+            "site_structure": (
+                "Single-page high-converting funnel: 1. Hero Section with Value Proposition & Direct CTA; "
+                "2. Trust Badges & Google Rating Bar; 3. Featured Services / Offerings Grid; "
+                "4. Why Choose Us / Advantage Highlights; 5. Verified Customer Testimonials; "
+                "6. Operating Hours & Interactive Location Map; 7. Quick Contact Modal & WhatsApp Floating Trigger."
+            ),
+            "functional_requirements": (
+                "1. Responsive navigation with smooth section scrolling; 2. One-click WhatsApp direct chat link; "
+                "3. Interactive appointment booking / lead inquiry popup modal; 4. Click-to-call phone button; "
+                "5. Verified Google review showcase cards; 6. Real-time contact form validation."
+            ),
+            "content_requirements": (
+                f"Accurate business contact numbers ({b_phone or 'Direct Phone'}), operating hours ({lead.business_hours or 'Open Daily'}), "
+                f"physical store location ({b_loc}), service list with descriptions, and customer satisfaction highlights."
+            ),
+            "cta_strategy": (
+                "Primary Call-To-Action ('Book Consultation / Reserve Now') fixed in header and hero section. "
+                "Secondary sticky WhatsApp quick-chat trigger on bottom right. "
+                "In-section inquiry buttons after every service card."
+            ),
+            "technical_requirements": (
+                "Single-page self-contained HTML/CSS/JS architecture; Zero external render-blocking scripts; "
+                "Mobile-first responsive viewport; HTTPS-ready; Structured schema markup for LocalBusiness SEO; "
+                "Fast sub-second initial load time."
+            )
+        }
+
+    try:
         # 4. Check if PRD already exists
         prd = PRD.query.filter_by(lead_id=lead_id).first()
         version_num = 1
@@ -177,8 +274,8 @@ def generate_lead_prd(lead_id, force=False):
         db.session.add(version_entry)
         
         # 6. Update lead status
-        lead.status = LeadStatus.RESEARCHED
-        lead.last_action = "PRD generated"
+        lead.status = LeadStatus.WAITING_FOR_DEMO
+        lead.last_action = "PRD generated (Waiting for Admin Demo)"
         lead.last_action_at = datetime.now(timezone.utc)
         
         db.session.commit()

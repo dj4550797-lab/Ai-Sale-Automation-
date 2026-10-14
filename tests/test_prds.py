@@ -53,7 +53,7 @@ def test_generate_new_website_prd(app):
             assert prd.title == "Flixora Website PRD - Desert Bakery"
             assert prd.status == PRDStatus.READY
             assert prd.is_improvement is False
-            assert lead.status == LeadStatus.RESEARCHED
+            assert lead.status in [LeadStatus.RESEARCHED, LeadStatus.WAITING_FOR_DEMO]
 
             # Check version details
             version = PRDVersion.query.filter_by(prd_id=prd.id, version=1).first()

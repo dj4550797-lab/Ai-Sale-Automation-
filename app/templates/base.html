@@ -21,6 +21,15 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
 
+    <script>
+        (function() {
+            var theme = localStorage.getItem('flixora_theme') || 'light';
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+
     {% block head %}{% endblock %}
 </head>
 <body>
@@ -155,6 +164,11 @@
                         <span class="material-symbols-outlined search-icon">search</span>
                         <input type="text" placeholder="Search..." id="globalSearch" aria-label="Search">
                     </div>
+
+                    <!-- Theme Toggle (Dark / Light) -->
+                    <button class="topbar-btn" id="themeToggleBtn" onclick="toggleAppTheme()" data-tooltip="Toggle Dark/Light Mode" aria-label="Toggle theme">
+                        <span class="material-symbols-outlined" id="themeToggleIcon">dark_mode</span>
+                    </button>
 
                     <button class="topbar-btn" data-tooltip="Notifications" id="notificationBtn">
                         <span class="material-symbols-outlined">notifications</span>

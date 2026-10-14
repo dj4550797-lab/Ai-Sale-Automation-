@@ -98,7 +98,7 @@
                         <!-- Compile generator button -->
                         <button class="btn btn-secondary btn-sm" id="btn_generate_{{ lead.id }}"
                                 onclick="generateDemo({{ lead.id }})"
-                                {% if not prd or prd.status != 'approved' %}disabled style="opacity:0.5;cursor:not-allowed;" title="PRD must be approved first"{% endif %}>
+                                {% if not prd or prd.status not in ['approved', 'ready'] %}disabled style="opacity:0.5;cursor:not-allowed;" title="PRD must be generated or approved first"{% endif %}>
                             <span class="material-symbols-outlined" style="font-size:16px;">construction</span>
                             Compile
                         </button>

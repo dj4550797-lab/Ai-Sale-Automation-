@@ -1,22 +1,25 @@
 {% extends "base.html" %}
 
-{% block title %}{{ prd.title }} — Flixora{% endblock %}
+{% block title %}{{ content.title or prd.title }} — Flixora PRD Editor{% endblock %}
 {% block page_title %}PRD Document Editor{% endblock %}
 
 {% block content %}
 <div class="page-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: var(--space-4); margin-bottom: var(--space-4);">
-    <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2);">
-        <a href="{{ url_for('prds.index') }}" style="display:flex;align-items:center;gap:4px;font-size:var(--text-sm);">
-            <span class="material-symbols-outlined" style="font-size:16px;">arrow_back</span>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-2);">
+        <a href="{{ url_for('prds.index') }}" style="display:flex;align-items:center;gap:4px;font-size:var(--text-sm);color:var(--primary-color);text-decoration:none;">
+            <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
             Back to PRD Directory
         </a>
+        <div style="font-size:var(--text-xs);color:var(--text-tertiary);">
+            Associated Lead: <strong>{{ lead.business_name if lead else 'Unknown' }}</strong>
+        </div>
     </div>
     
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-4);">
         <div>
-            <h1 style="margin:0;font-size:var(--text-2xl);">{{ content.title or prd.title }}</h1>
-            <div style="display:flex;align-items:center;gap:var(--space-3);margin-top:var(--space-1);flex-wrap:wrap;">
-                <span class="badge badge-gray" style="font-weight:600;">v{{ selected_version }}</span>
+            <h1 id="prdDocTitle" style="margin:0;font-size:var(--text-2xl);font-weight:700;">{{ content.title or prd.title }}</h1>
+            <div style="display:flex;align-items:center;gap:var(--space-3);margin-top:var(--space-2);flex-wrap:wrap;">
+                <span class="badge badge-primary" style="font-weight:600;">Version v{{ selected_version }}</span>
                 {% if prd.status == 'approved' %}
                 <span class="badge badge-success">Approved</span>
                 {% elif prd.status == 'under_review' %}
@@ -28,24 +31,36 @@
                 {% endif %}
                 
                 <span style="font-size:var(--text-xs);color:var(--text-tertiary);">
-                    Last edited: {{ prd.updated_at.strftime('%Y-%m-%d %H:%M') if prd.updated_at else '-' }}
+                    Last updated: {{ prd.updated_at.strftime('%Y-%m-%d %H:%M') if prd.updated_at else '-' }}
                 </span>
             </div>
         </div>
         
-        <!-- Document Action Forms -->
-        <div style="display:flex;gap:var(--space-2);">
-            <form method="POST" action="{{ url_for('prds.action', id=prd.id) }}" style="display:inline;">
+        <!-- Document Action Buttons -->
+        <div style="display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;">
+            <!-- Edit Mode Toggle Button -->
+            <button type="button" id="btnToggleEdit" class="btn btn-secondary" onclick="toggleEditMode()">
+                <span class="material-symbols-outlined" style="font-size:18px;">edit_document</span>
+                <span id="btnToggleEditText">Edit Content</span>
+            </button>
+
+            <!-- Save Changes Button (Visible only in edit mode) -->
+            <button type="button" id="btnSaveDirect" class="btn btn-primary" onclick="submitDirectEdit()" style="display:none;">
+                <span class="material-symbols-outlined" style="font-size:18px;">save</span>
+                Save Changes
+            </button>
+
+            <form method="POST" action="{{ url_for('prds.action', id=prd.id) }}" style="display:inline-flex;gap:var(--space-2);">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 {% if prd.status != 'approved' %}
                 <button type="submit" name="action" value="approve" class="btn btn-primary">
-                    <span class="material-symbols-outlined">check_circle</span>
+                    <span class="material-symbols-outlined" style="font-size:18px;">check_circle</span>
                     Approve PRD
                 </button>
                 {% endif %}
                 {% if prd.status != 'rejected' %}
-                <button type="submit" name="action" value="reject" class="btn btn-secondary">
-                    <span class="material-symbols-outlined">cancel</span>
+                <button type="submit" name="action" value="reject" class="btn btn-ghost" style="border:1px solid var(--border-color);">
+                    <span class="material-symbols-outlined" style="font-size:18px;">cancel</span>
                     Reject
                 </button>
                 {% endif %}
@@ -54,18 +69,21 @@
     </div>
 </div>
 
-<div style="display:grid;grid-template-columns:3fr 1fr;gap:var(--space-6);align-items:start;">
+<!-- Inline Alert Box -->
+<div id="editorAlert" style="display:none;padding:12px 16px;border-radius:var(--radius-sm);margin-bottom:var(--space-4);font-size:var(--text-sm);"></div>
+
+<div style="display:grid;grid-template-columns:3fr 1.3fr;gap:var(--space-6);align-items:start;">
     
     <!-- LEFT COLUMN: Structured PRD Content Blocks -->
-    <div style="display:flex;flex-direction:column;gap:var(--space-6);">
+    <div style="display:flex;flex-direction:column;gap:var(--space-5);">
         
         <!-- Version Selector & Version Compare Bar -->
-        <div class="card" style="padding:var(--space-4) var(--space-6);">
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-4);">
+        <div class="card" style="padding:var(--space-3) var(--space-5);">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-3);">
                 <!-- Select Version -->
                 <div style="display:flex;align-items:center;gap:var(--space-2);">
-                    <label class="form-label" for="vSelect" style="margin-bottom:0;white-space:nowrap;">Viewing Version:</label>
-                    <select class="form-select" id="vSelect" onchange="switchVersion(this.value)" style="width:90px;padding:4px 8px;">
+                    <label class="form-label" for="vSelect" style="margin-bottom:0;font-size:var(--text-xs);font-weight:600;white-space:nowrap;">Version:</label>
+                    <select class="form-select" id="vSelect" onchange="switchVersion(this.value)" style="width:130px;padding:4px 8px;font-size:var(--text-xs);">
                         {% for v in versions %}
                         <option value="{{ v.version }}" {{ 'selected' if selected_version == v.version }}>v{{ v.version }} ({{ v.author_type|upper }})</option>
                         {% endfor %}
@@ -74,8 +92,8 @@
                 
                 <!-- Compare Version -->
                 <div style="display:flex;align-items:center;gap:var(--space-2);">
-                    <label class="form-label" for="compSelect" style="margin-bottom:0;white-space:nowrap;">Compare with:</label>
-                    <select class="form-select" id="compSelect" onchange="compareVersion(this.value)" style="width:110px;padding:4px 8px;">
+                    <label class="form-label" for="compSelect" style="margin-bottom:0;font-size:var(--text-xs);font-weight:600;white-space:nowrap;">Compare:</label>
+                    <select class="form-select" id="compSelect" onchange="compareVersion(this.value)" style="width:110px;padding:4px 8px;font-size:var(--text-xs);">
                         <option value="">None</option>
                         {% for v in versions %}
                         {% if v.version != selected_version %}
@@ -86,122 +104,200 @@
                 </div>
             </div>
             
-            <!-- Comparison Notice Banner -->
             {% if compare_version %}
             <div style="margin-top:var(--space-3);padding:var(--space-2) var(--space-4);background:var(--secondary-light);color:var(--primary-color);border-radius:var(--radius-sm);font-size:var(--text-xs);display:flex;align-items:center;justify-content:space-between;">
-                <span>Comparing v{{ selected_version }} (main body) against v{{ compare_version }} (red highlighted diff block).</span>
-                <a href="{{ url_for('prds.detail', id=prd.id, version=selected_version) }}" style="font-weight:600;text-decoration:underline;">Cancel Compare</a>
+                <span>Comparing <strong>v{{ selected_version }}</strong> against <strong>v{{ compare_version }}</strong>.</span>
+                <a href="{{ url_for('prds.detail', id=prd.id, version=selected_version) }}" style="font-weight:600;text-decoration:underline;">Close Diff</a>
             </div>
             {% endif %}
         </div>
 
-        {% set sections = [
-            ('business_overview', 'Business Overview', 'Overview of target profile and branding objectives.'),
-            ('business_analysis', 'Business Analysis', 'Existing website defects or marketing gaps identified.'),
-            ('website_goal', 'Website Goal', 'Target conversions, visitor actions, and website goals.'),
-            ('target_audience', 'Target Audience', 'Audience demographics, customer personas and pain points.'),
-            ('design_direction', 'Design Direction', 'Color palette details, fonts, visuals, and responsiveness directions.'),
-            ('site_structure', 'Site Structure & Pages', 'Sitemap links, pages layout, and nav structure.'),
-            ('functional_requirements', 'Functional Requirements', 'Core site features, integrations, forms, and tools.'),
-            ('content_requirements', 'Content Requirements', 'Information copy, images, logo, and resources assets needed.'),
-            ('cta_strategy', 'CTA Placement Strategy', 'Placements and messaging rules for call-to-actions.'),
-            ('technical_requirements', 'Technical & SEO Specifications', 'Hosting, domain settings, performance benchmarks, and local SEO metadata.')
-        ] %}
+        <!-- Form for Direct Editing -->
+        <form id="directEditForm" method="POST" action="{{ url_for('prds.update_content', id=prd.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        {% for key, title, desc in sections %}
-        <div class="card" id="card_{{ key }}">
-            <div class="card-header" style="background:var(--surface-dim);cursor:pointer;user-select:none;" onclick="toggleCardBody('body_{{ key }}')">
-                <div style="display:flex;flex-direction:column;">
-                    <h3 style="font-size:var(--text-md);font-weight:600;">{{ title }}</h3>
-                    <span style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:2px;">{{ desc }}</span>
-                </div>
-                <span class="material-symbols-outlined" id="icon_body_{{ key }}">expand_more</span>
+            <!-- Title Edit Field (Hidden in view mode) -->
+            <div id="titleEditContainer" class="card" style="display:none;padding:var(--space-4);margin-bottom:var(--space-4);">
+                <label class="form-label" style="font-weight:600;">PRD Document Title</label>
+                <input type="text" class="form-input" name="title" value="{{ content.title or prd.title }}" style="font-size:var(--text-md);font-weight:600;">
             </div>
-            <div class="card-body" id="body_{{ key }}" style="display:block;padding:var(--space-6);">
-                <div style="display:grid;grid-template-columns:{% if compare_version %}1fr 1fr{% else %}1fr{% endif %};gap:var(--space-4);">
-                    <!-- Main Version Content -->
-                    <div style="font-size:var(--text-sm);line-height:1.6;color:var(--text-primary);white-space:pre-wrap;">{{ content[key] or 'No content drafted for this section.' }}</div>
-                    
-                    <!-- Compare Version Content -->
-                    {% if compare_version %}
-                    <div style="font-size:var(--text-sm);line-height:1.6;color:var(--error);background:#fff5f5;padding:var(--space-4);border-radius:var(--radius-sm);border-left:3px solid var(--error);white-space:pre-wrap;">{{ compare_content[key] or 'No content existed in this version.' }}</div>
-                    {% endif %}
+
+            {% set sections = [
+                ('business_overview', '1. Business Overview', 'Company history, local presence, core value proposition and operations.'),
+                ('business_analysis', '2. Business Analysis', 'Strengths, weaknesses, current online gaps, and market positioning.'),
+                ('website_goal', '3. Website Goal', 'Conversion objectives, lead capture goals, and performance targets.'),
+                ('target_audience', '4. Target Audience', 'Customer personas, local demographics, and behavioral needs.'),
+                ('design_direction', '5. Design Direction', 'Color palette tokens, typography, visual aesthetic mood, and layout tone.'),
+                ('site_structure', '6. Site Structure & Hierarchy', 'Sitemap pages, navigation hierarchy, and section architecture.'),
+                ('functional_requirements', '7. Functional Requirements', 'Forms, booking schedulers, Google Maps, review feeds, and interactive tools.'),
+                ('content_requirements', '8. Content Requirements', 'Copywriting, photos, media assets, team bios, and local SEO keywords.'),
+                ('cta_strategy', '9. Call to Action (CTA) Strategy', 'Primary action buttons, placement rules, and conversion funnels.'),
+                ('technical_requirements', '10. Technical Requirements', 'Hosting, domain, mobile responsiveness, HTTPS, schema markup, and speed.')
+            ] %}
+
+            <div style="display:flex;flex-direction:column;gap:var(--space-4);">
+            {% for key, title, desc in sections %}
+            <div class="card" id="card_{{ key }}" style="padding:0;overflow:hidden;">
+                <div class="card-header" style="background:var(--surface-dim);padding:var(--space-3) var(--space-5);cursor:pointer;user-select:none;display:flex;justify-content:space-between;align-items:center;" onclick="toggleCardBody('body_{{ key }}')">
+                    <div>
+                        <h3 style="font-size:var(--text-md);font-weight:600;margin:0;">{{ title }}</h3>
+                        <span style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:2px;display:block;">{{ desc }}</span>
+                    </div>
+                    <span class="material-symbols-outlined" id="icon_body_{{ key }}" style="font-size:20px;color:var(--text-tertiary);">expand_more</span>
+                </div>
+                
+                <div class="card-body" id="body_{{ key }}" style="display:block;padding:var(--space-5);">
+                    <!-- View Mode Display -->
+                    <div class="section-view-mode" style="display:grid;grid-template-columns:{% if compare_version %}1fr 1fr{% else %}1fr{% endif %};gap:var(--space-4);">
+                        <div style="font-size:var(--text-sm);line-height:1.7;color:var(--text-primary);white-space:pre-wrap;">{{ content[key] or 'No content drafted for this section.' }}</div>
+                        {% if compare_version %}
+                        <div style="font-size:var(--text-sm);line-height:1.7;color:var(--error);background:#fff5f5;padding:var(--space-3);border-radius:var(--radius-sm);border-left:3px solid var(--error);white-space:pre-wrap;">{{ compare_content[key] or 'No content in this compared version.' }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Direct Edit Mode Display -->
+                    <div class="section-edit-mode" style="display:none;">
+                        <textarea class="form-input" name="{{ key }}" rows="5" 
+                                  style="font-size:var(--text-sm);line-height:1.6;width:100%;resize:vertical;font-family:inherit;">{{ content[key] or '' }}</textarea>
+                    </div>
                 </div>
             </div>
-        </div>
-        {% endfor %}
+            {% endfor %}
+            </div>
+
+            <!-- Bottom Floating Save Bar for Edit Mode -->
+            <div id="bottomSaveBar" style="display:none;position:sticky;bottom:20px;z-index:50;background:var(--surface-base);padding:var(--space-3) var(--space-5);border:1px solid var(--border-color);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);align-items:center;justify-content:space-between;margin-top:var(--space-4);">
+                <div style="font-size:var(--text-xs);color:var(--text-secondary);">
+                    You are in <strong>Direct Document Edit Mode</strong>. Changes will be saved as a new version.
+                </div>
+                <div style="display:flex;gap:var(--space-2);">
+                    <button type="button" class="btn btn-ghost" onclick="toggleEditMode()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Document Changes</button>
+                </div>
+            </div>
+        </form>
         
     </div>
     
-    <!-- RIGHT COLUMN: Admin AI Chat Revision Drawer (§33) -->
-    <div class="card" style="position:sticky;top:20px;">
-        <div class="card-header" style="background:var(--primary-light);border-bottom: 1px solid var(--primary-border);">
-            <div style="display:flex;align-items:center;gap:8px;">
+    <!-- RIGHT COLUMN: Admin AI Revision Drawer & Quick Assistant -->
+    <div style="display:flex;flex-direction:column;gap:var(--space-4);position:sticky;top:20px;">
+        <div class="card" style="padding:0;overflow:hidden;">
+            <div class="card-header" style="background:var(--primary-light);border-bottom: 1px solid var(--primary-border);padding:var(--space-3) var(--space-4);display:flex;align-items:center;gap:8px;">
                 <span class="material-symbols-outlined" style="color:var(--primary-color);">smart_toy</span>
-                <h3 style="color:var(--primary-color);font-weight:600;">PRD Revision Chat</h3>
+                <h3 style="color:var(--primary-color);font-size:var(--text-sm);font-weight:600;margin:0;">PRD AI Assistant</h3>
             </div>
-        </div>
-        
-        <div class="card-body" style="padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-4);">
-            <!-- Chat Feed logs -->
-            <div id="chatFeed" style="height:320px;overflow-y:auto;border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:var(--space-3);background:var(--surface-dim);display:flex;flex-direction:column;gap:var(--space-3);">
+            
+            <div class="card-body" style="padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-3);">
                 
-                <!-- System intro -->
-                <div style="display:flex;gap:8px;align-items:flex-start;">
-                    <div style="width:24px;height:24px;border-radius:50%;background:var(--primary-color);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">AI</div>
-                    <div style="background:#fff;padding:8px var(--space-3);border-radius:var(--radius-md);font-size:var(--text-xs);border:1px solid var(--border-color);line-height:1.4;">
-                        Hello! I am your PRD generation assistant. Provide text instructions below to revise document sections (e.g. <i>"Add pricing tables to sitemap"</i> or <i>"Make visual branding dark gold themed"</i>).
+                <!-- Quick Revision Prompts -->
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                    <span style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.04em;">Quick AI Prompts</span>
+                    {% set prd_prompts = [
+                        ("Add WhatsApp CTA", "Add prominent WhatsApp floating contact and click-to-chat triggers across all pages."),
+                        ("Add Pricing Tables", "Include clear transparent pricing packages and tier tables in Site Structure."),
+                        ("Boost Local SEO", "Enhance Technical Requirements with schema markup and local area keywords."),
+                        ("Mobile-First Focus", "Emphasize high-speed mobile responsiveness and touch-friendly booking.")
+                    ] %}
+                    <div style="display:flex;flex-direction:column;gap:3px;">
+                        {% for label, prompt_text in prd_prompts %}
+                        <button type="button" class="btn btn-ghost" 
+                                style="text-align:left;font-size:11px;padding:4px 8px;border:1px solid var(--border-color);border-radius:var(--radius-xs);line-height:1.2;"
+                                onclick="applyPresetPrompt('{{ prompt_text|escape }}')">
+                            + {{ label }}
+                        </button>
+                        {% endfor %}
                     </div>
                 </div>
-                
-                <!-- Versions log items -->
-                {% for v in versions|reverse %}
-                {% if v.change_summary and v.version > 1 %}
-                <div style="display:flex;flex-direction:column;gap:6px;">
-                    <!-- User Instruction -->
-                    <div style="display:flex;gap:8px;align-items:flex-start;justify-content:flex-end;">
-                        <div style="background:var(--primary-light);color:var(--primary-color);padding:8px var(--space-3);border-radius:var(--radius-md);font-size:var(--text-xs);border:1px solid var(--primary-border);line-height:1.4;max-width:85%;">
-                            {{ v.change_summary.replace('Admin revision chat: ', '') }}
-                        </div>
-                        <div style="width:24px;height:24px;border-radius:50%;background:var(--text-secondary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">AD</div>
-                    </div>
-                    <!-- AI response confirmation -->
+
+                <!-- Chat Feed logs -->
+                <div id="chatFeed" style="height:260px;overflow-y:auto;border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:var(--space-3);background:var(--surface-dim);display:flex;flex-direction:column;gap:var(--space-3);">
+                    
+                    <!-- System intro -->
                     <div style="display:flex;gap:8px;align-items:flex-start;">
-                        <div style="width:24px;height:24px;border-radius:50%;background:var(--primary-color);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">AI</div>
+                        <div style="width:24px;height:24px;border-radius:50%;background:var(--primary-color);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;">AI</div>
                         <div style="background:#fff;padding:8px var(--space-3);border-radius:var(--radius-md);font-size:var(--text-xs);border:1px solid var(--border-color);line-height:1.4;">
-                            I have updated the document sections to apply those requirements. Incremented version to <b>v{{ v.version }}</b>.
+                            Give natural language instructions to revise any section (e.g. <i>"Add consultation booking form"</i>).
                         </div>
                     </div>
+                    
+                    <!-- Version change history -->
+                    {% for v in versions|reverse %}
+                    {% if v.change_summary and v.version > 1 %}
+                    <div style="display:flex;flex-direction:column;gap:4px;">
+                        <div style="display:flex;gap:6px;align-items:flex-start;justify-content:flex-end;">
+                            <div style="background:var(--primary-light);color:var(--primary-color);padding:6px 10px;border-radius:var(--radius-md);font-size:var(--text-xs);border:1px solid var(--primary-border);line-height:1.3;max-width:85%;">
+                                {{ v.change_summary.replace('Admin revision chat: ', '') }}
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:6px;align-items:flex-start;">
+                            <div style="width:20px;height:20px;border-radius:50%;background:var(--primary-color);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">AI</div>
+                            <div style="background:#fff;padding:6px 10px;border-radius:var(--radius-md);font-size:var(--text-xs);border:1px solid var(--border-color);line-height:1.3;">
+                                Updated document sections. Created <strong>v{{ v.version }}</strong>.
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
                 </div>
-                {% endif %}
-                {% endfor %}
-            </div>
 
-            <!-- Loader Indicator -->
-            <div id="chatLoader" style="display:none;align-items:center;justify-content:center;gap:8px;background:var(--surface-dim);padding:var(--space-3);border-radius:var(--radius-sm);font-size:var(--text-xs);color:var(--text-secondary);">
-                <div class="spinner" style="width:16px;height:16px;border-width:2px;"></div>
-                <span>LLM is revising PRD sections...</span>
-            </div>
-
-            <!-- Input Form -->
-            <form id="chatForm" onsubmit="submitRevision(event)">
-                <div class="form-group" style="margin-bottom:var(--space-2);">
-                    <textarea class="form-input" id="instruction" name="instruction" required rows="3" 
-                              placeholder="e.g. Add a contact form for consultation bookings..." style="font-size:var(--text-sm);resize:none;"></textarea>
+                <!-- Loader Indicator -->
+                <div id="chatLoader" style="display:none;align-items:center;justify-content:center;gap:8px;background:var(--surface-dim);padding:var(--space-2);border-radius:var(--radius-sm);font-size:var(--text-xs);color:var(--text-secondary);">
+                    <div class="spinner" style="width:14px;height:14px;border-width:2px;"></div>
+                    <span>AI is updating PRD sections...</span>
                 </div>
-                <button type="submit" class="btn btn-primary" style="width:100%;">
-                    <span class="material-symbols-outlined">send</span>
-                    Send Instruction
-                </button>
-            </form>
+
+                <!-- AI Revision Input Form -->
+                <form id="chatForm" onsubmit="submitRevision(event)">
+                    <div class="form-group" style="margin-bottom:var(--space-2);">
+                        <textarea class="form-input" id="instruction" name="instruction" required rows="2" 
+                                  placeholder="Type revision prompt..." style="font-size:var(--text-xs);resize:none;padding:8px;"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;padding:8px;font-size:var(--text-xs);justify-content:center;gap:6px;">
+                        <span class="material-symbols-outlined" style="font-size:16px;">send</span>
+                        Submit AI Revision
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-// Chat Drawer Feed Scroll Bottom
-const chatFeed = document.getElementById('chatFeed');
-chatFeed.scrollTop = chatFeed.scrollHeight;
+let isEditMode = false;
+
+function toggleEditMode() {
+    isEditMode = !isEditMode;
+    const viewBlocks = document.querySelectorAll('.section-view-mode');
+    const editBlocks = document.querySelectorAll('.section-edit-mode');
+    const titleEdit = document.getElementById('titleEditContainer');
+    const btnSave = document.getElementById('btnSaveDirect');
+    const bottomBar = document.getElementById('bottomSaveBar');
+    const btnText = document.getElementById('btnToggleEditText');
+
+    if (isEditMode) {
+        viewBlocks.forEach(b => b.style.display = 'none');
+        editBlocks.forEach(b => b.style.display = 'block');
+        titleEdit.style.display = 'block';
+        btnSave.style.display = 'inline-flex';
+        bottomBar.style.display = 'flex';
+        btnText.innerText = 'View Mode';
+    } else {
+        viewBlocks.forEach(b => b.style.display = 'grid');
+        editBlocks.forEach(b => b.style.display = 'none');
+        titleEdit.style.display = 'none';
+        btnSave.style.display = 'none';
+        bottomBar.style.display = 'none';
+        btnText.innerText = 'Edit Content';
+    }
+}
+
+function submitDirectEdit() {
+    document.getElementById('directEditForm').submit();
+}
+
+function applyPresetPrompt(promptText) {
+    document.getElementById('instruction').value = promptText;
+}
 
 function toggleCardBody(bodyId) {
     const body = document.getElementById(bodyId);
@@ -233,16 +329,15 @@ function compareVersion(val) {
 
 function submitRevision(e) {
     e.preventDefault();
-    const input = document.getElementById('instruction');
-    const instruction = input.value.trim();
-    if (!instruction) return;
+    const instructionInput = document.getElementById('instruction');
+    const text = instructionInput.value.trim();
+    if (!text) return;
 
-    // Show Loader
     document.getElementById('chatLoader').style.display = 'flex';
-    input.disabled = true;
-    
+    instructionInput.disabled = true;
+
     const formData = new FormData();
-    formData.append('instruction', instruction);
+    formData.append('instruction', text);
 
     fetch("{{ url_for('prds.chat', id=prd.id) }}", {
         method: "POST",
@@ -253,22 +348,19 @@ function submitRevision(e) {
     })
     .then(r => r.json())
     .then(data => {
+        document.getElementById('chatLoader').style.display = 'none';
+        instructionInput.disabled = false;
         if (data.success) {
-            // Reload pointing to the new version on success
-            let url = new URL(window.location.href);
-            url.searchParams.set('version', data.version);
-            url.searchParams.delete('compare'); // clear compare to highlight new revision
-            window.location.href = url.toString();
+            instructionInput.value = '';
+            window.location.href = "{{ url_for('prds.detail', id=prd.id) }}?version=" + data.version;
         } else {
-            document.getElementById('chatLoader').style.display = 'none';
-            input.disabled = false;
-            alert("Revision Failed: " + data.error);
+            alert(data.error || "Revision request failed.");
         }
     })
     .catch(err => {
         document.getElementById('chatLoader').style.display = 'none';
-        input.disabled = false;
-        alert("Request Error: " + err);
+        instructionInput.disabled = false;
+        alert("Server error: " + err);
     });
 }
 </script>

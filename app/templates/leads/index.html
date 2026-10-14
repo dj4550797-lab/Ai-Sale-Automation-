@@ -145,7 +145,7 @@
                             <a href="{{ url_for('leads.detail', id=lead.id) }}" class="btn btn-sm btn-secondary" style="margin-right:4px;">
                                 Details
                             </a>
-                            <button type="button" class="btn btn-sm btn-danger" style="background:transparent; color:var(--error); border-color:var(--error); padding: 5px 10px;" onclick="confirmDeleteLead({{ lead.id }}, '{{ lead.business_name|replace("'", "\\'")|escape }}', {{ lead.contacts.count() }}, {{ lead.website_analyses.count() }}, {{ lead.prds.count() }}, {{ lead.demos.count() }}, {{ lead.conversations.count() }}, {{ lead.outreach_campaigns.count() }}, {{ lead.followups.count() }}, {{ lead.sales_deals.count() }})">
+                            <button type="button" class="btn btn-sm btn-danger" style="background:transparent; color:var(--error); border-color:var(--error); padding: 5px 10px;" onclick="confirmDeleteLead({{ lead.id }}, '{{ lead.business_name|replace("'", "\\'")|escape }}')">
                                 Delete
                             </button>
                         </td>
@@ -208,18 +208,8 @@
                 </div>
             </div>
             
-            <div style="font-size: var(--text-xs); color: var(--text-secondary);">
-                <span style="font-weight: 600; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary);">The following related records will be removed:</span>
-                <ul style="margin: 0; padding-left: var(--space-4); display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px;">
-                    <li>Contacts: <strong id="cnt_contacts">0</strong></li>
-                    <li>Website Analysis: <strong id="cnt_analysis">0</strong></li>
-                    <li>PRD Documents: <strong id="cnt_prds">0</strong></li>
-                    <li>Demo Projects: <strong id="cnt_demos">0</strong></li>
-                    <li>Conversations: <strong id="cnt_conversations">0</strong></li>
-                    <li>Outreach Campaigns: <strong id="cnt_campaigns">0</strong></li>
-                    <li>Follow-Ups: <strong id="cnt_followups">0</strong></li>
-                    <li>Sales Pipeline Deals: <strong id="cnt_deals">0</strong></li>
-                </ul>
+            <div style="font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.5;">
+                <p style="margin: 0;">Are you sure you want to permanently delete this lead? All associated contacts, website analyses, PRDs, demos, conversations, and outreach campaigns will be automatically removed.</p>
             </div>
         </div>
         <div class="dialog-footer" style="border-top: 1px solid var(--border-color); padding-top: var(--space-4);">
@@ -233,20 +223,10 @@
 </div>
 
 <script>
-function confirmDeleteLead(id, name, contacts, analysis, prds, demos, conversations, campaigns, followups, deals) {
+function confirmDeleteLead(id, name) {
     document.getElementById('delete_lead_id').innerText = id;
     document.getElementById('delete_business_name').innerText = name;
     document.getElementById('delete_form').action = `/leads/${id}/delete`;
-    
-    document.getElementById('cnt_contacts').innerText = contacts;
-    document.getElementById('cnt_analysis').innerText = analysis;
-    document.getElementById('cnt_prds').innerText = prds;
-    document.getElementById('cnt_demos').innerText = demos;
-    document.getElementById('cnt_conversations').innerText = conversations;
-    document.getElementById('cnt_campaigns').innerText = campaigns;
-    document.getElementById('cnt_followups').innerText = followups;
-    document.getElementById('cnt_deals').innerText = deals;
-
     openDialog('deleteLeadModal');
 }
 

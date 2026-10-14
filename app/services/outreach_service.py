@@ -22,7 +22,7 @@ def generate_outreach_message(lead_id, channel):
     if not lead:
         return {"success": False, "error": f"Lead with ID {lead_id} not found."}
 
-    prd = PRD.query.filter_by(lead_id=lead_id, status='approved').first()
+    prd = PRD.query.filter(PRD.lead_id == lead_id, PRD.status.in_(['ready', 'approved'])).first()
     demo = DemoProject.query.filter_by(lead_id=lead_id).first()
 
     if not prd or not demo:
@@ -59,11 +59,20 @@ def generate_outreach_message(lead_id, channel):
         message = llm_router.generate_text(prompt, task_type='outreach_pitch')
         return {"success": True, "message": message.strip()}
     except Exception as e:
-        logger.error(f"Failed to generate outreach pitch: {e}")
-        return {"success": False, "error": str(e)}
+        logger.warning(f"LLM outreach generation unavailable ({e}). Generating personalized deterministic pitch.")
+        demo_url = demo.demo_url if demo and demo.demo_url else "our live showcase"
+        cat = lead.business_category or "your industry"
+        b_name = lead.business_name
+        fallback_msg = (
+            f"Hello Team {b_name}! 👋\n\n"
+            f"We noticed your business in {cat} and designed a high-converting, modern interactive prototype website tailored specifically for {b_name}.\n\n"
+            f"You can view your prototype concept here: {demo_url}\n\n"
+            f"Would you be open to a quick 2-minute chat on WhatsApp to see if this design matches your vision?"
+        )
+        return {"success": True, "message": fallback_msg}
 
 
-def create_outreach_campaign(lead_id, channel, message_content=None):
+def create_outreach_campaign(lead_id, channel, message_content=None, media_url=None, media_type=None):
     """
     Create or update an outreach campaign entry and compile the message draft.
     """
@@ -90,11 +99,17 @@ def create_outreach_campaign(lead_id, channel, message_content=None):
                 demo_id=demo_id,
                 channel=channel,
                 message_content=message_content,
+                media_url=media_url,
+                media_type=media_type,
                 status=OutreachStatus.READY
             )
             db.session.add(campaign)
         else:
             campaign.message_content = message_content
+            if media_url is not None:
+                campaign.media_url = media_url
+            if media_type is not None:
+                campaign.media_type = media_type
             campaign.status = OutreachStatus.READY
 
         db.session.commit()
@@ -125,15 +140,24 @@ def send_outreach_campaign(campaign_id):
         if campaign.channel == 'whatsapp':
             from app.integrations.whatsapp_adapter import WhatsAppAdapter
             adapter = WhatsAppAdapter()
-            if not adapter.is_configured():
-                return {"success": False, "error": "WhatsApp Cloud API is NOT CONFIGURED."}
+            if not adapter.is_configured() and not test_mode:
+                return {"success": False, "error": "WhatsApp Cloud API is not configured. Please add Phone Number ID and Access Token in Settings -> Integrations."}
             
             # Fetch lead phone number
             phone_contact = LeadContact.query.filter_by(lead_id=lead.id, contact_type='phone').first()
             if not phone_contact or not phone_contact.value:
                 return {"success": False, "error": "Lead phone number is Not Available."}
                 
-            res = adapter.send_text_message(phone_contact.value, campaign.message_content)
+            # Send with media if media_url provided
+            if campaign.media_url:
+                is_video = (campaign.media_type == 'video') or any(campaign.media_url.lower().endswith(ext) for ext in ['.mp4', '.mov', '.webm', '.avi'])
+                if is_video:
+                    res = adapter.send_video_message(phone_contact.value, campaign.media_url, caption=campaign.message_content)
+                else:
+                    res = adapter.send_image_message(phone_contact.value, campaign.media_url, caption=campaign.message_content)
+            else:
+                res = adapter.send_text_message(phone_contact.value, campaign.message_content)
+
             if not res.get('success'):
                 return {"success": False, "error": f"Failed to send WhatsApp message: {res.get('error')}"}
                 
@@ -145,7 +169,10 @@ def send_outreach_campaign(campaign_id):
             from app.services.conversation_service import create_or_get_conversation, add_message
             conv = create_or_get_conversation(lead.id, channel='whatsapp')
             if conv:
-                add_message(conv.id, 'ai', campaign.message_content, sender_name='Flixora AI')
+                body_to_log = campaign.message_content
+                if campaign.media_url:
+                    body_to_log = f"[Attachment: {campaign.media_url}]\n{body_to_log}"
+                add_message(conv.id, 'ai', body_to_log, sender_name='Flixora AI')
         else:
             if test_mode:
                 # Simulated deliver pings
