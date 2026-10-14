@@ -65,6 +65,9 @@ def create_app(config_name=None):
             app.logger.error(f"Health check failed: {str(e)}")
             return {"status": "unhealthy", "database": "error", "error": str(e)}, 500
 
+    # Auto-run lightweight startup migrations and seeding
+    _run_startup_migrations(app)
+
     return app
 
 
@@ -88,6 +91,69 @@ def _init_extensions(app):
             except Exception:
                 pass
             return None
+
+
+def _run_startup_migrations(app):
+    """Run lightweight schema updates and ensure missing tables/columns exist."""
+    with app.app_context():
+        from app.extensions import db
+        import app.models  # noqa
+        from sqlalchemy import text
+
+        try:
+            db.create_all()
+        except Exception as e:
+            app.logger.warning(f"Startup create_all notice: {e}")
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+
+        # Safe ALTER statements for newly added columns across tables
+        migration_statements = [
+            "ALTER TABLE outreach_campaigns ADD COLUMN media_url VARCHAR(500) DEFAULT NULL",
+            "ALTER TABLE outreach_campaigns ADD COLUMN media_type VARCHAR(20) DEFAULT NULL",
+            "ALTER TABLE leads ADD COLUMN business_hours VARCHAR(500) DEFAULT ''",
+            "ALTER TABLE leads ADD COLUMN google_place_id VARCHAR(300)",
+            "ALTER TABLE messages ADD COLUMN detected_intent VARCHAR(100) DEFAULT ''",
+            "ALTER TABLE messages ADD COLUMN confidence FLOAT DEFAULT 0.0",
+            "ALTER TABLE messages ADD COLUMN sales_stage VARCHAR(50) DEFAULT ''",
+            "ALTER TABLE automation_runs DROP CONSTRAINT IF EXISTS automation_runs_lock_key_key",
+        ]
+        for stmt in migration_statements:
+            try:
+                db.session.execute(text(stmt))
+                db.session.commit()
+            except Exception:
+                try:
+                    db.session.rollback()
+                except Exception:
+                    pass
+
+        # Ensure admin user exists
+        try:
+            from app.services.auth_service import create_admin_user
+            create_admin_user(
+                username=app.config.get('ADMIN_USERNAME', 'admin'),
+                email=app.config.get('ADMIN_EMAIL', 'admin@flixora.com'),
+                password=app.config.get('ADMIN_PASSWORD', 'admin123'),
+                display_name='Admin',
+            )
+        except Exception:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+
+        # Ensure default settings, LLMs, knowledge base, and pricing plans exist
+        try:
+            _seed_defaults(db)
+        except Exception as e:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            app.logger.warning(f"Startup defaults seed notice: {e}")
 
 
 def _register_blueprints(app):
@@ -150,6 +216,20 @@ def _register_commands(app):
             db.session.execute(text("ALTER TABLE leads ADD COLUMN google_place_id VARCHAR(300)"))
             db.session.commit()
             click.echo("Migrated: Added 'google_place_id' to 'leads' table.")
+        except Exception:
+            db.session.rollback()
+
+        try:
+            db.session.execute(text("ALTER TABLE outreach_campaigns ADD COLUMN media_url VARCHAR(500) DEFAULT NULL"))
+            db.session.commit()
+            click.echo("Migrated: Added 'media_url' to 'outreach_campaigns' table.")
+        except Exception:
+            db.session.rollback()
+
+        try:
+            db.session.execute(text("ALTER TABLE outreach_campaigns ADD COLUMN media_type VARCHAR(20) DEFAULT NULL"))
+            db.session.commit()
+            click.echo("Migrated: Added 'media_type' to 'outreach_campaigns' table.")
         except Exception:
             db.session.rollback()
 
@@ -405,6 +485,13 @@ def _seed_defaults(db):
             is_enabled=True
         )
         db.session.add_all([model1, model2])
+
+    # 5. Seed Knowledge Base and Pricing Plans
+    try:
+        from app.seeds.seed_data import seed_knowledge_and_pricing
+        seed_knowledge_and_pricing(db)
+    except Exception as e:
+        app.logger.warning(f"Could not seed knowledge base / pricing: {e}")
 
     db.session.commit()
 
