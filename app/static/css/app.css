@@ -151,8 +151,20 @@
     flex-direction: column;
     min-height: 100vh;
     min-width: 0;
-    max-width: calc(100vw - var(--sidebar-width));
+    width: 100%;
     overflow-x: hidden;
+}
+@media (min-width: 1025px) {
+    .main {
+        max-width: calc(100vw - var(--sidebar-width));
+    }
+}
+@media (max-width: 1024px) {
+    .main {
+        margin-left: 0 !important;
+        max-width: 100vw !important;
+        width: 100% !important;
+    }
 }
 
 /* ── Top Bar ─────────────────────────────────────────────── */

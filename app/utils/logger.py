@@ -67,7 +67,8 @@ def setup_logging(app):
         file_handler = RotatingFileHandler(
             os.path.join(log_dir, filename),
             maxBytes=10 * 1024 * 1024,  # 10 MB
-            backupCount=5
+            backupCount=5,
+            encoding='utf-8'
         )
         file_handler.setFormatter(formatter)
         file_handler.addFilter(secret_filter)

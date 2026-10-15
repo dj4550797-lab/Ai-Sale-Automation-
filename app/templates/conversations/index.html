@@ -4,13 +4,13 @@
 {% block page_title %}Client Conversations{% endblock %}
 
 {% block content %}
-<div style="display:grid;grid-template-columns:300px 1fr;gap:var(--space-4);height:calc(100vh - 180px);margin-top:var(--space-2);">
+<div class="conversations-grid-layout">
     
     <!-- LEFT PANEL: CLIENT LIST -->
-    <div style="background:#fff;border-radius:var(--radius-md);border:1px solid var(--border-color);display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow-sm);">
+    <div class="conversations-list-panel {% if active_conv %}conversations-list-has-active{% endif %}" style="background:#fff;border-radius:var(--radius-md);border:1px solid var(--border-color);display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow-sm);">
         <div style="padding:var(--space-4);border-bottom:1px solid var(--border-color);background:var(--background-light);">
             <h3 style="font-size:var(--text-md);font-weight:600;margin:0;">Prospect Conversations</h3>
-            <p style="font-size:10px;color:var(--text-tertiary);margin:2px 0 0 0;">Isolate messaging context (§48).</p>
+            <p style="font-size:var(--text-xs);color:var(--text-tertiary);margin:2px 0 0 0;">Isolate messaging context (§48).</p>
         </div>
         
         <!-- Active conversations list -->
@@ -25,18 +25,18 @@
                         <strong style="font-size:var(--text-sm);font-weight:600;color:var(--text-primary);">
                             {{ conv.lead.business_name }}
                         </strong>
-                        <span style="font-size:9px;color:var(--text-tertiary);">
+                        <span style="font-size:var(--text-xs);color:var(--text-tertiary);">
                             {{ conv.updated_at.strftime('%H:%M') }}
                         </span>
                     </div>
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
-                        <span style="font-size:10px;color:var(--text-secondary);text-transform:capitalize;">
+                        <span style="font-size:var(--text-xs);color:var(--text-secondary);text-transform:capitalize;">
                             Channel: {{ conv.channel }}
                         </span>
                         {% if conv.status == 'ai_active' %}
-                        <span class="badge badge-success" style="font-size:8px;padding:2px 4px;">AI Active</span>
+                        <span class="badge badge-success" style="font-size:10px;padding:2px 6px;">AI Active</span>
                         {% else %}
-                        <span class="badge badge-warning" style="font-size:8px;padding:2px 4px;">Admin Active</span>
+                        <span class="badge badge-warning" style="font-size:10px;padding:2px 6px;">Admin Active</span>
                         {% endif %}
                     </div>
                 </div>
@@ -55,7 +55,7 @@
                 </h4>
                 <div style="display:flex;flex-direction:column;gap:6px;max-height:150px;overflow-y:auto;">
                     {% for l in leads_to_start %}
-                    <button class="btn btn-secondary btn-sm" style="font-size:10px;text-align:left;justify-content:flex-start;width:100%;padding:6px 8px;"
+                    <button class="btn btn-secondary btn-sm" style="font-size:12px;text-align:left;justify-content:flex-start;width:100%;padding:8px 10px;"
                             onclick="initializeChat({{ l.id }})">
                         <span class="material-symbols-outlined" style="font-size:14px;margin-right:4px;">chat_bubble</span>
                         {{ l.business_name }}
@@ -68,7 +68,7 @@
     </div>
     
     <!-- RIGHT PANEL: CHAT TIMELINE -->
-    <div style="background:#fff;border-radius:var(--radius-md);border:1px solid var(--border-color);display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow-sm);">
+    <div class="conversations-chat-panel {% if not active_conv %}conversations-chat-empty{% endif %}" style="background:#fff;border-radius:var(--radius-md);border:1px solid var(--border-color);display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow-sm);">
         {% if active_conv %}
         <!-- Header status bar -->
         {% set phone_val = '' %}
@@ -82,6 +82,10 @@
         
         <div style="padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--border-color);background:var(--background-light);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-2);">
             <div>
+                <a href="{{ url_for('conversations.index') }}" class="btn btn-secondary btn-sm mobile-back-to-chats" style="display:none; align-items:center; gap:4px; margin-bottom:6px; padding:4px 8px; width:fit-content; font-size:12px;">
+                    <span class="material-symbols-outlined" style="font-size:16px;">arrow_back</span>
+                    All Conversations
+                </a>
                 <div style="display:flex;align-items:center;gap:var(--space-2);">
                     <h3 style="font-size:var(--text-md);font-weight:700;margin:0;">{{ active_conv.lead.business_name }}</h3>
                     {% if phone_val %}

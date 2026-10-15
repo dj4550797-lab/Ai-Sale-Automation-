@@ -6,7 +6,7 @@ Generates personalized messaging content and maps delivery states (§39, §40).
 from datetime import datetime, timezone
 from flask import current_app
 from app.extensions import db
-from app.models import Lead, PRD, DemoProject, OutreachCampaign, OutreachEvent, SalesDeal
+from app.models import Lead, LeadContact, PRD, DemoProject, OutreachCampaign, OutreachEvent, SalesDeal
 from app.constants import OutreachStatus, LeadStatus, PipelineStage
 from app.ai.llm_router import llm_router
 from app.utils.logger import get_logger
