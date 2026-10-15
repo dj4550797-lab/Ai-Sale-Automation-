@@ -10,6 +10,22 @@ from app.utils.logger import get_logger
 logger = get_logger('integrations')
 
 
+def _format_meta_error(err_text, clean_phone):
+    """Format raw Meta Graph API errors into clear, actionable messages."""
+    if '131030' in err_text or 'not in allowed list' in err_text.lower():
+        return (
+            f"Meta Sandbox Security (#131030): Phone number +{clean_phone} is not yet in your Meta Developer allowed list. "
+            f"Please add +{clean_phone} at developers.facebook.com -> WhatsApp -> API Setup -> 'Manage phone number list' and verify with OTP. "
+            f"Alternatively, click the green 'Open Chat on WhatsApp' button to send the pitch directly with zero restrictions!"
+        )
+    if '131047' in err_text or '24 hours' in err_text.lower():
+        return (
+            f"Meta 24-Hour Policy (#131047): Customer (+{clean_phone}) has not messaged your WhatsApp bot in the last 24 hours. "
+            f"Have customer reply 'Hi' on WhatsApp, or send an approved Meta Template."
+        )
+    return err_text
+
+
 class WhatsAppAdapter:
     """Meta WhatsApp Business Cloud API Client Adapter."""
 
@@ -124,7 +140,8 @@ class WhatsAppAdapter:
                 return {"success": True, "message_id": msg_id}
             else:
                 logger.error(f"WhatsApp Template Send Error: {response.text}")
-                return {"success": False, "error": f"Meta API Error {response.status_code}: {response.text}"}
+                formatted = _format_meta_error(response.text, clean_phone)
+                return {"success": False, "error": formatted}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
@@ -172,7 +189,7 @@ class WhatsAppAdapter:
                             "message_id": tmpl_res.get('message_id'),
                             "notice": "Initial contact initiated with hello_world template (24h customer window was closed)."
                         }
-                return {"success": False, "error": f"WhatsApp API Error {response.status_code}: {err_text}"}
+                return {"success": False, "error": _format_meta_error(err_text, clean_phone)}
         except Exception as e:
             logger.error(f"WhatsApp API exception: {str(e)}")
             return {"success": False, "error": str(e)}
