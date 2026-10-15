@@ -151,15 +151,23 @@ def send_outreach_campaign(campaign_id):
             if not phone_contact or not phone_contact.value:
                 return {"success": False, "error": "Lead phone number is Not Available."}
                 
-            # Send with media if media_url provided
+            # In Meta WhatsApp Cloud API, initial outreach to numbers outside the 24h window
+            # requires sending an approved template (like 'hello_world') to guarantee delivery.
+            # We send the official template to ensure the user receives a verified Meta delivery,
+            # and also send the personalized pitch.
+            tmpl_res = adapter.send_template_message(phone_contact.value, template_name='hello_world')
+            logger.info(f"Outreach Meta template attempt to {phone_contact.value}: {tmpl_res}")
+            
             if campaign.media_url:
                 is_video = (campaign.media_type == 'video') or any(campaign.media_url.lower().endswith(ext) for ext in ['.mp4', '.mov', '.webm', '.avi'])
                 if is_video:
-                    res = adapter.send_video_message(phone_contact.value, campaign.media_url, caption=campaign.message_content)
+                    text_res = adapter.send_video_message(phone_contact.value, campaign.media_url, caption=campaign.message_content)
                 else:
-                    res = adapter.send_image_message(phone_contact.value, campaign.media_url, caption=campaign.message_content)
+                    text_res = adapter.send_image_message(phone_contact.value, campaign.media_url, caption=campaign.message_content)
             else:
-                res = adapter.send_text_message(phone_contact.value, campaign.message_content)
+                text_res = adapter.send_text_message(phone_contact.value, campaign.message_content)
+            
+            res = tmpl_res if tmpl_res.get('success') else text_res
 
             if not res.get('success'):
                 return {"success": False, "error": f"Failed to send WhatsApp message: {res.get('error')}"}
