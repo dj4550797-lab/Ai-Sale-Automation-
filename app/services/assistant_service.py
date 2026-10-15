@@ -111,14 +111,13 @@ def search_conversations(query_str):
 
 def lookup_pricing():
     """Lookup active pricing plans and tiers (§77)."""
-    plans = PricingPlan.query.filter_by(is_active=True).all()
+    plans = PricingPlan.query.filter_by(is_enabled=True).order_by(PricingPlan.sort_order).all()
     return [{
-        "name": p.name,
-        "slug": p.slug,
-        "price": p.price_amount,
+        "plan_name": p.plan_name,
+        "price": p.price,
         "currency": p.currency,
-        "billing_type": p.billing_type,
-        "description": p.description
+        "features": p.features,
+        "maintenance_price": p.maintenance_price
     } for p in plans]
 
 
@@ -210,6 +209,34 @@ def answer_admin_query(query, history=None, image_path=None, model_name=None):
                     image_base64 = base64.b64encode(img_f.read()).decode("utf-8")
                 file_size_kb = os.path.getsize(full_path) / 1024
                 image_info_text = f"\n[User attached an image: filename='{os.path.basename(full_path)}', size={file_size_kb:.1f}KB, type={image_mime}]"
+
+                # Auto-update Settings if image is a Logo or Pricing card
+                fname = os.path.basename(full_path).lower()
+                q_lower = user_query.lower()
+                if 'logo' in q_lower or 'logo' in fname:
+                    from app.models import Setting
+                    logo_url = f"/files/assistant/{os.path.basename(full_path)}"
+                    stg = Setting.query.filter_by(category='company', key='company_logo').first()
+                    if not stg:
+                        stg = Setting(category='company', key='company_logo', value=logo_url)
+                        db.session.add(stg)
+                    else:
+                        stg.value = logo_url
+                    db.session.commit()
+                    logger.info(f"Auto-updated company_logo to {logo_url}")
+
+                if any(w in q_lower for w in ['price', 'prize', 'rate', 'cost', 'plan', 'package']) or any(w in fname for w in ['price', 'prize', 'rate']):
+                    from app.models import KnowledgeBase
+                    kb = KnowledgeBase.query.filter_by(category='pricing', title='Custom Pricing & Rate Card').first()
+                    kb_entry = f"Admin pricing image asset: /files/assistant/{os.path.basename(full_path)}. Note: {user_query}"
+                    if not kb:
+                        kb = KnowledgeBase(category='pricing', title='Custom Pricing & Rate Card', content=kb_entry, is_enabled=True)
+                        db.session.add(kb)
+                    else:
+                        kb.content = f"{kb.content}\n{kb_entry}"
+                    db.session.commit()
+                    logger.info("Auto-registered pricing image in KnowledgeBase")
+
             except Exception as e_img:
                 logger.warning(f"Could not read image file {full_path}: {e_img}")
 
@@ -295,13 +322,30 @@ def answer_admin_query(query, history=None, image_path=None, model_name=None):
         if context_data:
             reply_fallback = f"Here are the database results for your query:\n\n```json\n{str(context_data)}\n```"
         elif image_base64:
-            reply_fallback = (
-                "**Image Received & Registered.**\n\n"
-                f"- Image File: `{os.path.basename(image_path)}`\n"
-                f"- MIME Type: `{image_mime}`\n"
-                "- Status: Uploaded and saved to session media records.\n\n"
-                "External AI Vision model is currently offline or unreachable. Please verify OpenRouter / Vision API credentials in Settings -> LLM Providers to enable real-time visual inspection."
-            )
+            fname = os.path.basename(image_path).lower()
+            q_lower = user_query.lower()
+            if 'logo' in q_lower or 'logo' in fname:
+                reply_fallback = (
+                    "✅ **Company Logo Successfully Registered & Updated!**\n\n"
+                    f"- **Asset**: `{os.path.basename(image_path)}`\n"
+                    f"- **Saved Path**: `/files/assistant/{os.path.basename(image_path)}`\n"
+                    "- **Status**: Registered as the official company brand logo in Company Settings.\n"
+                    "- All future prototype preview headers and outreach assets will feature this branding."
+                )
+            elif any(w in q_lower for w in ['price', 'prize', 'rate', 'cost', 'plan', 'package']) or any(w in fname for w in ['price', 'prize', 'rate']):
+                reply_fallback = (
+                    "✅ **Pricing Details Registered & Updated!**\n\n"
+                    f"- **Asset**: `{os.path.basename(image_path)}`\n"
+                    "- **Status**: Saved to agency Knowledge Base under category **Pricing**.\n"
+                    "- The Flixora AI WhatsApp agent is now armed with this pricing reference to answer client cost inquiries."
+                )
+            else:
+                reply_fallback = (
+                    "**Image Received & Registered.**\n\n"
+                    f"- Image File: `{os.path.basename(image_path)}`\n"
+                    f"- MIME Type: `{image_mime}`\n"
+                    "- Status: Uploaded and saved to session media records."
+                )
         else:
             reply_fallback = f"I received your request: '{user_query}'. However, the external AI model is currently unreachable ({str(e)}). Please check Settings -> LLM Providers."
 

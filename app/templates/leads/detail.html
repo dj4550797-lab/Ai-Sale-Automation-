@@ -17,12 +17,7 @@
             <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:2px;">{{ lead.address }}</p>
         </div>
         <div style="margin-left:auto;display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;">
-            {% set lead_phone = '' %}
-            {% for c in lead.contacts %}
-                {% if c.contact_type in ['phone', 'whatsapp'] and not lead_phone %}
-                    {% set lead_phone = c.value %}
-                {% endif %}
-            {% endfor %}
+            {% set lead_phone = lead.primary_phone %}
             {% if lead_phone %}
             {% set clean_ph = lead_phone|replace('+', '')|replace(' ', '')|replace('-', '') %}
             {% set header_pitch = "Hello Team " ~ lead.business_name ~ "! 👋 We prepared an exclusive live website prototype for your business: https://ai-sale-automation.onrender.com/demos/preview/" ~ lead.id ~ " - Would you like to review it?" %}
@@ -397,12 +392,7 @@
                         </form>
                     </div>
 
-                    {% set lead_phone = '' %}
-                    {% for c in lead.contacts %}
-                        {% if c.contact_type in ['phone', 'whatsapp'] and not lead_phone %}
-                            {% set lead_phone = c.value %}
-                        {% endif %}
-                    {% endfor %}
+                    {% set lead_phone = lead.primary_phone %}
                     {% if lead_phone %}
                     {% set clean_ph = lead_phone|replace('+', '')|replace(' ', '')|replace('-', '') %}
                     {% set sample_pitch = "Hello Team " ~ lead.business_name ~ "! 👋 We prepared an exclusive live website prototype for your business: https://ai-sale-automation.onrender.com/demos/preview/" ~ lead.id ~ " - Would you like to review it?" %}

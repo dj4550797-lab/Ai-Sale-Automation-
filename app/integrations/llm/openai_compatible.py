@@ -99,10 +99,24 @@ class OpenAICompatibleAdapter(BaseLLMAdapter):
             headers["HTTP-Referer"] = "https://flixora.com"
             headers["X-Title"] = "Flixora Sales Agent"
 
+        if options.get("image_base64"):
+            image_mime = options.get("image_mime", "image/jpeg")
+            user_content = [
+                {"type": "text", "text": prompt},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:{image_mime};base64,{options['image_base64']}"
+                    }
+                }
+            ]
+        else:
+            user_content = prompt
+
         payload = {
             "model": model_id,
             "messages": [
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": user_content}
             ],
             "temperature": options.get("temperature", 0.7),
             "max_tokens": options.get("max_tokens", 1000)

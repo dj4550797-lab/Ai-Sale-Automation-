@@ -68,7 +68,11 @@ def add_message(conversation_id, sender_type, content, sender_name=''):
         if sender_type == 'client':
             try:
                 c = (content or '').lower().strip()
-                if any(w in c for w in ['price', 'cost', 'how much', 'rate', 'package', 'pricing', 'charges', 'charge', 'kya rate', 'kitna']):
+                if any(w in c for w in ['wrong number', 'wrong person', 'galat number', 'galti se', 'who are you', 'not my business', 'not the owner', 'kaun ho', 'remove me', 'wrong no', 'galat no']):
+                    detected_intent, detected_stage = 'wrong_number', 'lost'
+                elif any(w in c for w in ['human', 'insaan', 'real person', 'manager', 'owner', 'talk to person', 'agent se baat', 'baat karvao', 'call me', 'call karo', 'phone karo']):
+                    detected_intent, detected_stage = 'human_escalation', 'interested'
+                elif any(w in c for w in ['price', 'cost', 'how much', 'rate', 'package', 'pricing', 'charges', 'charge', 'kya rate', 'kitna']):
                     detected_intent, detected_stage = 'price inquiry', 'interested'
                 elif any(w in c for w in ['demo', 'sample', 'link', 'preview', 'portfolio', 'website', 'site', 'dikhao', 'design']):
                     detected_intent, detected_stage = 'demo inquiry', 'interested'
@@ -94,18 +98,21 @@ def add_message(conversation_id, sender_type, content, sender_name=''):
                 lead = Lead.query.get(conv.lead_id)
                 if lead:
                     from app.constants import LeadStatus, PipelineStage
-                    stage_map = {
-                        'new': LeadStatus.NEW,
-                        'contacted': LeadStatus.CONTACTED,
-                        'replied': LeadStatus.REPLIED,
-                        'interested': LeadStatus.INTERESTED,
-                        'negotiation': LeadStatus.NEGOTIATION,
-                        'won': LeadStatus.WON,
-                        'lost': LeadStatus.LOST
-                    }
-                    new_status = stage_map.get(msg.sales_stage.lower())
-                    if new_status:
-                        lead.status = new_status
+                    if detected_intent == 'wrong_number':
+                        lead.status = LeadStatus.DISQUALIFIED
+                    else:
+                        stage_map = {
+                            'new': LeadStatus.NEW,
+                            'contacted': LeadStatus.CONTACTED,
+                            'replied': LeadStatus.REPLIED,
+                            'interested': LeadStatus.INTERESTED,
+                            'negotiation': LeadStatus.NEGOTIATION,
+                            'won': LeadStatus.WON,
+                            'lost': LeadStatus.LOST
+                        }
+                        new_status = stage_map.get(msg.sales_stage.lower())
+                        if new_status:
+                            lead.status = new_status
                         
                     deal = SalesDeal.query.filter_by(lead_id=lead.id).first()
                     if not deal:
@@ -208,6 +215,8 @@ def generate_chatbot_reply(conversation_id, user_message):
     
     CRITICAL Instructions:
     - Respond directly, politely, warmly, and concisely to the prospect's question.
+    - WRONG NUMBER HANDLING: If the prospect says this is a wrong number, wrong person, or that they don't own this business, apologize warmly, reassure them that you have immediately removed their number so they won't be bothered again, and wish them a great day.
+    - HUMAN AGENT HANDOVER: If the prospect asks to speak with a human, manager, owner, or wants a call, confirm that you have notified our sales manager who will call or WhatsApp them shortly on this number, and ask what time works best.
     - When the prospect asks for their website link, demo, prototype, portfolio, or preview (e.g. "demo link bhejo", "link send karo", "sample dikhao", "show demo"), ALWAYS give them their live interactive link: {demo_url}. Inform them warmly that their interactive prototype has ALREADY BEEN BUILT and is live for them to explore! NEVER say you will check with the design team for their demo link.
     - If they ask about pricing, concisely present our clear packages (Starter Showcase: ₹14,999, Growth Business Engine: ₹24,999, Enterprise Custom App: ₹44,999).
     - If the user messages in Hindi or Hinglish, answer in friendly and polite Hinglish.
@@ -220,11 +229,14 @@ def generate_chatbot_reply(conversation_id, user_message):
         reply_content = llm_router.generate_text(prompt, task_type='client_chat').strip()
         # Save AI reply message
         ai_msg = add_message(conversation_id, 'ai', reply_content, sender_name=agent_name)
-        return ai_msg
     except Exception as e:
         logger.warning(f"Error generating chatbot reply via LLM ({e}). Using intelligent sales responder.")
         user_lower = user_message.lower()
-        if any(w in user_lower for w in ['price', 'cost', 'rate', 'how much', 'pricing', 'charges', 'kitna', 'rate kya']):
+        if any(w in user_lower for w in ['wrong number', 'wrong person', 'galat number', 'galti se', 'who are you', 'not my business', 'kaun ho', 'remove me', 'wrong no', 'galat no']):
+            reply_content = "माफ़ी चाहते हैं! 🙏 लगता है हमारे पास ग़लत नंबर दर्ज हो गया था। हमने अपने सिस्टम से आपका नंबर तुरंत रिमूव कर दिया है ताकि आपको दोबारा कोई मैसेज न आए। आपका दिन शुभ हो!"
+        elif any(w in user_lower for w in ['human', 'insaan', 'real person', 'manager', 'owner', 'talk to person', 'agent se baat', 'baat karvao', 'call me', 'call karo', 'phone karo']):
+            reply_content = "जी बिल्कुल! 🙏 मैंने हमारी सीनियर टीम को नोटिफ़ाई कर दिया है। हमारे सेल्स मैनेजर आपसे थोड़ी देर में इसी नंबर पर कॉल या WhatsApp पर कनेक्ट करेंगे। क्या अभी बात करने का सही समय है?"
+        elif any(w in user_lower for w in ['price', 'cost', 'rate', 'how much', 'pricing', 'charges', 'kitna', 'rate kya']):
             reply_content = f"Hello! Our website design packages start from ₹14,999 (Starter Showcase) to ₹24,999 (Growth Business Engine), including mobile responsive UI, SSL security, custom domain, and WhatsApp booking integration. Would you like us to customize this for {lead.business_name}?"
         elif any(w in user_lower for w in ['demo', 'link', 'sample', 'preview', 'portfolio', 'site', 'bhejo', 'dikhao']):
             reply_content = f"You can preview your live prototype concept right here: {demo_url} 🚀 Let me know if you would like any adjustments to the branding or menu!"
@@ -233,7 +245,25 @@ def generate_chatbot_reply(conversation_id, user_message):
         else:
             reply_content = f"Thank you for getting back to us! We crafted a live prototype concept for {lead.business_name} here: {demo_url}. Feel free to ask any questions about features or packages!"
         ai_msg = add_message(conversation_id, 'ai', reply_content, sender_name=agent_name)
-        return ai_msg
+
+    # Post-reply state transition (Wrong Number / Human Handover)
+    try:
+        user_lower = (user_message or '').lower().strip()
+        if any(w in user_lower for w in ['wrong number', 'wrong person', 'galat number', 'galti se', 'who are you', 'not my business', 'not the owner', 'kaun ho', 'remove me', 'wrong no', 'galat no']):
+            conv.status = ConversationStatus.ADMIN_ACTIVE
+            if lead:
+                from app.constants import LeadStatus
+                lead.status = LeadStatus.DISQUALIFIED
+            db.session.commit()
+            logger.info(f"Conversation {conv.id} marked ADMIN_ACTIVE and lead disqualified after wrong number reply.")
+        elif any(w in user_lower for w in ['human', 'insaan', 'real person', 'manager', 'owner', 'talk to person', 'agent se baat', 'baat karvao', 'call me', 'call karo', 'phone karo']):
+            conv.status = ConversationStatus.ADMIN_ACTIVE
+            db.session.commit()
+            logger.info(f"Conversation {conv.id} marked ADMIN_ACTIVE after human escalation handover.")
+    except Exception as state_err:
+        logger.error(f"Error updating conversation state post-reply: {state_err}")
+
+    return ai_msg
 
 
 def toggle_takeover_status(conversation_id, active, admin_user_id):

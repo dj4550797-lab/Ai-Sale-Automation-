@@ -65,5 +65,12 @@ class Lead(db.Model):
     sales_deals = db.relationship('SalesDeal', backref='lead', lazy='dynamic', cascade='all, delete-orphan')
     uploaded_files = db.relationship('UploadedFile', backref='lead', lazy='dynamic', cascade='all, delete-orphan')
 
+    @property
+    def primary_phone(self):
+        """Retrieve primary phone or whatsapp number for this lead."""
+        from app.models.contact import LeadContact
+        c = self.contacts.filter(LeadContact.contact_type.in_(['phone', 'whatsapp'])).first()
+        return c.value if c else ''
+
     def __repr__(self):
         return f'<Lead {self.business_name}>'
