@@ -1,0 +1,172 @@
+{% extends "legal/base_legal.html" %}
+
+{% set active_tab = 'privacy' %}
+
+{% block title %}Privacy Policy — {{ company_name }}{% endblock %}
+{% block meta_description %}Official Privacy Policy for {{ company_name }} and Flixora AI Sales Automation. Outlines data collection, Meta WhatsApp Cloud API usage, and user rights.{% endblock %}
+
+{% block legal_content %}
+<div class="legal-wrapper">
+    <div class="legal-hero">
+        <div class="legal-meta-badge">
+            <span class="material-symbols-outlined" style="font-size:14px;">verified_user</span>
+            Meta Verified & GDPR Compliant
+        </div>
+        <h1>Privacy Policy</h1>
+        <p>
+            Learn how {{ company_name }} collects, processes, and protects your business information and WhatsApp interactions across our AI Sales Automation platform.
+        </p>
+        <div style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:var(--space-4);">
+            <strong>Effective Date:</strong> January 1, 2026 &nbsp;|&nbsp; <strong>Last Updated:</strong> October 15, 2026
+        </div>
+    </div>
+
+    <div class="legal-layout-grid">
+        <!-- Table of Contents -->
+        <aside class="legal-sidebar">
+            <div class="legal-sidebar-title">Sections</div>
+            <ul class="legal-toc-list">
+                <li><a href="#overview">1. Overview & Scope</a></li>
+                <li><a href="#data-collected">2. Information We Collect</a></li>
+                <li><a href="#whatsapp-meta">3. WhatsApp & Meta Cloud API</a></li>
+                <li><a href="#how-we-use">4. How We Use Data</a></li>
+                <li><a href="#third-parties">5. Third-Party Processors</a></li>
+                <li><a href="#data-retention">6. Data Retention & Storage</a></li>
+                <li><a href="#opt-out">7. Opt-Out & Stop Messaging</a></li>
+                <li><a href="#user-rights">8. Your Data Protection Rights</a></li>
+                <li><a href="#security">9. Security Architecture</a></li>
+                <li><a href="#contact">10. Contact & Grievance Officer</a></li>
+            </ul>
+        </aside>
+
+        <!-- Document Content -->
+        <main class="legal-content-card">
+            <section id="overview">
+                <h2><span class="material-symbols-outlined">info</span> 1. Overview & Scope</h2>
+                <p>
+                    This Privacy Policy describes how <strong>{{ company_name }}</strong> ("we", "our", or "us"), operating the <strong>Flixora AI Sales Automation Platform</strong>, collects, protects, uses, and discloses information when business leads, clients, and partners interact with our automated outreach, website audit engine, customer support systems, and official WhatsApp Business channels.
+                </p>
+                <p>
+                    By engaging with our automated messaging channels, submitting your contact details, or receiving an automated website proposal from our system, you acknowledge the terms of this Privacy Policy.
+                </p>
+                <div class="legal-callout">
+                    <strong>Zero-Spam Commitment:</strong> {{ company_name }} maintains a strict zero-spam policy. We only reach out to verifiable business entities regarding digital modernization, responsive website audits, and performance consulting. We provide instantaneous opt-out capabilities on all communications.
+                </div>
+            </section>
+
+            <section id="data-collected">
+                <h2><span class="material-symbols-outlined">dataset</span> 2. Information We Collect</h2>
+                <p>We collect only the minimum information necessary to conduct tailored B2B website audits and communicate proposals:</p>
+                <ul>
+                    <li><strong>Public Business Contact Details:</strong> Business name, industry category, official contact phone number, public business website address, and location.</li>
+                    <li><strong>WhatsApp Messaging Data:</strong> Sender phone number, verified WhatsApp profile name, incoming message content, conversation timestamps, and message delivery status receipts provided by Meta Platforms, Inc.</li>
+                    <li><strong>Technical Audit Information:</strong> Public website performance metrics, mobile viewport responsiveness scores, SSL configuration, and technology stack indicators gathered for the purpose of generating digital proposals.</li>
+                    <li><strong>User Preferences:</strong> Communication opt-in records, conversation status tags, and language preferences.</li>
+                </ul>
+            </section>
+
+            <section id="whatsapp-meta">
+                <h2><span class="material-symbols-outlined">chat</span> 3. WhatsApp Business & Meta Cloud API Compliance</h2>
+                <p>
+                    Our messaging operations strictly abide by the <strong>Meta Platform Terms</strong>, <strong>WhatsApp Business Messaging Policy</strong>, and <strong>WhatsApp Commerce Policy</strong>:
+                </p>
+                <ul>
+                    <li><strong>Authorized API Integration:</strong> All WhatsApp interactions are transmitted exclusively through the official <em>Meta WhatsApp Cloud API</em>. We do not use unofficial scrapers, unauthorized modified WhatsApp clients, or spoofed devices.</li>
+                    <li><strong>Template Pre-Approval:</strong> Outbound business-initiated conversations utilize pre-approved Meta WhatsApp templates compliant with regional guidelines.</li>
+                    <li><strong>Customer Service Window:</strong> Inbound conversations adhere strictly to Meta's 24-hour customer care service window. Free-form AI conversational assistance is offered exclusively while responding to direct inquiries initiated by the user.</li>
+                    <li><strong>No Reselling of Contact Information:</strong> We never sell, lease, or monetize your phone number, chat records, or business identifiers to third-party data brokers or advertising networks.</li>
+                </ul>
+            </section>
+
+            <section id="how-we-use">
+                <h2><span class="material-symbols-outlined">engineering</span> 4. How We Use Your Information</h2>
+                <p>The information we collect is utilized strictly for the following purposes:</p>
+                <ol>
+                    <li>To deliver automated website audit summaries and personalized interactive design demos requested by prospective clients.</li>
+                    <li>To answer technical inquiries, pricing questions, feature explanations, and scope clarifications via our Flixora AI Autonomous Assistant.</li>
+                    <li>To connect interested prospects with our human sales engineers and design team when requested.</li>
+                    <li>To monitor system uptime, prevent denial-of-service abuse, and verify message delivery fidelity.</li>
+                    <li>To enforce compliance with legal obligations, prevent fraudulent inquiries, and honor immediate opt-out directives.</li>
+                </ol>
+            </section>
+
+            <section id="third-parties">
+                <h2><span class="material-symbols-outlined">hub</span> 5. Third-Party Service Processors</h2>
+                <p>
+                    To operate our high-speed, 24/7 AI sales infrastructure, we work with industry-standard, SOC2 and ISO27001-certified cloud infrastructure providers:
+                </p>
+                <ul>
+                    <li><strong>Meta Platforms, Inc. (WhatsApp Cloud API):</strong> Used for secure, enterprise message transport and webhook event dispatching.</li>
+                    <li><strong>AI Model Inference Providers (OpenRouter, OpenAI, Groq):</strong> Used for natural language processing of inquiries. Messages sent to inference engines are ephemeral and not used to train public foundation models.</li>
+                    <li><strong>Cloud Hosting & Database (Neon PostgreSQL, Render):</strong> Encrypted database and server hosting for storing lead records and conversation transcripts.</li>
+                </ul>
+            </section>
+
+            <section id="data-retention">
+                <h2><span class="material-symbols-outlined">inventory_2</span> 6. Data Retention & Archival</h2>
+                <p>
+                    We retain business conversation logs and lead audit metrics only as long as necessary to fulfill legitimate commercial consulting obligations, typically for a period of up to 12 months from the date of last customer activity, unless a deletion request is received sooner or required by law.
+                </p>
+            </section>
+
+            <section id="opt-out">
+                <h2><span class="material-symbols-outlined">block</span> 7. Immediate Opt-Out & Stop Messaging</h2>
+                <p>
+                    We provide frictionless, automated opt-out mechanisms directly inside WhatsApp and via our web portal:
+                </p>
+                <div class="legal-callout warning">
+                    <strong>Instant WhatsApp Opt-Out:</strong> Replying with any of the following keywords immediately halts all automated outreach and disqualifies future messages:
+                    <div style="margin-top:8px;font-family:monospace;font-weight:700;color:var(--text-primary);">
+                        STOP &nbsp;•&nbsp; UNSUBSCRIBE &nbsp;•&nbsp; WRONG NUMBER &nbsp;•&nbsp; REMOVE ME &nbsp;•&nbsp; MAT KARO
+                    </div>
+                </div>
+                <p>
+                    Upon receiving an opt-out command, our AI autonomous agent immediately stops messaging, marks your record as disqualified, and suppresses all upcoming automated follow-ups.
+                </p>
+            </section>
+
+            <section id="user-rights">
+                <h2><span class="material-symbols-outlined">gavel</span> 8. Your Data Protection Rights</h2>
+                <p>
+                    Depending on your geographic jurisdiction (including under GDPR, California CCPA, and India's Digital Personal Data Protection Act 2023), you hold the following rights:
+                </p>
+                <ul>
+                    <li><strong>Right to Access:</strong> You may request a copy of the personal information and chat logs we hold regarding your phone number.</li>
+                    <li><strong>Right to Rectification:</strong> You may request corrections to inaccurate business records or contact details.</li>
+                    <li><strong>Right to Erasure ("Right to Be Forgotten"):</strong> You may request complete deletion of your records via our dedicated <a href="{{ url_for('legal.data_deletion') }}">User Data Deletion Page</a>.</li>
+                    <li><strong>Right to Restrict Processing:</strong> You may request that we suspend further processing or automated analysis of your web presence.</li>
+                </ul>
+            </section>
+
+            <section id="security">
+                <h2><span class="material-symbols-outlined">shield</span> 9. Security Architecture</h2>
+                <p>
+                    {{ company_name }} implements bank-grade administrative, technical, and physical safeguards:
+                </p>
+                <ul>
+                    <li>All data in transit is protected using TLS 1.3 encryption.</li>
+                    <li>All database storage at rest is encrypted using AES-256 standards.</li>
+                    <li>API credentials, WhatsApp tokens, and database secrets are managed using encrypted environment variables and masked secret filters.</li>
+                    <li>Role-based access controls (RBAC) restrict access to customer conversation histories solely to authorized administrators.</li>
+                </ul>
+            </section>
+
+            <section id="contact">
+                <h2><span class="material-symbols-outlined">mail</span> 10. Contact & Grievance Officer</h2>
+                <p>
+                    If you have questions regarding this Privacy Policy, wish to exercise your data rights, or have a compliance inquiry for Meta app review, please contact our designated Data Protection Officer:
+                </p>
+                <div style="background:var(--bg-app);border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:var(--space-4) var(--space-6);margin-top:var(--space-4);">
+                    <div style="font-weight:700;font-size:var(--text-base);color:var(--text-primary);margin-bottom:4px;">{{ company_name }}</div>
+                    <div style="font-size:var(--text-sm);color:var(--text-secondary);line-height:1.6;">
+                        <strong>Attn:</strong> Data Protection & Compliance Officer<br>
+                        <strong>Email:</strong> <a href="mailto:{{ contact_email }}" style="color:var(--primary-500);">{{ contact_email }}</a><br>
+                        <strong>WhatsApp Official Helpline:</strong> {{ contact_phone }}<br>
+                        <strong>Website:</strong> <a href="{{ website_url }}" target="_blank" rel="noopener" style="color:var(--primary-500);">{{ website_url }}</a>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+{% endblock %}

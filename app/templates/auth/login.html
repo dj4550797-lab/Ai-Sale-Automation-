@@ -77,6 +77,16 @@
                     Log In
                 </button>
             </form>
+
+            <div style="margin-top:var(--space-6);padding-top:var(--space-4);border-top:1px solid var(--border-color);text-align:center;font-size:var(--text-xs);color:var(--text-tertiary);display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
+                <a href="{{ url_for('legal.privacy_policy') }}" style="color:var(--text-secondary);text-decoration:none;">Privacy Policy</a>
+                <span>•</span>
+                <a href="{{ url_for('legal.terms_of_service') }}" style="color:var(--text-secondary);text-decoration:none;">Terms of Service</a>
+                <span>•</span>
+                <a href="{{ url_for('legal.data_deletion') }}" style="color:var(--text-secondary);text-decoration:none;">Data Deletion</a>
+                <span>•</span>
+                <a href="{{ url_for('legal.whatsapp_policy') }}" style="color:var(--text-secondary);text-decoration:none;">WhatsApp Policy</a>
+            </div>
         </div>
     </div>
 

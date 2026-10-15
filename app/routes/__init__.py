@@ -25,6 +25,7 @@ from app.routes.outreach import outreach_bp
 from app.routes.followups import followups_bp
 from app.routes.sales import sales_bp
 from app.routes.conversations import conversations_bp
+from app.routes.legal import legal_bp
 
 
 def register_blueprints(app):
@@ -33,6 +34,7 @@ def register_blueprints(app):
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(settings_bp)
+    app.register_blueprint(legal_bp)
     app.register_blueprint(models_bp)
     app.register_blueprint(credentials_api_bp)
 

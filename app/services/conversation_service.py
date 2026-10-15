@@ -68,12 +68,16 @@ def add_message(conversation_id, sender_type, content, sender_name=''):
         if sender_type == 'client':
             try:
                 c = (content or '').lower().strip()
-                if any(w in c for w in ['wrong number', 'wrong person', 'galat number', 'galti se', 'who are you', 'not my business', 'not the owner', 'kaun ho', 'remove me', 'wrong no', 'galat no']):
+                if any(w in c for w in ['wrong number', 'wrong person', 'galat number', 'galti se', 'not my business', 'not the owner', 'remove me', 'wrong no', 'galat no', 'remove my number', 'mera number hatao']):
                     detected_intent, detected_stage = 'wrong_number', 'lost'
+                elif any(w in c for w in ['who are you', 'tu kon ho', 'kaun ho', 'kon ho', 'aap kaun', 'kiske liye', 'kis ke liye', 'who r u', 'kya kaam']):
+                    detected_intent, detected_stage = 'identity_inquiry', 'replied'
                 elif any(w in c for w in ['human', 'insaan', 'real person', 'manager', 'owner', 'talk to person', 'agent se baat', 'baat karvao', 'call me', 'call karo', 'phone karo']):
                     detected_intent, detected_stage = 'human_escalation', 'interested'
-                elif any(w in c for w in ['price', 'cost', 'how much', 'rate', 'package', 'pricing', 'charges', 'charge', 'kya rate', 'kitna']):
+                elif any(w in c for w in ['price', 'prize', 'cost', 'how much', 'rate', 'package', 'pricing', 'charges', 'charge', 'kya rate', 'kitna', 'kharcha']):
                     detected_intent, detected_stage = 'price inquiry', 'interested'
+                elif any(w in c for w in ['nice', 'good', 'mast', 'badhiya', 'great', 'awesome', 'sahi hai', 'pasand aaya', 'loved it', 'beautiful']):
+                    detected_intent, detected_stage = 'positive_feedback', 'interested'
                 elif any(w in c for w in ['demo', 'sample', 'link', 'preview', 'portfolio', 'website', 'site', 'dikhao', 'design']):
                     detected_intent, detected_stage = 'demo inquiry', 'interested'
                 elif any(w in c for w in ['hi', 'hello', 'hey', 'namaste', 'halo', 'good morning', 'good evening']):
@@ -232,12 +236,16 @@ def generate_chatbot_reply(conversation_id, user_message):
     except Exception as e:
         logger.warning(f"Error generating chatbot reply via LLM ({e}). Using intelligent sales responder.")
         user_lower = user_message.lower()
-        if any(w in user_lower for w in ['wrong number', 'wrong person', 'galat number', 'galti se', 'who are you', 'not my business', 'kaun ho', 'remove me', 'wrong no', 'galat no']):
+        if any(w in user_lower for w in ['wrong number', 'wrong person', 'galat number', 'galti se', 'not my business', 'not the owner', 'remove me', 'wrong no', 'galat no', 'remove my number', 'mera number hatao']):
             reply_content = "माफ़ी चाहते हैं! 🙏 लगता है हमारे पास ग़लत नंबर दर्ज हो गया था। हमने अपने सिस्टम से आपका नंबर तुरंत रिमूव कर दिया है ताकि आपको दोबारा कोई मैसेज न आए। आपका दिन शुभ हो!"
+        elif any(w in user_lower for w in ['who are you', 'tu kon ho', 'kaun ho', 'kon ho', 'aap kaun', 'kiske liye', 'kis ke liye', 'who r u', 'kya kaam']):
+            reply_content = f"नमस्ते! 🙏 मैं {agent_name} हूँ, {company_name} की तरफ से। हम businesses के लिए modern, high-speed websites और custom digital prototypes तैयार करते हैं ताकि आपका business ऑनलाइन और grow कर सके। हमने {lead.business_name} के लिए एक personalized prototype live तैयार किया है: {demo_url} — क्या आपको यह design पसंद आया?"
         elif any(w in user_lower for w in ['human', 'insaan', 'real person', 'manager', 'owner', 'talk to person', 'agent se baat', 'baat karvao', 'call me', 'call karo', 'phone karo']):
             reply_content = "जी बिल्कुल! 🙏 मैंने हमारी सीनियर टीम को नोटिफ़ाई कर दिया है। हमारे सेल्स मैनेजर आपसे थोड़ी देर में इसी नंबर पर कॉल या WhatsApp पर कनेक्ट करेंगे। क्या अभी बात करने का सही समय है?"
-        elif any(w in user_lower for w in ['price', 'cost', 'rate', 'how much', 'pricing', 'charges', 'kitna', 'rate kya']):
-            reply_content = f"Hello! Our website design packages start from ₹14,999 (Starter Showcase) to ₹24,999 (Growth Business Engine), including mobile responsive UI, SSL security, custom domain, and WhatsApp booking integration. Would you like us to customize this for {lead.business_name}?"
+        elif any(w in user_lower for w in ['price', 'prize', 'cost', 'rate', 'how much', 'pricing', 'charges', 'kitna', 'rate kya', 'kharcha']):
+            reply_content = f"हमारे पास {lead.business_name} के लिए 3 बेहतरीन packages हैं:\n- Starter Showcase: ₹14,999 (1-page fast website, WhatsApp CTA & 1yr hosting)\n- Growth Business Engine: ₹24,999 (Multi-section funnel, booking flow & Local SEO)\n- Enterprise Custom App: ₹44,999 (Custom database, payment gateway & admin dashboard)\n\nआप अपनी आवश्यकता के अनुसार कौन सा plan पसंद करेंगे? 😊"
+        elif any(w in user_lower for w in ['nice', 'good', 'mast', 'badhiya', 'great', 'awesome', 'sahi hai', 'pasand aaya', 'loved it', 'beautiful']):
+            reply_content = f"Thank you so much! 😊 बहुत खुशी हुई कि आपको {lead.business_name} का design पसंद आया! क्या आप हमारे pricing packages देखना चाहेंगे ताकि हम इसे आपके official domain पर live कर सकें?"
         elif any(w in user_lower for w in ['demo', 'link', 'sample', 'preview', 'portfolio', 'site', 'bhejo', 'dikhao']):
             reply_content = f"You can preview your live prototype concept right here: {demo_url} 🚀 Let me know if you would like any adjustments to the branding or menu!"
         elif any(w in user_lower for w in ['yes', 'interested', 'sure', 'ok', 'call', 'talk', 'meeting', 'baat']):
@@ -249,7 +257,7 @@ def generate_chatbot_reply(conversation_id, user_message):
     # Post-reply state transition (Wrong Number / Human Handover)
     try:
         user_lower = (user_message or '').lower().strip()
-        if any(w in user_lower for w in ['wrong number', 'wrong person', 'galat number', 'galti se', 'who are you', 'not my business', 'not the owner', 'kaun ho', 'remove me', 'wrong no', 'galat no']):
+        if any(w in user_lower for w in ['wrong number', 'wrong person', 'galat number', 'galti se', 'not my business', 'not the owner', 'remove me', 'wrong no', 'galat no', 'remove my number', 'mera number hatao']):
             conv.status = ConversationStatus.ADMIN_ACTIVE
             if lead:
                 from app.constants import LeadStatus

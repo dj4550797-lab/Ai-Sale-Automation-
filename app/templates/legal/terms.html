@@ -1,0 +1,152 @@
+{% extends "legal/base_legal.html" %}
+
+{% set active_tab = 'terms' %}
+
+{% block title %}Terms of Service — {{ company_name }}{% endblock %}
+{% block meta_description %}Official Terms of Service for {{ company_name }} and the Flixora AI Sales Automation Platform.{% endblock %}
+
+{% block legal_content %}
+<div class="legal-wrapper">
+    <div class="legal-hero">
+        <div class="legal-meta-badge">
+            <span class="material-symbols-outlined" style="font-size:14px;">verified</span>
+            Official Service Agreement
+        </div>
+        <h1>Terms of Service</h1>
+        <p>
+            Please read these Terms of Service carefully before utilizing our website audit tools, AI sales advisory services, or interacting with our WhatsApp Business automation.
+        </p>
+        <div style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:var(--space-4);">
+            <strong>Effective Date:</strong> January 1, 2026 &nbsp;|&nbsp; <strong>Last Updated:</strong> October 15, 2026
+        </div>
+    </div>
+
+    <div class="legal-layout-grid">
+        <!-- Table of Contents -->
+        <aside class="legal-sidebar">
+            <div class="legal-sidebar-title">Sections</div>
+            <ul class="legal-toc-list">
+                <li><a href="#acceptance">1. Acceptance of Terms</a></li>
+                <li><a href="#services">2. Scope of Services</a></li>
+                <li><a href="#whatsapp-rules">3. WhatsApp Communication</a></li>
+                <li><a href="#ai-disclaimer">4. AI Responder Disclaimers</a></li>
+                <li><a href="#ip-rights">5. Intellectual Property</a></li>
+                <li><a href="#prohibited">6. Prohibited Conduct</a></li>
+                <li><a href="#commercial">7. Packages & Pricing Terms</a></li>
+                <li><a href="#liability">8. Limitation of Liability</a></li>
+                <li><a href="#governing-law">9. Governing Law</a></li>
+                <li><a href="#contact">10. Contact Us</a></li>
+            </ul>
+        </aside>
+
+        <!-- Document Content -->
+        <main class="legal-content-card">
+            <section id="acceptance">
+                <h2><span class="material-symbols-outlined">handshake</span> 1. Acceptance of Terms</h2>
+                <p>
+                    These Terms of Service ("Terms") constitute a legally binding agreement between you ("User", "Client", or "Lead") and <strong>{{ company_name }}</strong> ("Company", "we", "us", or "our") concerning your access to and use of the <strong>Flixora AI Sales Automation Platform</strong>, associated web properties, and our automated WhatsApp messaging services.
+                </p>
+                <p>
+                    By interacting with our platform, requesting a website analysis, communicating with our automated WhatsApp agent, or engaging our digital design services, you agree to be bound by these Terms.
+                </p>
+            </section>
+
+            <section id="services">
+                <h2><span class="material-symbols-outlined">design_services</span> 2. Scope of Services</h2>
+                <p>
+                    {{ company_name }} provides cutting-edge digital agency and sales automation services, including:
+                </p>
+                <ul>
+                    <li><strong>Automated Website Audits:</strong> AI-driven evaluation of website speed, mobile responsiveness, SSL security, and user experience for business modernization.</li>
+                    <li><strong>Interactive Demo Prototyping:</strong> Customized concept previews and design mockups showcasing modern website architecture.</li>
+                    <li><strong>Flixora AI Autonomous Assistant:</strong> 24/7 conversational advisory over WhatsApp to answer package queries, discuss website requirements, and schedule design consultations.</li>
+                    <li><strong>Full-Stack Web Development & Hosting:</strong> Custom responsive web applications, hosting infrastructure, SSL certificate provisioning, and ongoing maintenance.</li>
+                </ul>
+            </section>
+
+            <section id="whatsapp-rules">
+                <h2><span class="material-symbols-outlined">chat</span> 3. WhatsApp Business Messaging Terms</h2>
+                <p>
+                    Our WhatsApp communication complies strictly with Meta Platforms, Inc.'s WhatsApp Business Policies:
+                </p>
+                <ul>
+                    <li><strong>Opt-In and Consent:</strong> Outbound communications are restricted to verifiable business contacts where legitimate interest in website enhancement exists. Inbound conversations are initiated voluntarily by the user.</li>
+                    <li><strong>Instant Opt-Out:</strong> You may discontinue WhatsApp conversations at any time by sending <code>STOP</code>, <code>UNSUBSCRIBE</code>, or <code>WRONG NUMBER</code>. We immediately honor this request.</li>
+                    <li><strong>Human Escalation:</strong> Our automated conversational system is backed by human engineering supervisors. Inquiries requiring human discretion are seamlessly flagged for administrator review.</li>
+                </ul>
+            </section>
+
+            <section id="ai-disclaimer">
+                <h2><span class="material-symbols-outlined">smart_toy</span> 4. AI Autonomous Responder Disclaimers</h2>
+                <p>
+                    Flixora AI utilizes advanced large language models to assist leads quickly and efficiently:
+                </p>
+                <div class="legal-callout">
+                    <strong>Informational Nature:</strong> While our AI models strive to maintain high accuracy regarding our website packages, quotes, and technical specs, estimates delivered by the AI are informational. Official binding commercial contracts and final statements of work are executed in writing with our project directors.
+                </div>
+            </section>
+
+            <section id="ip-rights">
+                <h2><span class="material-symbols-outlined">copyright</span> 5. Intellectual Property Rights</h2>
+                <p>
+                    All proprietary algorithms, user interface designs, logos, software workflows, and promotional materials associated with Flixora are the sole property of {{ company_name }}.
+                </p>
+                <p>
+                    Upon full payment of design deliverables, custom website assets produced for clients are transferred according to the specific service agreement, while underlying platform frameworks remain our property.
+                </p>
+            </section>
+
+            <section id="prohibited">
+                <h2><span class="material-symbols-outlined">do_not_disturb_on</span> 6. Prohibited Activities</h2>
+                <p>You agree not to:</p>
+                <ul>
+                    <li>Use our automated communication channels to transmit abusive, defamatory, or unlawful content.</li>
+                    <li>Attempt to exploit, reverse engineer, or decompile our AI assistant models or web application backends.</li>
+                    <li>Submit falsified business credentials or third-party phone numbers without proper authorization.</li>
+                    <li>Launch denial-of-service attacks or flood our WhatsApp webhook endpoints with automated spam.</li>
+                </ul>
+            </section>
+
+            <section id="commercial">
+                <h2><span class="material-symbols-outlined">payments</span> 7. Packages, Pricing & Payment Terms</h2>
+                <p>Our standard website design and engineering packages include:</p>
+                <ul>
+                    <li><strong>Starter Showcase (₹14,999 / $199):</strong> 1-page blazing-fast responsive website, Google Maps integration, customer reviews, WhatsApp CTA, free SSL, and 1 year hosting.</li>
+                    <li><strong>Growth Business Engine (₹24,999 / $349):</strong> Multi-section funnel, interactive booking flow, lead capture system, sub-second load speed, and 2 rounds of design revisions.</li>
+                    <li><strong>Enterprise / Custom Solutions:</strong> Fully tailored web applications, custom CRM integrations, and specialized e-commerce platforms.</li>
+                </ul>
+                <p>
+                    Payment terms, milestones, and invoice schedules are defined in formal client proposals. All payments are securely processed via certified payment gateways.
+                </p>
+            </section>
+
+            <section id="liability">
+                <h2><span class="material-symbols-outlined">security</span> 8. Limitation of Liability</h2>
+                <p>
+                    To the maximum extent permitted by applicable law, {{ company_name }} and its directors, employees, or partners shall not be liable for any indirect, incidental, punitive, or consequential damages resulting from downtime of third-party APIs (including Meta WhatsApp or Cloud Hosting), temporary service disruptions, or communication delays beyond our reasonable control.
+                </p>
+            </section>
+
+            <section id="governing-law">
+                <h2><span class="material-symbols-outlined">balance</span> 9. Governing Law & Dispute Resolution</h2>
+                <p>
+                    These Terms shall be governed by and construed in accordance with the laws of India, without regard to its conflict of law principles. Any legal action or dispute arising out of these Terms shall be resolved exclusively in the competent courts having jurisdiction over the registered office of {{ company_name }}.
+                </p>
+            </section>
+
+            <section id="contact">
+                <h2><span class="material-symbols-outlined">support_agent</span> 10. Contact Us</h2>
+                <p>For questions or notices regarding these Terms of Service, please reach out:</p>
+                <div style="background:var(--bg-app);border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:var(--space-4) var(--space-6);margin-top:var(--space-4);">
+                    <div style="font-weight:700;font-size:var(--text-base);color:var(--text-primary);margin-bottom:4px;">{{ company_name }}</div>
+                    <div style="font-size:var(--text-sm);color:var(--text-secondary);line-height:1.6;">
+                        <strong>Email:</strong> <a href="mailto:{{ contact_email }}" style="color:var(--primary-500);">{{ contact_email }}</a><br>
+                        <strong>WhatsApp Official:</strong> {{ contact_phone }}<br>
+                        <strong>Website:</strong> <a href="{{ website_url }}" target="_blank" rel="noopener" style="color:var(--primary-500);">{{ website_url }}</a>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+{% endblock %}

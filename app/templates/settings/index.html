@@ -64,6 +64,28 @@
             </div>
         </div>
     </a>
+    <a href="{{ url_for('settings.appearance') }}" class="card" style="text-decoration:none;color:inherit;border: 1.5px solid var(--primary-500);box-shadow: 0 4px 14px rgba(37,99,235,0.15);">
+        <div class="card-body" style="display:flex;align-items:center;gap:var(--space-4);">
+            <div class="kpi-icon blue"><span class="material-symbols-outlined">palette</span></div>
+            <div>
+                <h4 style="font-weight:600;display:flex;align-items:center;gap:6px;">
+                    Appearance <span class="badge badge-primary" style="font-size:10px;">80+ Fonts</span>
+                </h4>
+                <p style="font-size:var(--text-sm);color:var(--text-secondary);margin-top:2px;">10 themes, 80+ Google fonts</p>
+            </div>
+        </div>
+    </a>
+    <a href="{{ url_for('legal.privacy_policy') }}" target="_blank" class="card" style="text-decoration:none;color:inherit;border: 1.5px solid var(--success-500, #10b981);box-shadow: 0 4px 14px rgba(16,185,129,0.15);">
+        <div class="card-body" style="display:flex;align-items:center;gap:var(--space-4);">
+            <div class="kpi-icon green"><span class="material-symbols-outlined">verified_user</span></div>
+            <div>
+                <h4 style="font-weight:600;display:flex;align-items:center;gap:6px;">
+                    Legal & Meta Docs <span class="badge badge-success" style="font-size:10px;">Meta Ready</span>
+                </h4>
+                <p style="font-size:var(--text-sm);color:var(--text-secondary);margin-top:2px;">Privacy, Terms, Data Deletion</p>
+            </div>
+        </div>
+    </a>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════

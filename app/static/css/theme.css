@@ -800,4 +800,106 @@ button, input, select, textarea {
     background: var(--surface-container);
 }
 
+/* ═══════════════════════════════════════════════════════════
+   THEME 8: EMERALD GLASS [data-theme="emerald"]
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="emerald"] {
+    --primary-50: rgba(16, 185, 129, 0.15);
+    --primary-500: #10b981;
+    --primary-600: #059669;
+    --surface: #061913;
+    --surface-dim: #030e0b;
+    --surface-container: #0b251d;
+    --surface-elevated: #103227;
+    --border-color: rgba(16, 185, 129, 0.22);
+    --border-focus: #10b981;
+    --text-primary: #ecfdf5;
+    --text-secondary: #a7f3d0;
+    --text-muted: #6ee7b7;
+}
+[data-theme="emerald"] body, [data-theme="emerald"] .app {
+    background: #04120e !important;
+    color: #ecfdf5 !important;
+}
+[data-theme="emerald"] .card, [data-theme="emerald"] .kpi-card, [data-theme="emerald"] .dialog {
+    background: #092019 !important;
+    border: 1px solid rgba(16, 185, 129, 0.2) !important;
+}
+[data-theme="emerald"] .sidebar {
+    background: #030d0a !important;
+    border-right: 1px solid rgba(16, 185, 129, 0.15) !important;
+}
+[data-theme="emerald"] .topbar {
+    background: #061712 !important;
+    border-bottom: 1px solid rgba(16, 185, 129, 0.15) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME 9: MIDNIGHT VIOLET [data-theme="midnight"]
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="midnight"] {
+    --primary-50: rgba(139, 92, 246, 0.18);
+    --primary-500: #8b5cf6;
+    --primary-600: #7c3aed;
+    --surface: #0d0b18;
+    --surface-dim: #07050e;
+    --surface-container: #161226;
+    --surface-elevated: #1f1936;
+    --border-color: rgba(139, 92, 246, 0.22);
+    --border-focus: #a78bfa;
+    --text-primary: #f5f3ff;
+    --text-secondary: #c4b5fd;
+    --text-muted: #8b5cf6;
+}
+[data-theme="midnight"] body, [data-theme="midnight"] .app {
+    background: #080612 !important;
+    color: #f5f3ff !important;
+}
+[data-theme="midnight"] .card, [data-theme="midnight"] .kpi-card, [data-theme="midnight"] .dialog {
+    background: #120e22 !important;
+    border: 1px solid rgba(139, 92, 246, 0.22) !important;
+}
+[data-theme="midnight"] .sidebar {
+    background: #06040e !important;
+    border-right: 1px solid rgba(139, 92, 246, 0.18) !important;
+}
+[data-theme="midnight"] .topbar {
+    background: #0a0718 !important;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.18) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME 10: SUNSET CRIMSON [data-theme="sunset"]
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="sunset"] {
+    --primary-50: rgba(244, 63, 94, 0.18);
+    --primary-500: #f43f5e;
+    --primary-600: #e11d48;
+    --surface: #1a0b12;
+    --surface-dim: #10060b;
+    --surface-container: #26101b;
+    --surface-elevated: #331524;
+    --border-color: rgba(244, 63, 94, 0.22);
+    --border-focus: #fb7185;
+    --text-primary: #fff1f2;
+    --text-secondary: #fecdd3;
+    --text-muted: #fb7185;
+}
+[data-theme="sunset"] body, [data-theme="sunset"] .app {
+    background: #0f050b !important;
+    color: #fff1f2 !important;
+}
+[data-theme="sunset"] .card, [data-theme="sunset"] .kpi-card, [data-theme="sunset"] .dialog {
+    background: #1f0c16 !important;
+    border: 1px solid rgba(244, 63, 94, 0.22) !important;
+}
+[data-theme="sunset"] .sidebar {
+    background: #0b0408 !important;
+    border-right: 1px solid rgba(244, 63, 94, 0.18) !important;
+}
+[data-theme="sunset"] .topbar {
+    background: #14070f !important;
+    border-bottom: 1px solid rgba(244, 63, 94, 0.18) !important;
+}
+
 

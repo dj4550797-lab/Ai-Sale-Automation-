@@ -352,35 +352,70 @@ function applyTheme(theme) {
     });
 }
 
-// ── Typography Font Selection ──────────────────────────────
+// ── Typography Font Selection (80+ Google Fonts Engine) ──────────────
 function initAppFont() {
-    const currentFont = localStorage.getItem('flixora_font') || 'inter';
+    const currentFont = localStorage.getItem('flixora_font') || 'Inter';
+    const currentScale = localStorage.getItem('flixora_font_scale') || '100';
     applyFont(currentFont);
+    applyFontScale(currentScale);
 }
 
 function selectFont(fontName) {
+    if (!fontName) return;
     localStorage.setItem('flixora_font', fontName);
     applyFont(fontName);
-    const fontTitles = {
-        'inter': 'Inter (Clean SaaS)',
-        'outfit': 'Outfit (Geometric Display)',
-        'jakarta': 'Plus Jakarta Sans (Startup)',
-        'space': 'Space Grotesk (Futuristic)',
-        'mono': 'JetBrains Mono (Code/Tech)',
-        'serif': 'Playfair Display (Editorial Serif)'
-    };
-    showToast(`🔤 Font applied: ${fontTitles[fontName] || fontName}`, 'info', 2200);
+    showToast(`🔤 Font applied: ${fontName}`, 'info', 2200);
 }
 
-function applyFont(font) {
-    document.documentElement.setAttribute('data-font', font || 'inter');
+function applyFont(fontName) {
+    if (!fontName) fontName = 'Inter';
+    const safeName = fontName.trim();
+    
+    // 1. Dynamically inject Google Font stylesheet if not already present
+    const linkId = 'gfont-' + safeName.replace(/\s+/g, '-').toLowerCase();
+    if (!document.getElementById(linkId) && safeName !== 'System Default') {
+        const fontUrl = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(safeName)}:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap`;
+        const linkEl = document.createElement('link');
+        linkEl.id = linkId;
+        linkEl.rel = 'stylesheet';
+        linkEl.href = fontUrl;
+        document.head.appendChild(linkEl);
+    }
+    
+    // 2. Apply font family globally to root variables and body
+    const fontStack = safeName === 'System Default' 
+        ? "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+        : `'${safeName}', system-ui, -apple-system, sans-serif`;
+    
+    document.documentElement.style.setProperty('--font-sans', fontStack);
+    document.documentElement.style.setProperty('--font-family-base', fontStack);
+    document.documentElement.setAttribute('data-font', safeName.toLowerCase());
+    document.body.style.fontFamily = fontStack;
+    
+    // 3. Update preview elements if present on appearance page
+    const previewBox = document.getElementById('fontPreviewBox');
+    if (previewBox) {
+        previewBox.style.fontFamily = fontStack;
+        const fontTitle = document.getElementById('fontPreviewName');
+        if (fontTitle) fontTitle.textContent = safeName;
+    }
+    
+    // 4. Mark active card
     document.querySelectorAll('.font-card-option').forEach(card => {
-        if (card.dataset.font === font || (!font && card.dataset.font === 'inter')) {
+        if (card.dataset.font && card.dataset.font.toLowerCase() === safeName.toLowerCase()) {
             card.classList.add('selected');
         } else {
             card.classList.remove('selected');
         }
     });
+}
+
+function applyFontScale(scalePercent) {
+    const scale = parseInt(scalePercent, 10) || 100;
+    document.documentElement.style.fontSize = `${(scale / 100) * 16}px`;
+    localStorage.setItem('flixora_font_scale', scale.toString());
+    const scaleLabel = document.getElementById('fontScaleValue');
+    if (scaleLabel) scaleLabel.textContent = `${scale}%`;
 }
 
 // ── Initialize ──────────────────────────────────────────────

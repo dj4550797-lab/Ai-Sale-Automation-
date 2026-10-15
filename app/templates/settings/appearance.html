@@ -1,0 +1,455 @@
+{% extends "base.html" %}
+
+{% block title %}Appearance & Typography (80+ Fonts) — Flixora{% endblock %}
+{% block page_title %}Themes & Typography{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--space-4);">
+    <div>
+        <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2);">
+            <a href="{{ url_for('settings.index') }}" class="btn btn-secondary btn-sm" style="display:inline-flex;align-items:center;gap:4px;">
+                <span class="material-symbols-outlined" style="font-size:16px;">arrow_back</span> Settings
+            </a>
+            <span style="color:var(--text-muted);font-size:var(--text-sm);">/ Appearance</span>
+        </div>
+        <h1 style="margin:0;font-size:var(--text-2xl);font-weight:700;">Themes & Typography Engine</h1>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:4px;">
+            Customize your workspace with 10 hand-crafted visual themes and 80+ premium Google typography fonts.
+        </p>
+    </div>
+    <div style="display:flex;gap:var(--space-3);align-items:center;">
+        <span class="badge badge-primary" style="display:flex;align-items:center;gap:6px;padding:6px 12px;font-size:12px;">
+            <span class="material-symbols-outlined" style="font-size:16px;">palette</span> 10 Themes Active
+        </span>
+        <span class="badge badge-secondary" style="display:flex;align-items:center;gap:6px;padding:6px 12px;font-size:12px;">
+            <span class="material-symbols-outlined" style="font-size:16px;">text_fields</span> 80+ Google Fonts
+        </span>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     LIVE INTERACTIVE FONT PREVIEW CANVAS
+     ═══════════════════════════════════════════════════════════ -->
+<div class="card" style="margin-bottom: var(--space-6); border: 2px solid var(--primary-500); box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-3);">
+        <div style="display:flex;align-items:center;gap:var(--space-2);">
+            <span class="material-symbols-outlined" style="color:var(--primary-500);font-size:22px;">visibility</span>
+            <h3 style="margin:0;font-size:var(--text-lg);font-weight:700;">Interactive Typography Live Preview</h3>
+            <span id="fontPreviewName" class="badge badge-primary" style="font-size:11px;">Inter</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:var(--space-4);">
+            <div style="display:flex;align-items:center;gap:var(--space-2);">
+                <label style="font-size:var(--text-xs);font-weight:600;color:var(--text-secondary);margin:0;">Font Scale:</label>
+                <input type="range" min="85" max="125" step="5" value="100" id="fontScaleSlider" oninput="applyFontScale(this.value)" style="width:110px;cursor:pointer;">
+                <span id="fontScaleValue" style="font-size:var(--text-xs);font-weight:700;color:var(--primary-500);min-width:36px;">100%</span>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="resetFontDefaults()" style="font-size:11px;padding:4px 8px;">Reset Default</button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div style="margin-bottom:var(--space-4);">
+            <input type="text" id="sampleTextInput" class="form-input" placeholder="Type custom test phrase here (e.g. The Royal Spice Bistro & Bar)..." oninput="updatePreviewText(this.value)" style="font-size:var(--text-sm);">
+        </div>
+        <div id="fontPreviewBox" style="padding:var(--space-5);border-radius:var(--radius-lg);background:var(--surface-container);border:1px dashed var(--border-color);transition:font-family 0.2s ease;">
+            <h2 id="previewHeading" style="margin:0 0 8px;font-size:var(--text-2xl);font-weight:700;color:var(--text-primary);">
+                Grow Your Business With Intelligent Autonomous AI
+            </h2>
+            <p id="previewBody" style="margin:0 0 16px;font-size:var(--text-base);color:var(--text-secondary);line-height:1.6;">
+                Flixora empowers local brands by discovering prospective leads, designing instant live website prototypes, and handling customer conversations directly over WhatsApp with zero friction.
+            </p>
+            <div style="display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap;">
+                <button class="btn btn-primary btn-sm">Explore Prototype</button>
+                <button class="btn btn-secondary btn-sm">Schedule Demo</button>
+                <span class="badge badge-success">98.4% Match Rate</span>
+                <span style="font-size:var(--text-xs);color:var(--text-muted);margin-left:auto;">
+                    Numbers: 0123456789 &bull; Currency: ₹14,999 / $199
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     THEMES SELECTOR (10 THEMES)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="card" style="margin-bottom: var(--space-6);">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+            <h3 style="margin:0;font-size:var(--text-lg);font-weight:700;">Design Themes & Color Palettes</h3>
+            <p style="font-size:var(--text-xs);color:var(--text-secondary);margin-top:2px;">
+                Select from 10 distinct UI aesthetic styles. Changes are saved automatically.
+            </p>
+        </div>
+        <span class="badge badge-primary" style="display:flex;align-items:center;gap:4px;">
+            <span class="material-symbols-outlined" style="font-size:14px;">brush</span> 10 Themes
+        </span>
+    </div>
+    <div class="card-body">
+        <div class="theme-selector-grid">
+            
+            <!-- 1. Light SaaS -->
+            <div class="theme-card-option" data-theme="light" onclick="selectTheme('light')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14px;color:var(--text-primary);">Clean SaaS (Light)</strong>
+                    <span class="badge badge-secondary" style="font-size:10px;">Default</span>
+                </div>
+                <div style="height:55px;border-radius:8px;background:#f8fafc;border:1px solid #e2e8f0;display:flex;align-items:center;padding:8px;gap:8px;">
+                    <div style="width:24px;height:24px;border-radius:6px;background:#2563eb;"></div>
+                    <div style="flex:1;">
+                        <div style="height:6px;background:#cbd5e1;border-radius:3px;width:70%;margin-bottom:4px;"></div>
+                        <div style="height:5px;background:#e2e8f0;border-radius:3px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Clean, crisp white workspace with royal blue accents.</div>
+            </div>
+
+            <!-- 2. Pure Obsidian Dark -->
+            <div class="theme-card-option" data-theme="dark" onclick="selectTheme('dark')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14px;color:var(--text-primary);">Obsidian Dark</strong>
+                    <span class="badge badge-primary" style="font-size:10px;">Matte Dark</span>
+                </div>
+                <div style="height:55px;border-radius:8px;background:#111827;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;padding:8px;gap:8px;">
+                    <div style="width:24px;height:24px;border-radius:6px;background:#3b82f6;"></div>
+                    <div style="flex:1;">
+                        <div style="height:6px;background:#374151;border-radius:3px;width:70%;margin-bottom:4px;"></div>
+                        <div style="height:5px;background:#1f2937;border-radius:3px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Deep matte charcoal & slate night mode for high contrast reading.</div>
+            </div>
+
+            <!-- 3. Liquid Frosted Glassmorphism -->
+            <div class="theme-card-option" data-theme="glass" onclick="selectTheme('glass')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14px;color:var(--text-primary);">Glassmorphism</strong>
+                    <span class="badge" style="background:rgba(99,102,241,0.2);color:#818cf8;border:1px solid rgba(99,102,241,0.4);font-size:10px;">Frosted Glass</span>
+                </div>
+                <div style="height:55px;border-radius:8px;background:radial-gradient(circle,rgba(99,102,241,0.3),rgba(236,72,153,0.2)),#0b0f19;border:1px solid rgba(255,255,255,0.25);backdrop-filter:blur(12px);display:flex;align-items:center;padding:8px;gap:8px;">
+                    <div style="width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);box-shadow:0 0 10px rgba(99,102,241,0.6);"></div>
+                    <div style="flex:1;">
+                        <div style="height:6px;background:rgba(255,255,255,0.3);border-radius:3px;width:70%;margin-bottom:4px;"></div>
+                        <div style="height:5px;background:rgba(255,255,255,0.15);border-radius:3px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Translucent frosted glass, aurora glow background, crystal acrylic panels.</div>
+            </div>
+
+            <!-- 4. Emerald Glass -->
+            <div class="theme-card-option" data-theme="emerald" onclick="selectTheme('emerald')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14px;color:var(--text-primary);">Emerald Forest</strong>
+                    <span class="badge badge-success" style="font-size:10px;">Luxury Green</span>
+                </div>
+                <div style="height:55px;border-radius:8px;background:#061913;border:1px solid rgba(16,185,129,0.3);display:flex;align-items:center;padding:8px;gap:8px;">
+                    <div style="width:24px;height:24px;border-radius:6px;background:#10b981;box-shadow:0 0 10px rgba(16,185,129,0.5);"></div>
+                    <div style="flex:1;">
+                        <div style="height:6px;background:#10b981;border-radius:3px;width:70%;margin-bottom:4px;opacity:0.8;"></div>
+                        <div style="height:5px;background:#0b251d;border-radius:3px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Deep emerald night backdrop with vivid jade and mint luminescence.</div>
+            </div>
+
+            <!-- 5. Midnight Violet -->
+            <div class="theme-card-option" data-theme="midnight" onclick="selectTheme('midnight')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14px;color:var(--text-primary);">Midnight Violet</strong>
+                    <span class="badge" style="background:rgba(139,92,246,0.2);color:#a78bfa;font-size:10px;">Indigo Night</span>
+                </div>
+                <div style="height:55px;border-radius:8px;background:#0d0b18;border:1px solid rgba(139,92,246,0.3);display:flex;align-items:center;padding:8px;gap:8px;">
+                    <div style="width:24px;height:24px;border-radius:6px;background:#8b5cf6;box-shadow:0 0 10px rgba(139,92,246,0.5);"></div>
+                    <div style="flex:1;">
+                        <div style="height:6px;background:#8b5cf6;border-radius:3px;width:70%;margin-bottom:4px;opacity:0.8;"></div>
+                        <div style="height:5px;background:#161226;border-radius:3px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Dark celestial obsidian with electric violet and lavender accents.</div>
+            </div>
+
+            <!-- 6. Sunset Crimson -->
+            <div class="theme-card-option" data-theme="sunset" onclick="selectTheme('sunset')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14px;color:var(--text-primary);">Sunset Crimson</strong>
+                    <span class="badge" style="background:rgba(244,63,94,0.2);color:#fb7185;font-size:10px;">Amber Rose</span>
+                </div>
+                <div style="height:55px;border-radius:8px;background:#1a0b12;border:1px solid rgba(244,63,94,0.3);display:flex;align-items:center;padding:8px;gap:8px;">
+                    <div style="width:24px;height:24px;border-radius:6px;background:#f43f5e;box-shadow:0 0 10px rgba(244,63,94,0.5);"></div>
+                    <div style="flex:1;">
+                        <div style="height:6px;background:#f43f5e;border-radius:3px;width:70%;margin-bottom:4px;opacity:0.8;"></div>
+                        <div style="height:5px;background:#26101b;border-radius:3px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Warm wine-dark backdrop with crimson ruby and amber rose glows.</div>
+            </div>
+
+            <!-- 7. Cyberpunk Neon -->
+            <div class="theme-card-option" data-theme="cyberpunk" onclick="selectTheme('cyberpunk')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14px;color:var(--text-primary);">Cyberpunk</strong>
+                    <span class="badge" style="background:rgba(0,240,255,0.15);color:#00f0ff;border:1px solid #00f0ff;font-size:10px;">Neon</span>
+                </div>
+                <div style="height:55px;border-radius:8px;background:#050811;border:1px solid #00f0ff;box-shadow:0 0 10px rgba(0,240,255,0.3);display:flex;align-items:center;padding:8px;gap:8px;">
+                    <div style="width:24px;height:24px;border-radius:4px;background:#00f0ff;box-shadow:0 0 10px #00f0ff;"></div>
+                    <div style="flex:1;">
+                        <div style="height:6px;background:#00f0ff;border-radius:2px;width:70%;margin-bottom:4px;opacity:0.8;"></div>
+                        <div style="height:5px;background:#ff0055;border-radius:2px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">High-tech cyber black, neon cyan & laser magenta futuristic vibes.</div>
+            </div>
+
+            <!-- 8. Synthwave / Arcade -->
+            <div class="theme-card-option" data-theme="synthwave" onclick="selectTheme('synthwave')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14px;color:var(--text-primary);">Synthwave Retro</strong>
+                    <span class="badge" style="background:rgba(236,72,153,0.15);color:#ec4899;border:1px solid #ec4899;font-size:10px;">Arcade</span>
+                </div>
+                <div style="height:55px;border-radius:8px;background:#130924;border:1px solid #ec4899;box-shadow:0 0 12px rgba(236,72,153,0.3);display:flex;align-items:center;padding:8px;gap:8px;">
+                    <div style="width:24px;height:24px;border-radius:4px;background:linear-gradient(135deg,#ec4899,#8b5cf6);box-shadow:0 0 10px #ec4899;"></div>
+                    <div style="flex:1;">
+                        <div style="height:6px;background:#ec4899;border-radius:2px;width:70%;margin-bottom:4px;"></div>
+                        <div style="height:5px;background:#8b5cf6;border-radius:2px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Midnight purple, vibrant neon sunset gradients, 80s arcade feel.</div>
+            </div>
+
+            <!-- 9. Neo-Brutalism -->
+            <div class="theme-card-option" data-theme="neo-brutalism" onclick="selectTheme('neo-brutalism')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14px;color:var(--text-primary);">Neo-Brutalism</strong>
+                    <span class="badge" style="background:#ffe600;color:#000;border:1.5px solid #000;font-size:10px;font-weight:800;">Bold</span>
+                </div>
+                <div style="height:55px;border-radius:4px;background:#fffdf5;border:2px solid #000;box-shadow:3px 3px 0px #000;display:flex;align-items:center;padding:8px;gap:8px;">
+                    <div style="width:24px;height:24px;border-radius:4px;background:#ffe600;border:1.5px solid #000;box-shadow:2px 2px 0px #000;"></div>
+                    <div style="flex:1;">
+                        <div style="height:6px;background:#000;border-radius:0;width:70%;margin-bottom:4px;"></div>
+                        <div style="height:5px;background:#000;border-radius:0;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Heavy black outlines, hard offset drop shadows, energetic pop colors.</div>
+            </div>
+
+            <!-- 10. Flat UI Design -->
+            <div class="theme-card-option" data-theme="flat" onclick="selectTheme('flat')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14px;color:var(--text-primary);">Flat UI Design</strong>
+                    <span class="badge badge-secondary" style="font-size:10px;">Turquoise</span>
+                </div>
+                <div style="height:55px;border-radius:4px;background:#ecf0f1;border:1.5px solid #bdc3c7;display:flex;align-items:center;padding:8px;gap:8px;">
+                    <div style="width:24px;height:24px;border-radius:3px;background:#1abc9c;"></div>
+                    <div style="flex:1;">
+                        <div style="height:6px;background:#2c3e50;border-radius:0;width:70%;margin-bottom:4px;"></div>
+                        <div style="height:5px;background:#bdc3c7;border-radius:0;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Clouds grey backdrop, dark asphalt sidebar, flat turquoise accents.</div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     80+ GOOGLE FONTS TYPOGRAPHY BROWSER
+     ═══════════════════════════════════════════════════════════ -->
+<div class="card">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-3);">
+        <div>
+            <h3 style="margin:0;font-size:var(--text-lg);font-weight:700;">80+ Curated Google Fonts</h3>
+            <p style="font-size:var(--text-xs);color:var(--text-secondary);margin-top:2px;">
+                Click any font card to apply it instantly across your entire dashboard.
+            </p>
+        </div>
+        <div style="width:280px;">
+            <input type="text" id="fontSearchInput" class="form-input form-input-sm" placeholder="🔍 Search 80+ fonts..." oninput="filterFonts(this.value)">
+        </div>
+    </div>
+
+    <!-- Category Filter Tabs -->
+    <div style="padding:var(--space-3) var(--space-6);border-bottom:1px solid var(--border-color);display:flex;gap:var(--space-2);overflow-x:auto;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm font-cat-btn" data-cat="all" onclick="filterFontCategory('all')">All Fonts (80+)</button>
+        <button class="btn btn-secondary btn-sm font-cat-btn" data-cat="sans" onclick="filterFontCategory('sans')">Clean Sans-Serif</button>
+        <button class="btn btn-secondary btn-sm font-cat-btn" data-cat="geometric" onclick="filterFontCategory('geometric')">Modern & Startup</button>
+        <button class="btn btn-secondary btn-sm font-cat-btn" data-cat="serif" onclick="filterFontCategory('serif')">Luxury & Editorial Serif</button>
+        <button class="btn btn-secondary btn-sm font-cat-btn" data-cat="mono" onclick="filterFontCategory('mono')">Developer Monospace</button>
+        <button class="btn btn-secondary btn-sm font-cat-btn" data-cat="display" onclick="filterFontCategory('display')">Bold & Display</button>
+        <button class="btn btn-secondary btn-sm font-cat-btn" data-cat="friendly" onclick="filterFontCategory('friendly')">Friendly & Rounded</button>
+    </div>
+
+    <div class="card-body">
+        <div class="font-selector-grid" id="fontsGrid" style="grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: var(--space-3);">
+            <!-- Fonts populated by script -->
+        </div>
+    </div>
+</div>
+
+<script>
+// 80+ Curated Google Fonts Catalog
+const FONTS_CATALOG = [
+    // ── 1. Clean Sans-Serif (20)
+    { name: "Inter", category: "sans", desc: "Clean modern SaaS standard" },
+    { name: "Roboto", category: "sans", desc: "Google material balance" },
+    { name: "Open Sans", category: "sans", desc: "Highly readable neutral" },
+    { name: "Montserrat", category: "sans", desc: "Urban geometric beauty" },
+    { name: "Lato", category: "sans", desc: "Warm corporate elegance" },
+    { name: "Poppins", category: "sans", desc: "Youthful geometric curves" },
+    { name: "Raleway", category: "sans", desc: "Elegant thin display weights" },
+    { name: "Nunito", category: "sans", desc: "Balanced rounded humanist" },
+    { name: "Work Sans", category: "sans", desc: "Screen-optimized clarity" },
+    { name: "DM Sans", category: "sans", desc: "Compact contemporary style" },
+    { name: "Manrope", category: "sans", desc: "Semi-pixel clean modern" },
+    { name: "Rubik", category: "sans", desc: "Subtly rounded corners" },
+    { name: "Sora", category: "sans", desc: "Crisp technical screen font" },
+    { name: "Urbanist", category: "sans", desc: "High-fashion modern digital" },
+    { name: "Figtree", category: "sans", desc: "Friendly Scandinavian curves" },
+    { name: "Albert Sans", category: "sans", desc: "Modern Scandinavian clean" },
+    { name: "Public Sans", category: "sans", desc: "Government-grade clarity" },
+    { name: "Red Hat Display", category: "sans", desc: "Enterprise open-source flair" },
+    { name: "Hanken Grotesk", category: "sans", desc: "Versatile editorial neo-grotesk" },
+    { name: "Overpass", category: "sans", desc: "Signage inspired bold look" },
+
+    // ── 2. Modern Geometric & Startup (15)
+    { name: "Outfit", category: "geometric", desc: "Commercial startup favorite" },
+    { name: "Plus Jakarta Sans", category: "geometric", desc: "Modern Indonesian tech design" },
+    { name: "Space Grotesk", category: "geometric", desc: "Futuristic brutalist tech" },
+    { name: "Syne", category: "geometric", desc: "Avant-garde artistic layout" },
+    { name: "Lexend", category: "geometric", desc: "Engineered for maximum reading speed" },
+    { name: "Spline Sans", category: "geometric", desc: "Sharp industrial tech look" },
+    { name: "Epilogue", category: "geometric", desc: "Bold variable display typography" },
+    { name: "Archivo", category: "geometric", desc: "High performance headlines" },
+    { name: "Chivo", category: "geometric", desc: "Grotesque neo-vintage appeal" },
+    { name: "Kumbh Sans", category: "geometric", desc: "Modern geometric clarity" },
+    { name: "Mohave", category: "geometric", desc: "Smooth modern corporate headline" },
+    { name: "Jost", category: "geometric", desc: "Futura-inspired German Bauhaus" },
+    { name: "Be Vietnam Pro", category: "geometric", desc: "Engineered neo-grotesque" },
+    { name: "Sen", category: "geometric", desc: "Sensible geometric proportions" },
+    { name: "Metrophobic", category: "geometric", desc: "Minimalist aerodynamic tech" },
+
+    // ── 3. Luxury & Editorial Serif (15)
+    { name: "Playfair Display", category: "serif", desc: "Editorial luxury & haute couture" },
+    { name: "Lora", category: "serif", desc: "Contemporary brushed literary" },
+    { name: "Merriweather", category: "serif", desc: "Optimized for long-form reading" },
+    { name: "Cormorant Garamond", category: "serif", desc: "Classic traditional sophistication" },
+    { name: "Cinzel", category: "serif", desc: "Roman classical inscriptions" },
+    { name: "PT Serif", category: "serif", desc: "Russian universal news serif" },
+    { name: "Bodoni Moda", category: "serif", desc: "Vogue Italian extreme contrast" },
+    { name: "Spectral", category: "serif", desc: "Google Docs premium book serif" },
+    { name: "EB Garamond", category: "serif", desc: "16th-century humanist Renaissance" },
+    { name: "Frank Ruhl Libre", category: "serif", desc: "Art deco modern classicism" },
+    { name: "Prata", category: "serif", desc: "Elegant teardrop terminals" },
+    { name: "Castoro", category: "serif", desc: "Scholarly academic journal style" },
+    { name: "Domine", category: "serif", desc: "Warm rounded editorial news" },
+    { name: "Marcellus", category: "serif", desc: "Trajan classical column style" },
+    { name: "Cinzel Decorative", category: "serif", desc: "Regal ceremonial inscriptions" },
+
+    // ── 4. Developer Monospace (10)
+    { name: "JetBrains Mono", category: "mono", desc: "Top developer code font" },
+    { name: "Fira Code", category: "mono", desc: "Clean programmatic ligatures" },
+    { name: "Source Code Pro", category: "mono", desc: "Adobe developer terminal standard" },
+    { name: "Space Mono", category: "mono", desc: "Retro 1960s lunar tech" },
+    { name: "IBM Plex Mono", category: "mono", desc: "Engineered corporate industrial" },
+    { name: "Inconsolata", category: "mono", desc: "Clear monospaced code beauty" },
+    { name: "Roboto Mono", category: "mono", desc: "Material design technical look" },
+    { name: "Ubuntu Mono", category: "mono", desc: "Linux command line clarity" },
+    { name: "Courier Prime", category: "mono", desc: "Hollywood screenplay typewriter" },
+    { name: "Overpass Mono", category: "mono", desc: "Technical architectural terminal" },
+
+    // ── 5. Bold & Display (12)
+    { name: "Bebas Neue", category: "display", desc: "Tall monumental movie poster" },
+    { name: "Oswald", category: "display", desc: "Classic gothic condensed headline" },
+    { name: "Anton", category: "display", desc: "Ultra-heavy billboard impactful" },
+    { name: "Righteous", category: "display", desc: "1980s retro grid neon" },
+    { name: "Russo One", category: "display", desc: "Heavy blocky space gaming" },
+    { name: "Orbitron", category: "display", desc: "Sci-fi HUD spacecraft interface" },
+    { name: "Audiowide", category: "display", desc: "Cyber techno gamer display" },
+    { name: "Rajdhani", category: "display", desc: "Angular esports typography" },
+    { name: "Chakra Petch", category: "display", desc: "Military tech squared curves" },
+    { name: "Teko", category: "display", desc: "Condensed athletic sports display" },
+    { name: "Titan One", category: "display", desc: "Fun cartoon punchy weight" },
+    { name: "Bangers", category: "display", desc: "Comic book superhero action" },
+
+    // ── 6. Friendly & Rounded (10)
+    { name: "Quicksand", category: "friendly", desc: "Delicate geometric rounded ends" },
+    { name: "Comfortaa", category: "friendly", desc: "Ultra-smooth rounded lowercase" },
+    { name: "Baloo 2", category: "friendly", desc: "Playful bubbly Indian curves" },
+    { name: "Fredoka", category: "friendly", desc: "Chubby lovable gaming brand" },
+    { name: "Dosis", category: "friendly", desc: "Tall rounded modern display" },
+    { name: "Varela Round", category: "friendly", desc: "Gentle welcoming UI interface" },
+    { name: "Sniglet", category: "friendly", desc: "Cheerful bouncy creative" },
+    { name: "Mali", category: "friendly", desc: "Lighthearted handwritten charm" },
+    { name: "Patrick Hand", category: "friendly", desc: "Natural classroom whiteboard handwriting" },
+    { name: "Caveat", category: "friendly", desc: "Casual fast signature cursive" }
+];
+
+let activeFontCategory = 'all';
+
+function renderFonts() {
+    const grid = document.getElementById('fontsGrid');
+    const currentActive = localStorage.getItem('flixora_font') || 'Inter';
+    const searchQuery = (document.getElementById('fontSearchInput').value || '').toLowerCase().trim();
+
+    const filtered = FONTS_CATALOG.filter(f => {
+        const matchesCat = (activeFontCategory === 'all' || f.category === activeFontCategory);
+        const matchesSearch = f.name.toLowerCase().includes(searchQuery) || f.desc.toLowerCase().includes(searchQuery);
+        return matchesCat && matchesSearch;
+    });
+
+    grid.innerHTML = filtered.map(f => {
+        const isSelected = f.name.toLowerCase() === currentActive.toLowerCase();
+        return `
+            <div class="font-card-option ${isSelected ? 'selected' : ''}" data-font="${f.name}" onclick="selectFont('${f.name}')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:14px;color:var(--text-primary);">${f.name}</strong>
+                    <span class="badge ${isSelected ? 'badge-primary' : 'badge-secondary'}" style="font-size:9px;text-transform:capitalize;">${f.category}</span>
+                </div>
+                <div style="font-family:'${f.name}',sans-serif;font-size:15px;color:var(--text-primary);margin:4px 0;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    The quick brown fox
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);line-height:1.3;">
+                    ${f.desc}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function filterFontCategory(cat) {
+    activeFontCategory = cat;
+    document.querySelectorAll('.font-cat-btn').forEach(btn => {
+        if (btn.dataset.cat === cat) {
+            btn.className = 'btn btn-primary btn-sm font-cat-btn';
+        } else {
+            btn.className = 'btn btn-secondary btn-sm font-cat-btn';
+        }
+    });
+    renderFonts();
+}
+
+function filterFonts() {
+    renderFonts();
+}
+
+function updatePreviewText(val) {
+    const text = val.trim() || 'Grow Your Business With Intelligent Autonomous AI';
+    document.getElementById('previewHeading').textContent = text;
+}
+
+function resetFontDefaults() {
+    selectTheme('light');
+    selectFont('Inter');
+    applyFontScale('100');
+    document.getElementById('fontScaleSlider').value = 100;
+    renderFonts();
+    showToast('Defaults restored (Clean SaaS + Inter + 100%)', 'info');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderFonts();
+    const currentScale = localStorage.getItem('flixora_font_scale') || '100';
+    document.getElementById('fontScaleSlider').value = currentScale;
+    document.getElementById('fontScaleValue').textContent = `${currentScale}%`;
+});
+</script>
+{% endblock %}

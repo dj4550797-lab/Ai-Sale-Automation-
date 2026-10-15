@@ -1,0 +1,152 @@
+{% extends "legal/base_legal.html" %}
+
+{% set active_tab = 'data_deletion' %}
+
+{% block title %}User Data Deletion Instructions & Request — {{ company_name }}{% endblock %}
+{% block meta_description %}Official Meta-compliant User Data Deletion Instructions and Self-Service Deletion Portal for {{ company_name }}.{% endblock %}
+
+{% block legal_content %}
+<div class="legal-wrapper">
+    <div class="legal-hero">
+        <div class="legal-meta-badge">
+            <span class="material-symbols-outlined" style="font-size:14px;">delete_forever</span>
+            Meta App Review & GDPR Compliant
+        </div>
+        <h1>User Data Deletion Instructions</h1>
+        <p>
+            Under Meta Platform Terms, GDPR, and Indian DPDP Act 2023, you have the absolute right to request the complete deletion and erasure of your contact details, chat logs, and business records from our systems.
+        </p>
+        <div style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:var(--space-4);">
+            <strong>Requirement:</strong> Meta Platform Data Deletion Callback & Self-Service Portal
+        </div>
+    </div>
+
+    <div class="legal-layout-grid">
+        <!-- Sidebar Navigation -->
+        <aside class="legal-sidebar">
+            <div class="legal-sidebar-title">Data Deletion Guide</div>
+            <ul class="legal-toc-list">
+                <li><a href="#portal">1. Instant Deletion Portal</a></li>
+                <li><a href="#methods">2. Deletion Methods</a></li>
+                <li><a href="#what-gets-deleted">3. What Data Is Erased</a></li>
+                <li><a href="#confirmation">4. Confirmation & Timelines</a></li>
+                <li><a href="#contact-dpo">5. DPO Contact</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="legal-content-card">
+            <!-- Flash / Status Notice -->
+            {% if confirmation_code %}
+            <div style="background:rgba(16, 185, 129, 0.1);border:1.5px solid #10b981;border-radius:var(--radius-lg);padding:var(--space-5);margin-bottom:var(--space-8);">
+                <div style="display:flex;align-items:center;gap:10px;color:#10b981;font-weight:700;font-size:var(--text-base);margin-bottom:6px;">
+                    <span class="material-symbols-outlined">check_circle</span>
+                    Data Deletion Request Processed Successfully
+                </div>
+                <p style="margin:0;font-size:var(--text-sm);color:var(--text-primary);line-height:1.6;">
+                    Your request has been verified and executed. All associated communication records, AI chat history, and phone number references have been removed or permanently scrubbed from our active database.
+                </p>
+                <div style="margin-top:12px;display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:var(--text-xs);font-weight:600;color:var(--text-secondary);">Confirmation Code:</span>
+                    <code style="background:var(--bg-app);padding:4px 10px;border-radius:4px;font-size:14px;font-weight:700;color:var(--primary-500);border:1px solid var(--border-color);">{{ confirmation_code }}</code>
+                </div>
+            </div>
+            {% endif %}
+
+            <section id="portal">
+                <h2><span class="material-symbols-outlined">delete_sweep</span> 1. Instant Self-Service Deletion Form</h2>
+                <p>
+                    Enter your WhatsApp phone number or business email address below to immediately trigger an automated deletion request across all {{ company_name }} outreach databases and AI chat logs:
+                </p>
+
+                <div style="background:var(--bg-app);border:1px solid var(--border-color);border-radius:var(--radius-xl);padding:var(--space-6);margin:var(--space-5) 0;">
+                    <form method="POST" action="{{ url_for('legal.data_deletion') }}">
+                        <div style="display:grid;grid-template-columns:1fr;gap:var(--space-4);">
+                            <div>
+                                <label style="display:block;font-size:var(--text-xs);font-weight:600;color:var(--text-primary);margin-bottom:6px;">
+                                    WhatsApp Phone Number or Email Address <span style="color:#ef4444;">*</span>
+                                </label>
+                                <input type="text" name="identifier" class="form-input" placeholder="e.g. +91 98765 43210 or yourname@business.com" required style="width:100%;font-size:14px;padding:10px 14px;border-radius:var(--radius-md);border:1px solid var(--border-color);background:var(--bg-surface);color:var(--text-primary);">
+                            </div>
+
+                            <div>
+                                <label style="display:block;font-size:var(--text-xs);font-weight:600;color:var(--text-primary);margin-bottom:6px;">
+                                    Reason for Deletion (Optional)
+                                </label>
+                                <select name="reason" class="form-select" style="width:100%;font-size:14px;padding:10px 14px;border-radius:var(--radius-md);border:1px solid var(--border-color);background:var(--bg-surface);color:var(--text-primary);">
+                                    <option value="opt_out">No longer interested in website upgrades / outreach</option>
+                                    <option value="wrong_number">Wrong number / not associated with this business</option>
+                                    <option value="privacy_request">General Privacy / GDPR erasure request</option>
+                                    <option value="other">Other reason</option>
+                                </select>
+                            </div>
+
+                            <div style="margin-top:var(--space-2);">
+                                <button type="submit" class="btn btn-danger" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;font-size:14px;font-weight:600;">
+                                    <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
+                                    Submit Deletion Request
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section id="methods">
+                <h2><span class="material-symbols-outlined">checklist</span> 2. Alternative Step-by-Step Deletion Methods</h2>
+                <p>You may also initiate data deletion through any of the following convenient channels:</p>
+
+                <h3>Option A: Direct on WhatsApp</h3>
+                <ol>
+                    <li>Open your WhatsApp conversation with our verified AI assistant number.</li>
+                    <li>Type and send the word <code>DELETE MY DATA</code> or <code>STOP</code>.</li>
+                    <li>Our AI will instantly trigger the opt-out suppression sequence and erase conversational context.</li>
+                </ol>
+
+                <h3>Option B: Email Our Privacy Officer</h3>
+                <ol>
+                    <li>Send an email to <a href="mailto:{{ contact_email }}" style="color:var(--primary-500);">{{ contact_email }}</a> with the subject line <em>"Data Deletion Request"</em>.</li>
+                    <li>Include the phone number or domain associated with your records.</li>
+                    <li>Our compliance team will execute the deletion and reply with your official verification confirmation code within 48 business hours.</li>
+                </ol>
+            </section>
+
+            <section id="what-gets-deleted">
+                <h2><span class="material-symbols-outlined">folder_delete</span> 3. What Information Is Erased</h2>
+                <p>When a data deletion request is fulfilled, our systems permanently remove:</p>
+                <ul>
+                    <li>Your primary contact phone number, secondary phone numbers, and WhatsApp IDs.</li>
+                    <li>All inbound and outbound message transcripts, user intents, and AI generation histories.</li>
+                    <li>Any custom notes, follow-up schedules, or proposal drafts saved under your lead profile.</li>
+                    <li>Website performance cache and diagnostic files generated during website audits.</li>
+                </ul>
+            </section>
+
+            <section id="confirmation">
+                <h2><span class="material-symbols-outlined">verified</span> 4. Confirmation Code & Tracking (Meta Compliance)</h2>
+                <p>
+                    In accordance with Meta Platform Data Deletion requirements, every data deletion request receives a unique cryptographic confirmation tracking code.
+                </p>
+                <div class="legal-callout">
+                    You can query the status of any previously submitted deletion request at any time using the permanent status URL format:
+                    <div style="margin-top:6px;font-family:monospace;font-size:13px;color:var(--primary-500);">
+                        {{ website_url }}/data-deletion/status/&lt;CONFIRMATION_CODE&gt;
+                    </div>
+                </div>
+            </section>
+
+            <section id="contact-dpo">
+                <h2><span class="material-symbols-outlined">mail</span> 5. Contact & Assistance</h2>
+                <p>For urgent questions regarding data handling or compliance verification, contact:</p>
+                <div style="background:var(--bg-app);border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:var(--space-4) var(--space-6);margin-top:var(--space-4);">
+                    <div style="font-weight:700;font-size:var(--text-base);color:var(--text-primary);margin-bottom:4px;">{{ company_name }} — Privacy Department</div>
+                    <div style="font-size:var(--text-sm);color:var(--text-secondary);line-height:1.6;">
+                        <strong>Email:</strong> <a href="mailto:{{ contact_email }}" style="color:var(--primary-500);">{{ contact_email }}</a><br>
+                        <strong>Phone / WhatsApp:</strong> {{ contact_phone }}
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+{% endblock %}

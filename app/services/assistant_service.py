@@ -25,8 +25,9 @@ logger = get_logger('services')
 
 class AssistantIntentSchema(BaseModel):
     """Pydantic schema for parsing user intent/tool selection."""
-    tool_to_call: str = Field(..., description="Name of the tool to run. Must be one of: 'lead_analytics', 'sales_analytics', 'search_prds', 'search_conversations', 'pricing_lookup', 'automation_status', 'system_health', 'knowledge_lookup', or 'none'.")
-    search_query: str = Field("", description="The query parameter or term to pass if searching for PRDs, conversations, or knowledge.")
+    tool_to_call: str = Field(..., description="Name of the tool to run. Must be one of: 'lead_analytics', 'sales_analytics', 'search_prds', 'search_conversations', 'pricing_lookup', 'automation_status', 'system_health', 'knowledge_lookup', 'update_company_logo', 'add_knowledge_rule', 'delete_knowledge_rule', 'delete_lead', 'update_agent_persona', 'clear_system_logs', or 'none'.")
+    search_query: str = Field("", description="The query parameter, title, ID, filename, rule content, or setting value.")
+
 
 
 # ── CONTROLLED DISPATCHER TOOLS ────────────────────────────────────────────────
@@ -164,6 +165,113 @@ def lookup_knowledge(query_str=""):
     } for e in entries]
 
 
+def update_company_logo(logo_path_or_url):
+    """Update company logo in settings."""
+    from app.models import Setting
+    val = (logo_path_or_url or '').strip().strip("'\"")
+    stg = Setting.query.filter_by(category='company', key='company_logo').first()
+    if not stg:
+        stg = Setting(category='company', key='company_logo', value=val)
+        db.session.add(stg)
+    else:
+        stg.value = val
+    db.session.commit()
+    logger.info(f"Admin Assistant updated company_logo to {val}")
+    return {"success": True, "action": "update_company_logo", "logo_url": val, "message": f"Company logo has been successfully updated to: {val}"}
+
+
+def add_knowledge_rule(title, content, category='company'):
+    """Add or update an active rule in the Knowledge Base."""
+    from app.models import KnowledgeBase
+    clean_title = (title or '').strip()
+    clean_content = (content or '').strip() or clean_title
+    kb = KnowledgeBase.query.filter_by(title=clean_title).first()
+    if not kb:
+        kb = KnowledgeBase(category=category, title=clean_title, content=clean_content, is_enabled=True)
+        db.session.add(kb)
+    else:
+        kb.content = clean_content
+        kb.is_enabled = True
+    db.session.commit()
+    logger.info(f"Admin Assistant added/updated knowledge rule: {clean_title}")
+    return {"success": True, "action": "add_knowledge_rule", "title": clean_title, "category": category, "message": f"Knowledge base rule '{clean_title}' saved and enabled in category '{category}'."}
+
+
+def delete_knowledge_rule(identifier):
+    """Delete a rule from Knowledge Base by ID or title match."""
+    from app.models import KnowledgeBase
+    target = str(identifier or '').strip()
+    kb = None
+    if target.isdigit():
+        kb = KnowledgeBase.query.get(int(target))
+    if not kb:
+        kb = KnowledgeBase.query.filter(KnowledgeBase.title.ilike(f"%{target}%")).first()
+    if kb:
+        del_title = kb.title
+        db.session.delete(kb)
+        db.session.commit()
+        return {"success": True, "action": "delete_knowledge_rule", "deleted_title": del_title, "message": f"Knowledge rule '{del_title}' deleted successfully."}
+    return {"success": False, "error": f"No knowledge rule found matching '{target}'."}
+
+
+def delete_lead_action(identifier):
+    """Delete a lead and cascade all associated records."""
+    from app.models import Lead
+    target = str(identifier or '').strip()
+    lead = None
+    if target.isdigit():
+        lead = Lead.query.get(int(target))
+    if not lead:
+        lead = Lead.query.filter(Lead.business_name.ilike(f"%{target}%")).first()
+    if lead:
+        bname = lead.business_name
+        lid = lead.id
+        db.session.delete(lead)
+        db.session.commit()
+        return {"success": True, "action": "delete_lead", "lead_id": lid, "business_name": bname, "message": f"Lead #{lid} ({bname}) and all associated deals, PRDs, and chats have been permanently deleted."}
+    return {"success": False, "error": f"No lead found matching identifier '{target}'."}
+
+
+def update_agent_persona(agent_name=None, agent_role=None, tone=None, style=None):
+    """Update Agent persona settings in database."""
+    from app.models import Setting
+    updates = {}
+    if agent_name:
+        updates['agent_name'] = agent_name
+    if agent_role:
+        updates['agent_role'] = agent_role
+    if tone:
+        updates['communication_tone'] = tone
+    if style:
+        updates['sales_style'] = style
+    for k, v in updates.items():
+        stg = Setting.query.filter_by(category='agent', key=k).first()
+        if not stg:
+            db.session.add(Setting(category='agent', key=k, value=v))
+        else:
+            stg.value = v
+    db.session.commit()
+    return {"success": True, "action": "update_agent_persona", "updated": updates, "message": "Agent persona settings updated in database."}
+
+
+def clear_system_logs(log_type='all'):
+    """Clear or truncate system log files."""
+    logs_dir = os.path.join(current_app.config.get('BASE_DIR', ''), 'logs')
+    cleared = []
+    if os.path.exists(logs_dir):
+        for f in os.listdir(logs_dir):
+            if f.endswith('.log') and (log_type == 'all' or log_type in f):
+                fpath = os.path.join(logs_dir, f)
+                try:
+                    with open(fpath, 'w', encoding='utf-8') as lf:
+                        lf.truncate(0)
+                    cleared.append(f)
+                except Exception:
+                    pass
+    return {"success": True, "action": "clear_system_logs", "cleared_files": cleared, "message": f"Cleared log file(s): {', '.join(cleared) if cleared else 'none'}."}
+
+
+
 # ── MAIN DISPATCHER ────────────────────────────────────────────────────────────
 
 def answer_admin_query(query, history=None, image_path=None, model_name=None):
@@ -245,20 +353,43 @@ def answer_admin_query(query, history=None, image_path=None, model_name=None):
     search_term = ''
 
     if not image_base64:
-        intent_prompt = f"""
-        Analyze Admin query and pick ONE tool from:
-        ['lead_analytics', 'sales_analytics', 'search_prds', 'search_conversations', 'pricing_lookup', 'automation_status', 'system_health', 'knowledge_lookup', 'none']
-        Admin query: "{user_query}"
-        """
-        try:
-            schema = AssistantIntentSchema.model_json_schema()
-            intent = llm_router.generate_structured_output(intent_prompt, schema, task_type='intent_parsing')
-            tool = intent.get('tool_to_call', 'none')
-            search_term = intent.get('search_query', '')
-            logger.info(f"Parsed tool to call: {tool} (search term: '{search_term}')")
-        except Exception as e:
-            logger.warning(f"Intent parsing fallback: {e}")
-            tool = 'none'
+        # Keyword Fast Intent Overrides for explicit admin action commands
+        q_clean = user_query.lower()
+        if ('lead' in q_clean) and any(w in q_clean for w in ['delete', 'remove', 'hata', 'delete kar']):
+            tool = 'delete_lead'
+            # Extract possible ID from query
+            import re
+            m = re.search(r'\b\d+\b', q_clean)
+            search_term = m.group(0) if m else q_clean
+        elif any(w in q_clean for w in ['clear log', 'clean log', 'fix log', 'delete log', 'logs clear', 'clear logs']):
+            tool = 'clear_system_logs'
+        elif 'logo' in q_clean and any(w in q_clean for w in ['update', 'set', 'change', 'daal', 'lagao', 'badal']):
+            tool = 'update_company_logo'
+            search_term = user_query
+        elif any(w in q_clean for w in ['knowledge', 'rule', 'faq']) and any(w in q_clean for w in ['add', 'daal', 'save', 'likh', 'insert', 'create']):
+            tool = 'add_knowledge_rule'
+            search_term = user_query
+        elif any(w in q_clean for w in ['knowledge', 'rule', 'faq']) and any(w in q_clean for w in ['delete', 'remove', 'hata']):
+            tool = 'delete_knowledge_rule'
+            search_term = user_query
+        elif any(w in q_clean for w in ['agent name', 'agent role', 'tone', 'sales style']) and any(w in q_clean for w in ['change', 'set', 'update', 'badal']):
+            tool = 'update_agent_persona'
+            search_term = user_query
+
+        if tool == 'none':
+            intent_prompt = f"""
+            Analyze Admin query and pick ONE tool from:
+            ['lead_analytics', 'sales_analytics', 'search_prds', 'search_conversations', 'pricing_lookup', 'automation_status', 'system_health', 'knowledge_lookup', 'update_company_logo', 'add_knowledge_rule', 'delete_knowledge_rule', 'delete_lead', 'update_agent_persona', 'clear_system_logs', 'none']
+            Admin query: "{user_query}"
+            """
+            try:
+                schema = AssistantIntentSchema.model_json_schema()
+                intent = llm_router.generate_structured_output(intent_prompt, schema, task_type='intent_parsing')
+                tool = intent.get('tool_to_call', 'none')
+                search_term = intent.get('search_query', '') or search_term
+                logger.info(f"Parsed tool to call: {tool} (search term: '{search_term}')")
+            except Exception as e:
+                logger.warning(f"Intent parsing fallback: {e}")
 
     # 2. Execute target tool and extract context string
     context_data = None
@@ -278,6 +409,18 @@ def answer_admin_query(query, history=None, image_path=None, model_name=None):
         context_data = get_system_health()
     elif tool == 'knowledge_lookup':
         context_data = lookup_knowledge(search_term)
+    elif tool == 'update_company_logo':
+        context_data = update_company_logo(search_term)
+    elif tool == 'add_knowledge_rule':
+        context_data = add_knowledge_rule(title=search_term[:80], content=search_term, category='company')
+    elif tool == 'delete_knowledge_rule':
+        context_data = delete_knowledge_rule(search_term)
+    elif tool == 'delete_lead':
+        context_data = delete_lead_action(search_term)
+    elif tool == 'update_agent_persona':
+        context_data = update_agent_persona(tone=search_term if 'tone' in search_term else None)
+    elif tool == 'clear_system_logs':
+        context_data = clear_system_logs()
 
     # 3. Formulate final prompt combining context data & history memory
     final_prompt = f"""

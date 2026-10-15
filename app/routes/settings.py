@@ -20,6 +20,14 @@ def index():
     return render_template('settings/index.html')
 
 
+@settings_bp.route('/appearance')
+@login_required
+def appearance():
+    """Themes and 80+ Google Fonts customization page."""
+    return render_template('settings/appearance.html')
+
+
+
 @settings_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():

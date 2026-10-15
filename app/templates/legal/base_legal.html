@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Legal & Compliance — Flixora AI{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Official Privacy Policy, Terms of Service, and Compliance Disclosures for Flixora AI Sales Automation and WhatsApp Messaging.{% endblock %}">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+
+    <style>
+        .legal-header {
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .legal-nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--space-3) var(--space-6);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .legal-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: var(--text-lg);
+            font-weight: 800;
+            color: var(--text-primary);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+        .legal-brand-icon {
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(135deg, var(--primary-600), var(--primary-500));
+            color: #fff;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 800;
+            box-shadow: 0 4px 12px rgba(37,99,235,0.25);
+        }
+        .legal-nav-links {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+        .legal-nav-links a {
+            font-size: var(--text-sm);
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: var(--radius-md);
+            transition: all 0.2s ease;
+        }
+        .legal-nav-links a:hover, .legal-nav-links a.active {
+            color: var(--primary-500);
+            background: var(--primary-50);
+        }
+        [data-theme="dark"] .legal-nav-links a:hover, [data-theme="dark"] .legal-nav-links a.active {
+            background: rgba(59, 130, 246, 0.15);
+        }
+        .legal-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--space-8) var(--space-6) var(--space-12);
+        }
+        .legal-hero {
+            text-align: center;
+            margin-bottom: var(--space-10);
+            padding: var(--space-8) var(--space-4);
+            background: radial-gradient(circle at 50% 20%, rgba(37, 99, 235, 0.08), transparent 70%);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border-color);
+        }
+        .legal-hero h1 {
+            font-size: var(--text-3xl);
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.8px;
+            margin-bottom: var(--space-2);
+        }
+        .legal-hero p {
+            font-size: var(--text-base);
+            color: var(--text-secondary);
+            max-width: 640px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        .legal-meta-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: var(--text-xs);
+            font-weight: 600;
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            margin-bottom: var(--space-3);
+        }
+        .legal-layout-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: var(--space-8);
+            align-items: start;
+        }
+        .legal-sidebar {
+            position: sticky;
+            top: 80px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            box-shadow: var(--shadow-sm);
+        }
+        .legal-sidebar-title {
+            font-size: var(--text-xs);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-tertiary);
+            margin-bottom: var(--space-3);
+            padding: 0 var(--space-2);
+        }
+        .legal-toc-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .legal-toc-list a {
+            display: block;
+            padding: 6px 10px;
+            font-size: var(--text-xs);
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s;
+            line-height: 1.4;
+        }
+        .legal-toc-list a:hover {
+            color: var(--primary-500);
+            background: var(--primary-50);
+            padding-left: 14px;
+        }
+        [data-theme="dark"] .legal-toc-list a:hover {
+            background: rgba(59, 130, 246, 0.15);
+        }
+        .legal-content-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-8) var(--space-10);
+            box-shadow: var(--shadow-md);
+            line-height: 1.7;
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+        .legal-content-card h2 {
+            font-size: var(--text-xl);
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-top: var(--space-8);
+            margin-bottom: var(--space-3);
+            padding-bottom: var(--space-2);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legal-content-card h2:first-of-type {
+            margin-top: 0;
+        }
+        .legal-content-card h3 {
+            font-size: var(--text-base);
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: var(--space-5);
+            margin-bottom: var(--space-2);
+        }
+        .legal-content-card p {
+            margin-bottom: var(--space-4);
+        }
+        .legal-content-card ul, .legal-content-card ol {
+            margin-bottom: var(--space-4);
+            padding-left: var(--space-5);
+        }
+        .legal-content-card li {
+            margin-bottom: var(--space-2);
+        }
+        .legal-content-card strong {
+            color: var(--text-primary);
+        }
+        .legal-callout {
+            padding: var(--space-4) var(--space-5);
+            border-radius: var(--radius-md);
+            margin: var(--space-5) 0;
+            border-left: 4px solid var(--primary-500);
+            background: rgba(37, 99, 235, 0.05);
+        }
+        [data-theme="dark"] .legal-callout {
+            background: rgba(37, 99, 235, 0.12);
+        }
+        .legal-callout.warning {
+            border-left-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.08);
+        }
+        .legal-footer {
+            border-top: 1px solid var(--border-color);
+            padding: var(--space-8) var(--space-6);
+            background: var(--bg-surface);
+            margin-top: var(--space-12);
+            text-align: center;
+            font-size: var(--text-xs);
+            color: var(--text-tertiary);
+        }
+        .legal-footer-links {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-5);
+            margin-bottom: var(--space-4);
+            flex-wrap: wrap;
+        }
+        .legal-footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .legal-footer-links a:hover {
+            color: var(--primary-500);
+        }
+        @media (max-width: 900px) {
+            .legal-layout-grid {
+                grid-template-columns: 1fr;
+            }
+            .legal-sidebar {
+                position: static;
+                margin-bottom: var(--space-6);
+            }
+            .legal-content-card {
+                padding: var(--space-6) var(--space-5);
+            }
+            .legal-nav-links {
+                display: none;
+            }
+        }
+    </style>
+
+    <script>
+        (function() {
+            var theme = localStorage.getItem('flixora_theme') || 'light';
+            if (theme && theme !== 'light') {
+                document.documentElement.setAttribute('data-theme', theme);
+            }
+            var font = localStorage.getItem('flixora_font') || 'inter';
+            document.documentElement.setAttribute('data-font', font);
+        })();
+    </script>
+</head>
+<body style="background:var(--bg-app);color:var(--text-primary);min-height:100vh;display:flex;flex-direction:column;">
+    <!-- Navigation Bar -->
+    <header class="legal-header">
+        <div class="legal-nav-container">
+            <a href="/" class="legal-brand">
+                <span class="legal-brand-icon">F</span>
+                <span>FLIXORA <span style="font-size:12px;color:var(--primary-500);font-weight:600;margin-left:4px;">LEGAL</span></span>
+            </a>
+
+            <nav class="legal-nav-links">
+                <a href="{{ url_for('legal.privacy_policy') }}" class="{% if active_tab == 'privacy' %}active{% endif %}">Privacy Policy</a>
+                <a href="{{ url_for('legal.terms_of_service') }}" class="{% if active_tab == 'terms' %}active{% endif %}">Terms of Service</a>
+                <a href="{{ url_for('legal.data_deletion') }}" class="{% if active_tab == 'data_deletion' %}active{% endif %}">Data Deletion</a>
+                <a href="{{ url_for('legal.whatsapp_policy') }}" class="{% if active_tab == 'whatsapp' %}active{% endif %}">WhatsApp Policy</a>
+            </nav>
+
+            <div style="display:flex;align-items:center;gap:10px;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleTheme()" title="Toggle Dark/Light Mode" style="padding:6px 10px;">
+                    <span class="material-symbols-outlined" style="font-size:16px;">contrast</span>
+                </button>
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary btn-sm" style="display:flex;align-items:center;gap:4px;">
+                    <span class="material-symbols-outlined" style="font-size:16px;">dashboard</span>
+                    Dashboard
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div style="flex:1;">
+        {% block legal_content %}{% endblock %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="legal-footer">
+        <div class="legal-footer-links">
+            <a href="{{ url_for('legal.privacy_policy') }}">Privacy Policy</a>
+            <span>•</span>
+            <a href="{{ url_for('legal.terms_of_service') }}">Terms of Service</a>
+            <span>•</span>
+            <a href="{{ url_for('legal.data_deletion') }}">User Data Deletion</a>
+            <span>•</span>
+            <a href="{{ url_for('legal.whatsapp_policy') }}">WhatsApp Business Policy</a>
+            <span>•</span>
+            <a href="{{ url_for('auth.login') }}">Admin Login</a>
+        </div>
+        <p>© 2026 {{ company_name }}. All rights reserved. Meta, WhatsApp, and related marks are registered trademarks of Meta Platforms, Inc.</p>
+        <p style="margin-top:4px;">Official compliance document certified for Meta WhatsApp Cloud API Production Access & Verification.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+        function toggleTheme() {
+            var current = document.documentElement.getAttribute('data-theme') || 'light';
+            var next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('flixora_theme', next);
+        }
+    </script>
+</body>
+</html>

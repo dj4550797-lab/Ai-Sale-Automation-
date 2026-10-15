@@ -1,0 +1,119 @@
+{% extends "legal/base_legal.html" %}
+
+{% set active_tab = 'whatsapp' %}
+
+{% block title %}WhatsApp Messaging & Anti-Spam Policy — {{ company_name }}{% endblock %}
+{% block meta_description %}Official WhatsApp Business Messaging and Anti-Spam Policy for Flixora AI and {{ company_name }}.{% endblock %}
+
+{% block legal_content %}
+<div class="legal-wrapper">
+    <div class="legal-hero">
+        <div class="legal-meta-badge">
+            <span class="material-symbols-outlined" style="font-size:14px;">chat</span>
+            WhatsApp Business Policy Compliant
+        </div>
+        <h1>WhatsApp Messaging & Anti-Spam Policy</h1>
+        <p>
+            Our standards for transparent, respectful, and fully compliant business communication over the official Meta WhatsApp Cloud API.
+        </p>
+        <div style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:var(--space-4);">
+            <strong>Effective Date:</strong> January 1, 2026 &nbsp;|&nbsp; <strong>Last Updated:</strong> October 15, 2026
+        </div>
+    </div>
+
+    <div class="legal-layout-grid">
+        <!-- Table of Contents -->
+        <aside class="legal-sidebar">
+            <div class="legal-sidebar-title">Policy Sections</div>
+            <ul class="legal-toc-list">
+                <li><a href="#core-principles">1. Core Principles</a></li>
+                <li><a href="#opt-in">2. Consent & Opt-In Policy</a></li>
+                <li><a href="#opt-out">3. Immediate Opt-Out (STOP)</a></li>
+                <li><a href="#message-quality">4. Message Quality & Frequency</a></li>
+                <li><a href="#customer-window">5. 24-Hour Service Window</a></li>
+                <li><a href="#prohibited-use">6. Prohibited Messaging</a></li>
+                <li><a href="#escalation">7. Human Escalation Support</a></li>
+            </ul>
+        </aside>
+
+        <!-- Document Content -->
+        <main class="legal-content-card">
+            <section id="core-principles">
+                <h2><span class="material-symbols-outlined">stars</span> 1. Core Principles</h2>
+                <p>
+                    {{ company_name }} is committed to maintaining the highest messaging quality standards on the WhatsApp platform. We strictly adhere to the <strong>WhatsApp Business Messaging Policy</strong>, ensuring that all communications deliver authentic, high-value consulting insights regarding digital web modernization.
+                </p>
+            </section>
+
+            <section id="opt-in">
+                <h2><span class="material-symbols-outlined">check_circle</span> 2. Consent & Opt-In Policy</h2>
+                <p>
+                    We value consumer privacy and only initiate outreach under established business-to-business guidelines:
+                </p>
+                <ul>
+                    <li>Outreach is limited to publicly listed commercial enterprises where modern web architecture, mobile optimization, or website redesign services offer tangible value.</li>
+                    <li>Inbound inquiries received on our WhatsApp number are treated as explicit opt-in for our AI sales assistant to answer the prospect's direct queries.</li>
+                    <li>We clearly introduce ourselves in our initial greeting: <em>"Hello! I'm Flixora AI, your digital sales and web assistant from {{ company_name }}."</em></li>
+                </ul>
+            </section>
+
+            <section id="opt-out">
+                <h2><span class="material-symbols-outlined">block</span> 3. Immediate Opt-Out & Honoring STOP</h2>
+                <p>
+                    Recipients maintain full control over communications. We offer zero-barrier opt-out triggers:
+                </p>
+                <div class="legal-callout warning">
+                    <strong>Zero Questions Asked Opt-Out:</strong> Replying with words such as <code>STOP</code>, <code>UNSUBSCRIBE</code>, <code>WRONG NUMBER</code>, or <code>NOT INTERESTED</code> immediately halts all automated messages.
+                </div>
+                <p>
+                    Our system records this status in real-time, suppresses automated scheduled follow-ups, and archives the conversation.
+                </p>
+            </section>
+
+            <section id="message-quality">
+                <h2><span class="material-symbols-outlined">thumb_up</span> 4. Message Quality, Rate Limits & Frequency</h2>
+                <p>
+                    To prevent notification fatigue and maintain a superior Meta Quality Rating:
+                </p>
+                <ul>
+                    <li><strong>Strict Rate Limiting:</strong> We never broadcast bulk blasts. Automated outreach is paced with intelligent delays (minimum 30–60 seconds between deliveries).</li>
+                    <li><strong>Maximum Outreach Attempts:</strong> If a lead does not engage after an initial audit proposal and scheduled follow-up, communications cease automatically.</li>
+                    <li><strong>Relevant Content:</strong> Messages are customized specifically to the recipient's website diagnostics, rather than generic spam templates.</li>
+                </ul>
+            </section>
+
+            <section id="customer-window">
+                <h2><span class="material-symbols-outlined">schedule</span> 5. 24-Hour Customer Care Window</h2>
+                <p>
+                    When a lead replies to our message, Meta's 24-hour customer service window opens. During this period, our autonomous AI assistant promptly answers questions regarding website cost, portfolio examples, timeline, and design aesthetics.
+                </p>
+                <p>
+                    Once the 24-hour window expires, free-form messaging terminates, and only Meta-approved customer care update templates may be utilized.
+                </p>
+            </section>
+
+            <section id="prohibited-use">
+                <h2><span class="material-symbols-outlined">warning</span> 6. Prohibited Messaging Categories</h2>
+                <p>
+                    In accordance with WhatsApp Commerce and Messaging Policies, our platform strictly prohibits:
+                </p>
+                <ul>
+                    <li>Transmission of deceptive or misleading commercial representations.</li>
+                    <li>Promotion of prohibited categories (e.g., pharmaceuticals, weapons, adult entertainment, illegal gambling).</li>
+                    <li>Harassment, repetitive unwanted pings, or abusive language.</li>
+                </ul>
+            </section>
+
+            <section id="escalation">
+                <h2><span class="material-symbols-outlined">person_pin</span> 7. Human Escalation Support</h2>
+                <p>
+                    If at any point during a conversation you prefer to speak directly with a human team member:
+                </p>
+                <p>
+                    Simply type <code>TALK TO HUMAN</code> or <code>ADMIN</code>. Our AI assistant will immediately transfer the thread to our lead engineering team, and an administrator will respond directly from our verified WhatsApp business desk.
+                </p>
+            </section>
+        </main>
+    </div>
+</div>
+{% endblock %}

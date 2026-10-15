@@ -80,24 +80,40 @@ def takeover(conversation_id):
 @conversations_bp.route('/reply/<int:conversation_id>', methods=['POST'])
 @login_required
 def reply(conversation_id):
-    """API endpoint to post manual admin responses to client threads."""
+    """API endpoint to post manual admin responses to client threads and send via WhatsApp."""
     content = request.form.get('content', '')
     if not content.strip():
         return jsonify({"success": False, "error": "Message content cannot be empty."}), 400
 
     msg = add_message(conversation_id, 'admin', content, sender_name=current_user.display_name)
-    if msg:
-        return jsonify({
-            "success": True,
-            "message": {
-                "id": msg.id,
-                "sender_type": msg.sender_type,
-                "sender_name": msg.sender_name,
-                "content": msg.content,
-                "created_at": msg.created_at.strftime('%H:%M')
-            }
-        })
-    return jsonify({"success": False, "error": "Could not save message."}), 500
+    if not msg:
+        return jsonify({"success": False, "error": "Could not save message."}), 500
+
+    # Dispatch via WhatsApp if lead has a phone number
+    conv = Conversation.query.get(conversation_id)
+    wa_result = None
+    if conv and conv.lead:
+        phone = conv.lead.primary_phone
+        if phone:
+            from app.integrations.whatsapp_adapter import WhatsAppAdapter
+            from app.utils.logger import get_logger
+            logger = get_logger('whatsapp_outreach')
+            wa_adapter = WhatsAppAdapter()
+            wa_result = wa_adapter.send_text_message(phone, content)
+            logger.info(f"Admin WhatsApp dispatch to {phone}: {wa_result}")
+
+    return jsonify({
+        "success": True,
+        "whatsapp_dispatched": wa_result.get('success') if wa_result else False,
+        "whatsapp_notice": wa_result.get('error') or wa_result.get('notice') if wa_result else None,
+        "message": {
+            "id": msg.id,
+            "sender_type": msg.sender_type,
+            "sender_name": msg.sender_name,
+            "content": msg.content,
+            "created_at": msg.created_at.strftime('%H:%M')
+        }
+    })
 
 
 @conversations_bp.route('/simulate-client/<int:conversation_id>', methods=['POST'])
