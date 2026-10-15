@@ -193,48 +193,91 @@ def webhook():
                 msg_body = msg_obj.get('text', {}).get('body', '') or f"[{msg_type} received]"
             
             if from_phone and msg_body:
-                # 1. Resolve lead by phone number
                 from app.models import LeadContact, Lead, OutreachCampaign, OutreachEvent
-                from app.constants import OutreachStatus
+                from app.constants import OutreachStatus, ConversationStatus
                 clean_phone = from_phone.replace('+', '').replace(' ', '').strip()
                 last_10 = clean_phone[-10:] if len(clean_phone) >= 10 else clean_phone
-                contact = LeadContact.query.filter_by(contact_type='phone').filter(
+                
+                # 1. Resolve lead by phone or whatsapp contact
+                contact = LeadContact.query.filter(
+                    LeadContact.contact_type.in_(['phone', 'whatsapp'])
+                ).filter(
                     (LeadContact.value == clean_phone) | 
                     (LeadContact.value == f"+{clean_phone}") |
                     (LeadContact.value.like(f"%{last_10}%"))
                 ).first()
                 
-                if contact:
-                    lead = Lead.query.get(contact.lead_id)
-                    if lead:
-                        # 2. Get/Create isolated conversation session
-                        conv = create_or_get_conversation(lead.id, channel='whatsapp')
-                        if conv:
-                            # 3. Save incoming client message
-                            # (This automatically triggers LLM intent detection and sales stage sync)
-                            sender_name = value.get('contacts', [{}])[0].get('profile', {}).get('name', lead.business_name or 'Client')
-                            client_msg = add_message(conv.id, 'client', msg_body, sender_name=sender_name)
-                            
-                            # 4. Sync outreach campaign status to REPLIED
-                            camp = OutreachCampaign.query.filter_by(lead_id=lead.id, channel='whatsapp').first()
-                            if camp:
-                                camp.status = OutreachStatus.REPLIED
-                                camp.replied_at = datetime.now(timezone.utc)
-                                evt = OutreachEvent(campaign_id=camp.id, event_type='replied', details=f"Client WhatsApp message: {msg_body[:100]}")
-                                db.session.add(evt)
-                                db.session.commit()
-                            
-                            # 5. Trigger auto response if AI is active
-                            from app.constants import ConversationStatus
-                            if conv.status == ConversationStatus.AI_ACTIVE:
-                                ai_msg = generate_chatbot_reply(conv.id, msg_body)
-                                if ai_msg:
-                                    send_res = adapter.send_text_message(from_phone, ai_msg.content)
-                                    logger.info(f"AI auto replied back to {from_phone}: {send_res}")
-                                    
-                else:
-                    logger.warning(f"Incoming WhatsApp message from unknown phone number: {from_phone}")
+                sender_name = value.get('contacts', [{}])[0].get('profile', {}).get('name', '')
+                
+                if not contact:
+                    # Auto-create inbound lead so prospective client inquiries are never lost
+                    lead_name = sender_name or f"Inbound Client ({clean_phone[-4:]})"
+                    lead = Lead(
+                        business_name=lead_name,
+                        business_category='Inbound WhatsApp Lead',
+                        status='contacted'
+                    )
+                    db.session.add(lead)
+                    db.session.flush()
                     
+                    contact = LeadContact(
+                        lead_id=lead.id,
+                        contact_type='whatsapp',
+                        value=f"+{clean_phone}"
+                    )
+                    db.session.add(contact)
+                    db.session.commit()
+                else:
+                    lead = Lead.query.get(contact.lead_id)
+
+                if lead:
+                    # 2. Get/Create isolated conversation session
+                    conv = create_or_get_conversation(lead.id, channel='whatsapp')
+                    if conv:
+                        # 3. Save incoming client message
+                        display_sender = sender_name or lead.business_name or 'Client'
+                        client_msg = add_message(conv.id, 'client', msg_body, sender_name=display_sender)
+                        
+                        # 4. Sync outreach campaign status to REPLIED
+                        camp = OutreachCampaign.query.filter_by(lead_id=lead.id, channel='whatsapp').first()
+                        if camp:
+                            camp.status = OutreachStatus.REPLIED
+                            camp.replied_at = datetime.now(timezone.utc)
+                            evt = OutreachEvent(campaign_id=camp.id, event_type='replied', details=f"Client WhatsApp message: {msg_body[:100]}")
+                            db.session.add(evt)
+                            db.session.commit()
+                        
+                        # 5. Trigger autonomous AI auto-response if AI mode is active
+                        if conv.status == ConversationStatus.AI_ACTIVE:
+                            ai_msg = generate_chatbot_reply(conv.id, msg_body)
+                            if ai_msg and ai_msg.content:
+                                send_res = adapter.send_text_message(from_phone, ai_msg.content)
+                                logger.info(f"AI auto replied back to {from_phone}: {send_res}")
+
+        # Handle Meta delivery status callbacks (sent, delivered, read, failed)
+        statuses = value.get('statuses', [])
+        if statuses:
+            from app.models import OutreachCampaign, OutreachEvent
+            from app.constants import OutreachStatus
+            for st in statuses:
+                wamid = st.get('id', '')
+                st_val = st.get('status', '')
+                errors = st.get('errors', [])
+                logger.info(f"Meta delivery status update: {wamid} => {st_val} (errors: {errors})")
+                if wamid:
+                    evt = OutreachEvent.query.filter(OutreachEvent.details.like(f"%{wamid}%")).first()
+                    if evt:
+                        camp = OutreachCampaign.query.get(evt.campaign_id)
+                        if camp:
+                            if st_val == 'delivered':
+                                camp.status = OutreachStatus.DELIVERED
+                                camp.delivered_at = datetime.now(timezone.utc)
+                            elif st_val == 'failed':
+                                camp.status = OutreachStatus.FAILED
+                                err_title = errors[0].get('title', 'Delivery rejected by Meta') if errors else 'Delivery rejected'
+                                camp.error_message = err_title
+                            db.session.commit()
+
         return jsonify({"success": True}), 200
     except Exception as e:
         logger.error(f"Error handling WhatsApp webhook: {str(e)}")
