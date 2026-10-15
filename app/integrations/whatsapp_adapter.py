@@ -91,6 +91,43 @@ class WhatsAppAdapter:
         except Exception as e:
             return {"success": False, "error": f"Connection request failed: {str(e)}"}
 
+    def send_template_message(self, recipient_phone, template_name='hello_world', language_code='en_US'):
+        """Send a pre-approved Meta WhatsApp template message (bypasses 24h customer care window)."""
+        clean_phone = recipient_phone.replace('+', '').replace(' ', '').strip()
+        if not self.is_configured():
+            if current_app and current_app.config.get('TEST_MODE'):
+                logger.info(f"[TEST MODE] Simulated WhatsApp template {template_name} to {clean_phone}")
+                return {"success": True, "message_id": f"sim_tmpl_{clean_phone[-4:]}"}
+            return {"success": False, "error": "WhatsApp API credentials are not configured in settings."}
+
+        url = f"https://graph.facebook.com/v20.0/{self.phone_number_id}/messages"
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "messaging_product": "whatsapp",
+            "to": clean_phone,
+            "type": "template",
+            "template": {
+                "name": template_name,
+                "language": {
+                    "code": language_code
+                }
+            }
+        }
+        try:
+            response = requests.post(url, headers=headers, json=payload, timeout=12)
+            if response.status_code in [200, 201]:
+                res_data = response.json()
+                msg_id = res_data.get('messages', [{}])[0].get('id', '')
+                return {"success": True, "message_id": msg_id}
+            else:
+                logger.error(f"WhatsApp Template Send Error: {response.text}")
+                return {"success": False, "error": f"Meta API Error {response.status_code}: {response.text}"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
     def send_text_message(self, recipient_phone, message_text):
         """Send standard WhatsApp text message to target phone number."""
         clean_phone = recipient_phone.replace('+', '').replace(' ', '').strip()
@@ -123,8 +160,19 @@ class WhatsAppAdapter:
                 msg_id = res_data.get('messages', [{}])[0].get('id', '')
                 return {"success": True, "message_id": msg_id}
             else:
-                logger.error(f"WhatsApp API Send Error: {response.text}")
-                return {"success": False, "error": f"WhatsApp API Error {response.status_code}: {response.text}"}
+                err_text = response.text
+                logger.error(f"WhatsApp API Send Error: {err_text}")
+                # If 24-hour window blocked, attempt to send hello_world template to initiate contact
+                if '131047' in err_text or '24 hours' in err_text.lower():
+                    logger.info("24-hour window closed. Attempting initial contact via hello_world template...")
+                    tmpl_res = self.send_template_message(clean_phone, template_name='hello_world')
+                    if tmpl_res.get('success'):
+                        return {
+                            "success": True,
+                            "message_id": tmpl_res.get('message_id'),
+                            "notice": "Initial contact initiated with hello_world template (24h customer window was closed)."
+                        }
+                return {"success": False, "error": f"WhatsApp API Error {response.status_code}: {err_text}"}
         except Exception as e:
             logger.error(f"WhatsApp API exception: {str(e)}")
             return {"success": False, "error": str(e)}
