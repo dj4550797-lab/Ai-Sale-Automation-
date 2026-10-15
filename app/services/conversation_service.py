@@ -64,49 +64,30 @@ def add_message(conversation_id, sender_type, content, sender_name=''):
             status='sent'
         )
         
-        # If it's a client message, perform intent and stage classification
+        # If it's a client message, perform fast intent and stage classification
         if sender_type == 'client':
             try:
-                from app.ai.llm_router import llm_router
-                prompt = f"""
-                Analyze the following customer message and classify it into one of these intents:
-                - greeting
-                - price inquiry
-                - website inquiry
-                - demo inquiry
-                - interested
-                - not interested
-                - objection
-                - wants changes
-                - wants meeting/call
-                - ready to buy
-                - follow-up
-                - stop/contact removal
-                
-                Also map the message to one of these sales stages:
-                - new
-                - contacted
-                - replied
-                - interested
-                - negotiation
-                - won
-                - lost
-                
-                Customer message: "{content}"
-                """
-                schema = {
-                    "type": "object",
-                    "properties": {
-                        "intent": {"type": "string"},
-                        "confidence": {"type": "number"},
-                        "sales_stage": {"type": "string"}
-                    },
-                    "required": ["intent", "confidence", "sales_stage"]
-                }
-                res = llm_router.generate_structured_output(prompt, schema, task_type='intent_classification')
-                msg.detected_intent = res.get('intent', 'replied')
-                msg.confidence = res.get('confidence', 0.9)
-                msg.sales_stage = res.get('sales_stage', 'replied')
+                c = (content or '').lower().strip()
+                if any(w in c for w in ['price', 'cost', 'how much', 'rate', 'package', 'pricing', 'charges', 'charge', 'kya rate', 'kitna']):
+                    detected_intent, detected_stage = 'price inquiry', 'interested'
+                elif any(w in c for w in ['demo', 'sample', 'link', 'preview', 'portfolio', 'website', 'site', 'dikhao', 'design']):
+                    detected_intent, detected_stage = 'demo inquiry', 'interested'
+                elif any(w in c for w in ['hi', 'hello', 'hey', 'namaste', 'halo', 'good morning', 'good evening']):
+                    detected_intent, detected_stage = 'greeting', 'replied'
+                elif any(w in c for w in ['call', 'talk', 'meet', 'phone', 'contact', 'baat', 'timing']):
+                    detected_intent, detected_stage = 'wants meeting/call', 'interested'
+                elif any(w in c for w in ['yes', 'sure', 'interested', 'ready', 'okay', 'ha', 'haan', 'done']):
+                    detected_intent, detected_stage = 'interested', 'interested'
+                elif any(w in c for w in ['no', 'not interested', 'nahi', 'stop', 'remove', 'unsubscribe']):
+                    detected_intent, detected_stage = 'not interested', 'lost'
+                elif any(w in c for w in ['change', 'modify', 'custom', 'food', 'menu', 'color', 'theme']):
+                    detected_intent, detected_stage = 'wants changes', 'negotiation'
+                else:
+                    detected_intent, detected_stage = 'inquiry', 'replied'
+
+                msg.detected_intent = detected_intent
+                msg.confidence = 0.95
+                msg.sales_stage = detected_stage
                 
                 # Sync Lead and SalesDeal status
                 from app.models import Lead, SalesDeal
@@ -191,7 +172,14 @@ def generate_chatbot_reply(conversation_id, user_message):
     plans = PricingPlan.query.filter_by(is_enabled=True).all()
     pricing_text = "\n".join([f"- Plan: {p.plan_name}\n  Price: ₹{p.price}\n  Features: {p.features}" for p in plans])
 
-    # 4. Fetch last 10 messages for conversation history (§48)
+    # 4. Fetch personalized demo URL for this lead
+    from app.models import DemoProject
+    demo = (lead.demos.first() if hasattr(lead, 'demos') else None) or DemoProject.query.filter_by(lead_id=lead.id).first()
+    demo_url = demo.demo_url if (demo and demo.demo_url) else f"https://ai-sale-automation.onrender.com/demos/preview/{lead.id}"
+    if demo_url.startswith('/'):
+        demo_url = f"https://ai-sale-automation.onrender.com{demo_url}"
+
+    # 5. Fetch last 10 messages for conversation history (§48)
     history_msgs = Message.query.filter_by(conversation_id=conversation_id)\
         .order_by(Message.created_at.desc()).limit(10).all()
     history_msgs.reverse() # Sort chronologically
@@ -203,26 +191,29 @@ def generate_chatbot_reply(conversation_id, user_message):
     Company overview: {company_desc}
     Tone constraints: {tone}. Sales style: {style}.
     
+    Lead Details:
+    - Business: {lead.business_name} (Category: {lead.business_category}, City: {lead.city or 'India'})
+    - Personalized Live Interactive Demo Website Link: {demo_url}
+    
     Company Guidelines & FAQ:
     {kb_text}
     
     Pricing Details:
     {pricing_text}
     
-    You are chatting with a prospect from: {lead.business_name} (niche category: {lead.business_category})
-    
     Recent Chat Logs:
     {history_text}
     
     Prospect message: {user_message}
     
-    Instructions:
-    - Respond directly, politely, and concisely to the prospect's question.
-    - Rely ONLY on the Company Guidelines & Pricing details provided.
-    - If the pricing or answer is not in the text, politely tell them you will check with our design team.
-    - Do NOT fabricate names or personal identities.
-    - Do NOT invent discounts or prices.
-    - Return only the raw message text. Do not wrap in markdown blocks.
+    CRITICAL Instructions:
+    - Respond directly, politely, warmly, and concisely to the prospect's question.
+    - When the prospect asks for their website link, demo, prototype, portfolio, or preview (e.g. "demo link bhejo", "link send karo", "sample dikhao", "show demo"), ALWAYS give them their live interactive link: {demo_url}. Inform them warmly that their interactive prototype has ALREADY BEEN BUILT and is live for them to explore! NEVER say you will check with the design team for their demo link.
+    - If they ask about pricing, concisely present our clear packages (Starter Showcase: ₹14,999, Growth Business Engine: ₹24,999, Enterprise Custom App: ₹44,999).
+    - If the user messages in Hindi or Hinglish, answer in friendly and polite Hinglish.
+    - Keep replies concise (2-4 lines/bullets), ideal for WhatsApp reading.
+    - Do NOT fabricate fake personal names or discounts.
+    - Return only the raw message text. Do not wrap in markdown code blocks.
     """
 
     try:
@@ -233,16 +224,14 @@ def generate_chatbot_reply(conversation_id, user_message):
     except Exception as e:
         logger.warning(f"Error generating chatbot reply via LLM ({e}). Using intelligent sales responder.")
         user_lower = user_message.lower()
-        if any(w in user_lower for w in ['price', 'cost', 'rate', 'how much', 'pricing', 'charges']):
-            reply_content = f"Hello! Our website design packages start from ₹14,999 (Basic Showcase) to ₹34,999 (Full Business Automation & Lead Engine), including mobile optimization, SSL security, and WhatsApp integration. Would you like us to walk you through the options for {lead.business_name}?"
-        elif any(w in user_lower for w in ['demo', 'link', 'sample', 'preview', 'portfolio']):
-            demo = lead.demo_projects.first()
-            demo_url = demo.demo_url if demo and demo.demo_url else "our live showcase"
-            reply_content = f"You can preview your prototype concept right here: {demo_url}. Let me know if you would like any adjustments to the branding or features!"
-        elif any(w in user_lower for w in ['yes', 'interested', 'sure', 'ok', 'call', 'talk', 'meeting']):
-            reply_content = f"That sounds great! I will have our team coordinator reach out. What is the best time today for a quick 5-minute conversation?"
+        if any(w in user_lower for w in ['price', 'cost', 'rate', 'how much', 'pricing', 'charges', 'kitna', 'rate kya']):
+            reply_content = f"Hello! Our website design packages start from ₹14,999 (Starter Showcase) to ₹24,999 (Growth Business Engine), including mobile responsive UI, SSL security, custom domain, and WhatsApp booking integration. Would you like us to customize this for {lead.business_name}?"
+        elif any(w in user_lower for w in ['demo', 'link', 'sample', 'preview', 'portfolio', 'site', 'bhejo', 'dikhao']):
+            reply_content = f"You can preview your live prototype concept right here: {demo_url} 🚀 Let me know if you would like any adjustments to the branding or menu!"
+        elif any(w in user_lower for w in ['yes', 'interested', 'sure', 'ok', 'call', 'talk', 'meeting', 'baat']):
+            reply_content = f"That sounds great! I can arrange a quick 5-minute call or WhatsApp consultation for {lead.business_name}. What is the best time today?"
         else:
-            reply_content = f"Thank you for getting back to us! We specialize in high-performance web development and automation for businesses like {lead.business_name}. Let us know if you'd like to review your concept or have any specific questions!"
+            reply_content = f"Thank you for getting back to us! We crafted a live prototype concept for {lead.business_name} here: {demo_url}. Feel free to ask any questions about features or packages!"
         ai_msg = add_message(conversation_id, 'ai', reply_content, sender_name=agent_name)
         return ai_msg
 

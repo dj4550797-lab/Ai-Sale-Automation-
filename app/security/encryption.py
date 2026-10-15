@@ -17,12 +17,12 @@ def _get_fernet():
     key = current_app.config.get('ENCRYPTION_KEY', '').strip()
     if not key:
         # Fallback key so deployment doesn't crash if environment variable was not set
-        key = 'RJby_GfHBHwOdxMt2X8qGxrgK_6Xpx7LDqm3dX64EJM='
+        key = 'fUGU7OHDeDte3DR2zI9VUlvNWo3W58Rjcq2PTz3m0a8='
     try:
         return Fernet(key.encode() if isinstance(key, str) else key)
     except Exception as e:
         logger.error(f'Invalid ENCRYPTION_KEY format: {e}. Using fallback.')
-        return Fernet(b'RJby_GfHBHwOdxMt2X8qGxrgK_6Xpx7LDqm3dX64EJM=')
+        return Fernet(b'fUGU7OHDeDte3DR2zI9VUlvNWo3W58Rjcq2PTz3m0a8=')
 
 
 def encrypt_value(plaintext):

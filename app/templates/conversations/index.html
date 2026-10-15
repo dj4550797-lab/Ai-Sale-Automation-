@@ -182,49 +182,24 @@
         </div>
         
         <!-- Message input footer area -->
-        <div style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--border-color);background:#fff;display:flex;flex-direction:column;gap:var(--space-3);">
+        <div style="padding:var(--space-3) var(--space-4);border-top:1px solid var(--border-color);background:#fff;display:flex;flex-direction:column;gap:var(--space-2);">
             
-            <!-- WhatsApp Client Message Simulator Panel -->
-            <div style="background:var(--background-light);padding:10px 12px;border-radius:var(--radius-md);border:1px solid var(--border-color);display:flex;flex-direction:column;gap:8px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;">
-                    <div style="display:flex;align-items:center;gap:6px;">
-                        <span class="badge" style="background:#25D366;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;">WHATSAPP SIMULATOR</span>
-                        <span style="font-size:11px;font-weight:600;color:var(--text-secondary);">Simulate Client Message & Test AI Auto-Reply</span>
-                    </div>
-                    <span style="font-size:10px;color:var(--text-tertiary);">Knowledge Base & Pricing Connected</span>
-                </div>
-                
-                <!-- Quick client query prompts -->
-                <div style="display:flex;gap:5px;flex-wrap:wrap;">
-                    <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px;padding:3px 8px;border-radius:12px;background:#fff;" onclick="quickSimulate('How much does this website cost, and what pricing packages do you offer?')">
-                        💰 Pricing inquiry
-                    </button>
-                    <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px;padding:3px 8px;border-radius:12px;background:#fff;" onclick="quickSimulate('Can customers book tables directly via WhatsApp on the site?')">
-                        📱 WhatsApp booking feature?
-                    </button>
-                    <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px;padding:3px 8px;border-radius:12px;background:#fff;" onclick="quickSimulate('How fast can you launch the website for our restaurant?')">
-                        ⚡ Turnaround time?
-                    </button>
-                    <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px;padding:3px 8px;border-radius:12px;background:#fff;" onclick="quickSimulate('Do you include custom domain and SSL hosting in the price?')">
-                        🌐 Domain & hosting?
-                    </button>
-                    <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px;padding:3px 8px;border-radius:12px;background:#fff;" onclick="quickSimulate('Can we customize the food menu dishes and color theme?')">
-                        🎨 Customization options?
-                    </button>
-                </div>
-
-                <div style="display:flex;gap:var(--space-2);align-items:center;">
-                    <input type="text" id="sim_client_input" class="form-input" style="flex:1;font-size:var(--text-sm);padding:6px 10px;background:#fff;"
-                           placeholder="Type client message as prospect (e.g. Can we connect our menu?)"
-                           onkeypress="if(event.key === 'Enter') submitSimulatedClientMessage()">
-                    <button class="btn btn-sm" style="background:#25D366;color:#fff;border:none;display:inline-flex;align-items:center;gap:4px;font-weight:600;padding:6px 12px;cursor:pointer;"
-                            onclick="submitSimulatedClientMessage()">
-                        <span class="material-symbols-outlined" style="font-size:16px;">send</span>
-                        Simulate Client Reply
-                    </button>
-                </div>
+            <!-- Admin Quick Response Templates -->
+            {% set demo_obj = active_conv.lead.demos.first() if (active_conv and active_conv.lead and active_conv.lead.demos) else None %}
+            {% set active_demo_link = demo_obj.demo_url if (demo_obj and demo_obj.demo_url) else ('https://ai-sale-automation.onrender.com/demos/preview/' ~ active_conv.lead.id if active_conv and active_conv.lead else '') %}
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                <span style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;">Quick Fill:</span>
+                <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px;padding:2px 8px;border-radius:12px;background:#f8fafc;" onclick="insertAdminSnippet('Namaste! Here is your exclusive interactive website prototype: {{ active_demo_link }} 🚀 Let us know if you would like any customizations!')">
+                    🔗 Insert Demo Link
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px;padding:2px 8px;border-radius:12px;background:#f8fafc;" onclick="insertAdminSnippet('Our web packages start at ₹14,999 (Starter Showcase) and ₹24,999 (Growth Business Engine), including custom domain, SSL, and WhatsApp booking integration.')">
+                    💰 Insert Pricing
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px;padding:2px 8px;border-radius:12px;background:#f8fafc;" onclick="insertAdminSnippet('Would you be available for a quick 5-minute call or WhatsApp consultation today to discuss your website launch?')">
+                    📞 Request Call
+                </button>
             </div>
-            
+
             <!-- Manual Admin input -->
             <div style="display:flex;gap:var(--space-2);align-items:flex-end;">
                 <textarea id="admin_reply_text" class="form-input" rows="2" style="resize:none;font-size:var(--text-sm);padding:8px 12px;flex:1;"
@@ -233,6 +208,37 @@
                     <span class="material-symbols-outlined">send</span>
                 </button>
             </div>
+
+            <!-- Optional Tester Simulator (Collapsible to prevent accidental clicks) -->
+            <details style="border:1px dashed var(--border-color);border-radius:var(--radius-md);background:var(--background-light);padding:6px 10px;font-size:11px;margin-top:2px;">
+                <summary style="cursor:pointer;font-weight:600;color:var(--text-secondary);display:flex;align-items:center;gap:6px;user-select:none;">
+                    <span class="badge" style="background:#25D366;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;">TESTER SIMULATOR</span>
+                    <span>Test Inbound Client Message & Verify AI Auto-Response (Click to expand)</span>
+                </summary>
+                <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
+                    <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                        <button type="button" class="btn btn-secondary btn-sm" style="font-size:10px;padding:2px 6px;border-radius:8px;background:#fff;" onclick="quickSimulate('Can you send the demo prototype link for our business?')">
+                            🔗 Ask for Demo Link
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" style="font-size:10px;padding:2px 6px;border-radius:8px;background:#fff;" onclick="quickSimulate('How much does this website cost, and what pricing packages do you offer?')">
+                            💰 Ask for Pricing
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" style="font-size:10px;padding:2px 6px;border-radius:8px;background:#fff;" onclick="quickSimulate('Can customers book tables directly via WhatsApp on the site?')">
+                            📱 WhatsApp Booking?
+                        </button>
+                    </div>
+                    <div style="display:flex;gap:var(--space-2);align-items:center;">
+                        <input type="text" id="sim_client_input" class="form-input" style="flex:1;font-size:12px;padding:4px 8px;background:#fff;"
+                               placeholder="Type simulated client message (e.g. Price kya hai?)"
+                               onkeypress="if(event.key === 'Enter') submitSimulatedClientMessage()">
+                        <button class="btn btn-sm" style="background:#25D366;color:#fff;border:none;display:inline-flex;align-items:center;gap:4px;font-weight:600;padding:4px 10px;font-size:11px;cursor:pointer;"
+                                onclick="submitSimulatedClientMessage()">
+                            <span class="material-symbols-outlined" style="font-size:14px;">send</span>
+                            Simulate Client
+                        </button>
+                    </div>
+                </div>
+            </details>
         </div>
         {% else %}
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;color:var(--text-tertiary);padding:var(--space-8);">
@@ -351,6 +357,14 @@ function submitAdminReply() {
             alert("Error: " + data.error);
         }
     });
+}
+
+function insertAdminSnippet(text) {
+    const textarea = document.getElementById('admin_reply_text');
+    if (textarea) {
+        textarea.value = text;
+        textarea.focus();
+    }
 }
 
 function quickSimulate(promptText) {
