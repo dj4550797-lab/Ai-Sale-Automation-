@@ -142,6 +142,22 @@
                         </td>
                         <td data-label="Last Action" style="font-size:var(--text-sm);color:var(--text-secondary);">{{ lead.last_action or 'Discovered' }}</td>
                         <td data-label="Actions" style="white-space:nowrap;">
+                            {% set lead_ph = '' %}
+                            {% for c in lead.contacts %}
+                                {% if c.contact_type in ['phone', 'whatsapp'] and not lead_ph %}
+                                    {% set lead_ph = c.value %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if lead_ph %}
+                            {% set clean_p = lead_ph|replace('+', '')|replace(' ', '')|replace('-', '') %}
+                            <a href="https://wa.me/{{ clean_p }}?text={{ ('Hello Team ' ~ lead.business_name ~ '! Live website prototype: https://ai-sale-automation.onrender.com/demos/preview/' ~ lead.id)|urlencode }}" 
+                               target="_blank" 
+                               class="btn btn-sm" 
+                               style="background:#25D366; color:#fff; border:none; padding:5px 8px; margin-right:4px; text-decoration:none; display:inline-flex; align-items:center; vertical-align:middle; box-shadow:0 1px 4px rgba(37,211,102,0.3);"
+                               title="Open WhatsApp Chat ({{ lead_ph }})">
+                                <span class="material-symbols-outlined" style="font-size:16px;">chat</span>
+                            </a>
+                            {% endif %}
                             <a href="{{ url_for('leads.detail', id=lead.id) }}" class="btn btn-sm btn-secondary" style="margin-right:4px;">
                                 Details
                             </a>
