@@ -60,15 +60,16 @@
                             </span>
                         </label>
                         
+                        <textarea id="kb_content_{{ entry.id }}" style="display:none;">{{ entry.content }}</textarea>
                         <button class="btn btn-ghost btn-sm" style="padding:4px 8px;min-width:auto;"
-                                onclick="openEditModal({{ entry.id }}, '{{ entry.category }}', '{{ entry.title|escape }}', '{{ entry.content|replace('\n', '\\n')|replace("'", "\\'")|escape }}', {{ 'true' if entry.is_enabled else 'false' }})">
+                                onclick="openEditModalById({{ entry.id }}, '{{ entry.category }}', {{ entry.title|tojson }}, {{ 'true' if entry.is_enabled else 'false' }})" title="Edit Entry">
                             <span class="material-symbols-outlined" style="font-size:18px;">edit</span>
                         </button>
                         
                         <form method="POST" action="{{ url_for('knowledge.delete', id=entry.id) }}" 
                               onsubmit="return confirm('Are you sure you want to delete this entry?');" style="display:inline;">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-ghost btn-sm" style="padding:4px 8px;min-width:auto;color:var(--error);">
+                            <button type="submit" class="btn btn-ghost btn-sm" style="padding:4px 8px;min-width:auto;color:var(--error);" title="Delete Entry">
                                 <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
                             </button>
                         </form>
@@ -186,15 +187,18 @@ function openAddModal(defaultCat = '') {
     openDialog('addEntryModal');
 }
 
-function openEditModal(id, category, title, content, isEnabled) {
+function openEditModalById(id, category, title, isEnabled) {
     document.getElementById('editForm').action = "{{ url_for('knowledge.index') }}/edit/" + id;
     document.getElementById('edit_category').value = category;
     document.getElementById('edit_title').value = title;
-    
-    // Replace escaped newlines for display
-    document.getElementById('edit_content').value = content;
+    var contentEl = document.getElementById('kb_content_' + id);
+    document.getElementById('edit_content').value = contentEl ? contentEl.value : '';
     document.getElementById('edit_is_enabled').checked = isEnabled;
     openDialog('editEntryModal');
+}
+
+function openEditModal(id, category, title, content, isEnabled) {
+    openEditModalById(id, category, title, isEnabled);
 }
 
 function toggleEntry(id, checkbox) {

@@ -65,6 +65,15 @@ def create_app(config_name=None):
             app.logger.error(f"Health check failed: {str(e)}")
             return {"status": "unhealthy", "database": "error", "error": str(e)}, 500
 
+    # Favicon endpoints to eliminate 404 console errors
+    @app.route('/favicon.ico')
+    @app.route('/favicon.svg')
+    def favicon():
+        """Serve application favicon directly to eliminate 404 errors."""
+        from flask import send_from_directory
+        return send_from_directory(os.path.join(app.root_path, 'static'),
+                                   'favicon.svg', mimetype='image/svg+xml')
+
     # Auto-run lightweight startup migrations and seeding
     _run_startup_migrations(app)
 
@@ -545,26 +554,37 @@ def _register_error_handlers(app):
 
 def _register_context(app):
     """Register template context processors."""
-    from app.models import Notification
+    from app.models import Notification, Setting
     from flask_login import current_user
     from app.extensions import db
 
     @app.context_processor
     def inject_globals():
         unread_notifications = 0
+        company_name = 'Flixora'
+        company_logo = '/static/img/logo.svg'
         try:
             if current_user and current_user.is_authenticated:
                 unread_notifications = Notification.query.filter_by(
                     user_id=current_user.id, is_read=False
                 ).count()
+            
+            c_name_stg = Setting.query.filter_by(category='company', key='company_name').first()
+            if c_name_stg and c_name_stg.value:
+                company_name = c_name_stg.value
+
+            c_logo_stg = Setting.query.filter_by(category='company', key='company_logo').first()
+            if c_logo_stg and c_logo_stg.value:
+                company_logo = c_logo_stg.value
         except Exception:
             try:
                 db.session.rollback()
             except Exception:
                 pass
-            unread_notifications = 0
 
         return {
-            'app_name': 'Flixora',
+            'app_name': company_name or 'Flixora',
+            'company_name': company_name or 'Flixora',
+            'company_logo': company_logo,
             'unread_notifications': unread_notifications,
         }

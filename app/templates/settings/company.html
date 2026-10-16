@@ -11,8 +11,35 @@
 
 <div class="card" style="max-width:720px;">
     <div class="card-body">
-        <form method="POST" action="{{ url_for('settings.company') }}">
+        <form method="POST" action="{{ url_for('settings.company') }}" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- Company Brand & Logo Section -->
+            <div style="background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:var(--radius-lg); padding:var(--space-4); margin-bottom:var(--space-5);">
+                <label class="form-label" style="font-weight:600; font-size:var(--text-sm); margin-bottom:var(--space-3); display:flex; align-items:center; gap:8px;">
+                    <span class="material-symbols-outlined" style="font-size:20px; color:var(--primary);">image</span>
+                    Company Logo & Brand Identity
+                </label>
+                <div style="display:flex; align-items:center; gap:var(--space-4); flex-wrap:wrap;">
+                    <div style="width:72px; height:72px; border-radius:var(--radius-md); border:2px dashed var(--border-color); background:var(--bg-card); display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                        {% if settings.get('company_logo') %}
+                            <img src="{{ settings.get('company_logo') }}" alt="Logo" style="max-width:100%; max-height:100%; object-fit:contain;" id="logoPreview">
+                        {% else %}
+                            <span class="logo-icon" style="font-size:28px;">{{ settings.get('company_name', 'F')[:1]|upper }}</span>
+                        {% endif %}
+                    </div>
+                    <div style="flex:1; min-width:240px; display:flex; flex-direction:column; gap:var(--space-2);">
+                        <div>
+                            <label class="form-label" style="font-size:var(--text-xs); margin-bottom:2px;">Upload New Logo (SVG, PNG, JPG)</label>
+                            <input type="file" class="form-input" name="logo_file" accept="image/*" style="padding:6px; font-size:var(--text-xs);" onchange="if(this.files && this.files[0]){ var reader = new FileReader(); reader.onload = function(e){ var p = document.getElementById('logoPreview'); if(p){ p.src = e.target.result; } }; reader.readAsDataURL(this.files[0]); }">
+                        </div>
+                        <div>
+                            <label class="form-label" style="font-size:var(--text-xs); margin-bottom:2px;">Or Direct Image URL / Static Path</label>
+                            <input type="text" class="form-input" name="company_logo" value="{{ settings.get('company_logo', '') }}" placeholder="/static/img/logo.svg or https://..." style="font-size:var(--text-xs);">
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div class="form-row">
                 <div class="form-group">

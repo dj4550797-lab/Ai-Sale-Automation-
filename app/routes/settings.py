@@ -74,12 +74,24 @@ def company():
     """Company settings (§93)."""
     if request.method == 'POST':
         fields = ['company_name', 'company_description', 'website', 
-                  'business_email', 'business_phone', 'business_location']
+                  'business_email', 'business_phone', 'business_location', 'company_logo']
         for field in fields:
             value = sanitize_string(request.form.get(field, ''), max_length=1000)
-            _set_setting('company', field, value)
+            if value or field in request.form:
+                _set_setting('company', field, value)
+
+        # Handle logo file upload
+        logo_file = request.files.get('logo_file')
+        if logo_file and logo_file.filename:
+            from werkzeug.utils import secure_filename
+            fname = secure_filename(logo_file.filename)
+            static_img_dir = os.path.join(current_app.root_path, 'static', 'img')
+            os.makedirs(static_img_dir, exist_ok=True)
+            logo_file.save(os.path.join(static_img_dir, fname))
+            _set_setting('company', 'company_logo', f"/static/img/{fname}")
+
         db.session.commit()
-        flash('Company settings updated.', 'success')
+        flash('Company settings and logo updated successfully.', 'success')
         return redirect(url_for('settings.company'))
 
     settings = _get_settings('company')

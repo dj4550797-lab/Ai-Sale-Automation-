@@ -166,18 +166,37 @@ def lookup_knowledge(query_str=""):
 
 
 def update_company_logo(logo_path_or_url):
-    """Update company logo in settings."""
+    """Update company logo and brand identity in settings."""
+    import re
     from app.models import Setting
-    val = (logo_path_or_url or '').strip().strip("'\"")
+    raw = (logo_path_or_url or '').strip().strip("'\"")
+
+    # Check if a new company name was also specified
+    name_match = re.search(r'(?:name|company)\s*(?:to|is|as|ko)?\s*["\']?([A-Za-z0-9_\-\s]{2,30})["\']?', raw, re.IGNORECASE)
+    if name_match:
+        extracted_name = name_match.group(1).strip()
+        if extracted_name.lower() not in ['change', 'update', 'set', 'logo', 'daal', 'kr', 'ka']:
+            stg_name = Setting.query.filter_by(category='company', key='company_name').first()
+            if not stg_name:
+                stg_name = Setting(category='company', key='company_name', value=extracted_name)
+                db.session.add(stg_name)
+            else:
+                stg_name.value = extracted_name
+
+    # Determine logo value
+    logo_val = raw
+    if not ('.' in raw and any(ext in raw.lower() for ext in ['.png', '.jpg', '.jpeg', '.svg', '.webp'])) and not raw.startswith('/'):
+        logo_val = "/static/img/logo.svg"
+        
     stg = Setting.query.filter_by(category='company', key='company_logo').first()
     if not stg:
-        stg = Setting(category='company', key='company_logo', value=val)
+        stg = Setting(category='company', key='company_logo', value=logo_val)
         db.session.add(stg)
     else:
-        stg.value = val
+        stg.value = logo_val
     db.session.commit()
-    logger.info(f"Admin Assistant updated company_logo to {val}")
-    return {"success": True, "action": "update_company_logo", "logo_url": val, "message": f"Company logo has been successfully updated to: {val}"}
+    logger.info(f"Admin Assistant updated company_logo to {logo_val}")
+    return {"success": True, "action": "update_company_logo", "logo_url": logo_val, "message": f"Company logo and brand asset updated to: {logo_val}"}
 
 
 def add_knowledge_rule(title, content, category='company'):
@@ -199,19 +218,42 @@ def add_knowledge_rule(title, content, category='company'):
 
 def delete_knowledge_rule(identifier):
     """Delete a rule from Knowledge Base by ID or title match."""
+    import re
     from app.models import KnowledgeBase
-    target = str(identifier or '').strip()
+    raw = str(identifier or '').strip()
+
+    # 1. Check if an ID number is present in the string
+    digit_match = re.search(r'\b\d+\b', raw)
     kb = None
-    if target.isdigit():
-        kb = KnowledgeBase.query.get(int(target))
+    if digit_match:
+        rule_id = int(digit_match.group(0))
+        kb = KnowledgeBase.query.get(rule_id)
+
+    # 2. Extract cleaned keyword by removing command words
     if not kb:
-        kb = KnowledgeBase.query.filter(KnowledgeBase.title.ilike(f"%{target}%")).first()
+        clean_kw = re.sub(r'\b(delete|remove|hata|hatao|rule|rules|knowledge|base|faq|kar|do|karo|plz|please|deet|change)\b', '', raw, flags=re.IGNORECASE).strip()
+        if clean_kw:
+            kb = KnowledgeBase.query.filter(
+                (KnowledgeBase.title.ilike(f"%{clean_kw}%")) |
+                (KnowledgeBase.content.ilike(f"%{clean_kw}%"))
+            ).first()
+
     if kb:
         del_title = kb.title
+        del_id = kb.id
         db.session.delete(kb)
         db.session.commit()
-        return {"success": True, "action": "delete_knowledge_rule", "deleted_title": del_title, "message": f"Knowledge rule '{del_title}' deleted successfully."}
-    return {"success": False, "error": f"No knowledge rule found matching '{target}'."}
+        return {"success": True, "action": "delete_knowledge_rule", "deleted_id": del_id, "deleted_title": del_title, "message": f"Knowledge rule #{del_id} ('{del_title}') has been permanently deleted from database."}
+
+    # If no rule matched, list available rules
+    all_rules = KnowledgeBase.query.limit(8).all()
+    rule_list = [f"ID {r.id}: '{r.title}' ({r.category})" for r in all_rules]
+    return {
+        "success": False,
+        "error": f"No knowledge rule found matching '{raw}'.",
+        "available_rules": rule_list,
+        "message": f"Could not find a rule matching '{raw}'. Available rules: {', '.join(rule_list) if rule_list else 'No rules'}. Please specify the exact ID or title to delete."
+    }
 
 
 def delete_lead_action(identifier):

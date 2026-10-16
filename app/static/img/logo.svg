@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60">
+  <defs>
+    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+  </defs>
+  <!-- Icon Mark -->
+  <rect x="5" y="8" width="44" height="44" rx="10" fill="url(#logoGrad)" />
+  <path d="M19 20h18v5.5H24.5v5.5H35v5.5H24.5V42H19V20z" fill="#ffffff" />
+  <!-- Brand Text -->
+  <text x="60" y="38" font-family="'Inter', sans-serif" font-size="24" font-weight="800" fill="#ffffff" letter-spacing="2">FLIXORA</text>
+</svg>
