@@ -292,10 +292,10 @@
             </a>
 
             <nav class="legal-nav-links">
-                <a href="{{ url_for('legal.privacy_policy') }}" class="{% if active_tab == 'privacy' %}active{% endif %}">Privacy Policy</a>
-                <a href="{{ url_for('legal.terms_of_service') }}" class="{% if active_tab == 'terms' %}active{% endif %}">Terms of Service</a>
-                <a href="{{ url_for('legal.data_deletion') }}" class="{% if active_tab == 'data_deletion' %}active{% endif %}">Data Deletion</a>
-                <a href="{{ url_for('legal.whatsapp_policy') }}" class="{% if active_tab == 'whatsapp' %}active{% endif %}">WhatsApp Policy</a>
+                <a href="{{ url_for('legal.privacy_policy') }}" onclick="if(window.switchLegalTab){switchLegalTab('privacy');return false;}" class="{% if active_tab == 'privacy' or not active_tab %}active{% endif %}">Privacy Policy</a>
+                <a href="{{ url_for('legal.terms_of_service') }}" onclick="if(window.switchLegalTab){switchLegalTab('terms');return false;}" class="{% if active_tab == 'terms' %}active{% endif %}">Terms of Service</a>
+                <a href="{{ url_for('legal.data_deletion') }}" onclick="if(window.switchLegalTab){switchLegalTab('deletion');return false;}" class="{% if active_tab == 'deletion' or active_tab == 'data_deletion' %}active{% endif %}">Data Deletion</a>
+                <a href="{{ url_for('legal.whatsapp_policy') }}" onclick="if(window.switchLegalTab){switchLegalTab('whatsapp');return false;}" class="{% if active_tab == 'whatsapp' %}active{% endif %}">WhatsApp Policy</a>
             </nav>
 
             <div style="display:flex;align-items:center;gap:10px;">
@@ -318,13 +318,13 @@
     <!-- Footer -->
     <footer class="legal-footer">
         <div class="legal-footer-links">
-            <a href="{{ url_for('legal.privacy_policy') }}">Privacy Policy</a>
+            <a href="{{ url_for('legal.privacy_policy') }}" onclick="if(window.switchLegalTab){switchLegalTab('privacy');return false;}">Privacy Policy</a>
             <span>•</span>
-            <a href="{{ url_for('legal.terms_of_service') }}">Terms of Service</a>
+            <a href="{{ url_for('legal.terms_of_service') }}" onclick="if(window.switchLegalTab){switchLegalTab('terms');return false;}">Terms of Service</a>
             <span>•</span>
-            <a href="{{ url_for('legal.data_deletion') }}">User Data Deletion</a>
+            <a href="{{ url_for('legal.data_deletion') }}" onclick="if(window.switchLegalTab){switchLegalTab('deletion');return false;}">User Data Deletion</a>
             <span>•</span>
-            <a href="{{ url_for('legal.whatsapp_policy') }}">WhatsApp Business Policy</a>
+            <a href="{{ url_for('legal.whatsapp_policy') }}" onclick="if(window.switchLegalTab){switchLegalTab('whatsapp');return false;}">WhatsApp Business Policy</a>
             <span>•</span>
             <a href="{{ url_for('auth.login') }}">Admin Login</a>
         </div>

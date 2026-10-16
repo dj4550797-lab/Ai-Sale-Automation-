@@ -87,7 +87,9 @@
     --space-16: 64px;
 
     /* ── Typography ──────────────────────────────────────── */
-    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-family: var(--font-sans);
+    --font-family-base: var(--font-sans);
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
     --text-xs: 0.75rem;
@@ -901,5 +903,381 @@ button, input, select, textarea {
     background: #14070f !important;
     border-bottom: 1px solid rgba(244, 63, 94, 0.18) !important;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   THEME 11: TOKYO NIGHT [data-theme="tokyo"]
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="tokyo"] {
+    --primary-50: rgba(125, 207, 255, 0.15);
+    --primary-500: #7dcfff;
+    --primary-600: #7aa2f7;
+    --surface: #1a1b26;
+    --surface-dim: #13141f;
+    --surface-container: #24283b;
+    --surface-elevated: #2f354f;
+    --border-color: rgba(122, 162, 247, 0.25);
+    --border-focus: #7dcfff;
+    --text-primary: #c0caf5;
+    --text-secondary: #9aa5ce;
+    --text-muted: #565f89;
+}
+[data-theme="tokyo"] body, [data-theme="tokyo"] .app {
+    background: #16161e !important;
+    color: #c0caf5 !important;
+}
+[data-theme="tokyo"] .card, [data-theme="tokyo"] .kpi-card, [data-theme="tokyo"] .dialog {
+    background: #1f2335 !important;
+    border: 1px solid rgba(122, 162, 247, 0.22) !important;
+}
+[data-theme="tokyo"] .sidebar {
+    background: #13141f !important;
+    border-right: 1px solid rgba(122, 162, 247, 0.2) !important;
+}
+[data-theme="tokyo"] .topbar {
+    background: #1a1b26 !important;
+    border-bottom: 1px solid rgba(122, 162, 247, 0.2) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME 12: ROSE GOLD LUXURY [data-theme="rose"]
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="rose"] {
+    --primary-50: rgba(251, 113, 133, 0.18);
+    --primary-500: #fb7185;
+    --primary-600: #f43f5e;
+    --surface: #1e1924;
+    --surface-dim: #151119;
+    --surface-container: #2b2333;
+    --surface-elevated: #372d42;
+    --border-color: rgba(251, 113, 133, 0.22);
+    --border-focus: #fda4af;
+    --text-primary: #fff1f2;
+    --text-secondary: #fbcfe8;
+    --text-muted: #f472b6;
+}
+[data-theme="rose"] body, [data-theme="rose"] .app {
+    background: #141019 !important;
+    color: #fff1f2 !important;
+}
+[data-theme="rose"] .card, [data-theme="rose"] .kpi-card, [data-theme="rose"] .dialog {
+    background: #231c2a !important;
+    border: 1px solid rgba(251, 113, 133, 0.25) !important;
+}
+[data-theme="rose"] .sidebar {
+    background: #120e16 !important;
+    border-right: 1px solid rgba(251, 113, 133, 0.18) !important;
+}
+[data-theme="rose"] .topbar {
+    background: #191420 !important;
+    border-bottom: 1px solid rgba(251, 113, 133, 0.18) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME 13: WARM ESPRESSO & LATTE [data-theme="coffee"]
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="coffee"] {
+    --primary-50: rgba(217, 119, 6, 0.18);
+    --primary-500: #d97706;
+    --primary-600: #b45309;
+    --surface: #1e1915;
+    --surface-dim: #14100d;
+    --surface-container: #2b231e;
+    --surface-elevated: #3b302a;
+    --border-color: rgba(217, 119, 6, 0.22);
+    --border-focus: #f59e0b;
+    --text-primary: #fef3c7;
+    --text-secondary: #fde68a;
+    --text-muted: #d97706;
+}
+[data-theme="coffee"] body, [data-theme="coffee"] .app {
+    background: #130f0c !important;
+    color: #fef3c7 !important;
+}
+[data-theme="coffee"] .card, [data-theme="coffee"] .kpi-card, [data-theme="coffee"] .dialog {
+    background: #241d18 !important;
+    border: 1px solid rgba(217, 119, 6, 0.24) !important;
+}
+[data-theme="coffee"] .sidebar {
+    background: #110d0a !important;
+    border-right: 1px solid rgba(217, 119, 6, 0.18) !important;
+}
+[data-theme="coffee"] .topbar {
+    background: #191410 !important;
+    border-bottom: 1px solid rgba(217, 119, 6, 0.18) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME 14: NORDIC ARCTIC FROST [data-theme="nordic"]
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="nordic"] {
+    --primary-50: rgba(56, 189, 248, 0.18);
+    --primary-500: #38bdf8;
+    --primary-600: #0284c7;
+    --surface: #0f172a;
+    --surface-dim: #090e1a;
+    --surface-container: #1e293b;
+    --surface-elevated: #334155;
+    --border-color: rgba(56, 189, 248, 0.25);
+    --border-focus: #7dd3fc;
+    --text-primary: #f0f9ff;
+    --text-secondary: #bae6fd;
+    --text-muted: #38bdf8;
+}
+[data-theme="nordic"] body, [data-theme="nordic"] .app {
+    background: #090e1a !important;
+    color: #f0f9ff !important;
+}
+[data-theme="nordic"] .card, [data-theme="nordic"] .kpi-card, [data-theme="nordic"] .dialog {
+    background: #131c33 !important;
+    border: 1px solid rgba(56, 189, 248, 0.25) !important;
+}
+[data-theme="nordic"] .sidebar {
+    background: #080c17 !important;
+    border-right: 1px solid rgba(56, 189, 248, 0.2) !important;
+}
+[data-theme="nordic"] .topbar {
+    background: #0e1628 !important;
+    border-bottom: 1px solid rgba(56, 189, 248, 0.2) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME 15: DRACULA GOTHIC NIGHT [data-theme="dracula"]
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="dracula"] {
+    --primary-50: rgba(189, 147, 249, 0.18);
+    --primary-500: #bd93f9;
+    --primary-600: #ff79c6;
+    --surface: #282a36;
+    --surface-dim: #1e1f29;
+    --surface-container: #383a59;
+    --surface-elevated: #44475a;
+    --border-color: rgba(189, 147, 249, 0.25);
+    --border-focus: #ff79c6;
+    --text-primary: #f8f8f2;
+    --text-secondary: #6272a4;
+    --text-muted: #50fa7b;
+}
+[data-theme="dracula"] body, [data-theme="dracula"] .app {
+    background: #1e1f29 !important;
+    color: #f8f8f2 !important;
+}
+[data-theme="dracula"] .card, [data-theme="dracula"] .kpi-card, [data-theme="dracula"] .dialog {
+    background: #282a36 !important;
+    border: 1px solid rgba(189, 147, 249, 0.25) !important;
+}
+[data-theme="dracula"] .sidebar {
+    background: #191a21 !important;
+    border-right: 1px solid rgba(189, 147, 249, 0.2) !important;
+}
+[data-theme="dracula"] .topbar {
+    background: #21222c !important;
+    border-bottom: 1px solid rgba(189, 147, 249, 0.2) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME 16: 80s RETRO OUTRUN VAPORWAVE [data-theme="outrun"]
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="outrun"] {
+    --primary-50: rgba(255, 42, 133, 0.2);
+    --primary-500: #ff2a85;
+    --primary-600: #00f0ff;
+    --surface: #170d30;
+    --surface-dim: #0e071e;
+    --surface-container: #26164d;
+    --surface-elevated: #361f6c;
+    --border-color: rgba(255, 42, 133, 0.3);
+    --border-focus: #00f0ff;
+    --text-primary: #ffe4f0;
+    --text-secondary: #e2b4df;
+    --text-muted: #00f0ff;
+}
+[data-theme="outrun"] body, [data-theme="outrun"] .app {
+    background: #0d061c !important;
+    color: #ffe4f0 !important;
+}
+[data-theme="outrun"] .card, [data-theme="outrun"] .kpi-card, [data-theme="outrun"] .dialog {
+    background: #1a0f35 !important;
+    border: 1px solid rgba(255, 42, 133, 0.35) !important;
+    box-shadow: 0 4px 18px rgba(255, 42, 133, 0.12) !important;
+}
+[data-theme="outrun"] .sidebar {
+    background: #0a0416 !important;
+    border-right: 1px solid rgba(255, 42, 133, 0.25) !important;
+}
+[data-theme="outrun"] .topbar {
+    background: #120926 !important;
+    border-bottom: 1px solid rgba(255, 42, 133, 0.25) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME 17: FOREST MATCHA ZEN [data-theme="matcha"]
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="matcha"] {
+    --primary-50: rgba(52, 211, 153, 0.18);
+    --primary-500: #34d399;
+    --primary-600: #059669;
+    --surface: #14221b;
+    --surface-dim: #0d1712;
+    --surface-container: #1e3328;
+    --surface-elevated: #284436;
+    --border-color: rgba(52, 211, 153, 0.25);
+    --border-focus: #6ee7b7;
+    --text-primary: #ecfdf5;
+    --text-secondary: #a7f3d0;
+    --text-muted: #34d399;
+}
+[data-theme="matcha"] body, [data-theme="matcha"] .app {
+    background: #0b140f !important;
+    color: #ecfdf5 !important;
+}
+[data-theme="matcha"] .card, [data-theme="matcha"] .kpi-card, [data-theme="matcha"] .dialog {
+    background: #182a21 !important;
+    border: 1px solid rgba(52, 211, 153, 0.25) !important;
+}
+[data-theme="matcha"] .sidebar {
+    background: #09100c !important;
+    border-right: 1px solid rgba(52, 211, 153, 0.2) !important;
+}
+[data-theme="matcha"] .topbar {
+    background: #101e17 !important;
+    border-bottom: 1px solid rgba(52, 211, 153, 0.2) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME 18: IMPERIAL AMETHYST [data-theme="amethyst"]
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="amethyst"] {
+    --primary-50: rgba(168, 85, 247, 0.2);
+    --primary-500: #a855f7;
+    --primary-600: #9333ea;
+    --surface: #1b1130;
+    --surface-dim: #110a1f;
+    --surface-container: #281a47;
+    --surface-elevated: #36245e;
+    --border-color: rgba(168, 85, 247, 0.28);
+    --border-focus: #c084fc;
+    --text-primary: #faf5ff;
+    --text-secondary: #e9d5ff;
+    --text-muted: #f59e0b;
+}
+[data-theme="amethyst"] body, [data-theme="amethyst"] .app {
+    background: #100a1c !important;
+    color: #faf5ff !important;
+}
+[data-theme="amethyst"] .card, [data-theme="amethyst"] .kpi-card, [data-theme="amethyst"] .dialog {
+    background: #201438 !important;
+    border: 1px solid rgba(168, 85, 247, 0.28) !important;
+}
+[data-theme="amethyst"] .sidebar {
+    background: #0d0817 !important;
+    border-right: 1px solid rgba(168, 85, 247, 0.2) !important;
+}
+[data-theme="amethyst"] .topbar {
+    background: #160e27 !important;
+    border-bottom: 1px solid rgba(168, 85, 247, 0.2) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME 19: SOLARIZED DARK STUDIO [data-theme="solarized"]
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="solarized"] {
+    --primary-50: rgba(42, 161, 152, 0.2);
+    --primary-500: #2aa198;
+    --primary-600: #268bd2;
+    --surface: #002b36;
+    --surface-dim: #001f27;
+    --surface-container: #073642;
+    --surface-elevated: #0d4654;
+    --border-color: rgba(42, 161, 152, 0.28);
+    --border-focus: #b58900;
+    --text-primary: #93a1a1;
+    --text-secondary: #839496;
+    --text-muted: #b58900;
+}
+[data-theme="solarized"] body, [data-theme="solarized"] .app {
+    background: #00212b !important;
+    color: #93a1a1 !important;
+}
+[data-theme="solarized"] .card, [data-theme="solarized"] .kpi-card, [data-theme="solarized"] .dialog {
+    background: #002b36 !important;
+    border: 1px solid rgba(42, 161, 152, 0.28) !important;
+}
+[data-theme="solarized"] .sidebar {
+    background: #001c24 !important;
+    border-right: 1px solid rgba(42, 161, 152, 0.2) !important;
+}
+[data-theme="solarized"] .topbar {
+    background: #002530 !important;
+    border-bottom: 1px solid rgba(42, 161, 152, 0.2) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME 20: BLOOD CRIMSON & ONYX [data-theme="crimson"]
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="crimson"] {
+    --primary-50: rgba(225, 29, 72, 0.22);
+    --primary-500: #e11d48;
+    --primary-600: #be123c;
+    --surface: #12090c;
+    --surface-dim: #0a0406;
+    --surface-container: #1e0d13;
+    --surface-elevated: #29121a;
+    --border-color: rgba(225, 29, 72, 0.3);
+    --border-focus: #f43f5e;
+    --text-primary: #fff1f2;
+    --text-secondary: #fecdd3;
+    --text-muted: #e11d48;
+}
+[data-theme="crimson"] body, [data-theme="crimson"] .app {
+    background: #090305 !important;
+    color: #fff1f2 !important;
+}
+[data-theme="crimson"] .card, [data-theme="crimson"] .kpi-card, [data-theme="crimson"] .dialog {
+    background: #170a0e !important;
+    border: 1px solid rgba(225, 29, 72, 0.3) !important;
+}
+[data-theme="crimson"] .sidebar {
+    background: #080304 !important;
+    border-right: 1px solid rgba(225, 29, 72, 0.22) !important;
+}
+[data-theme="crimson"] .topbar {
+    background: #100609 !important;
+    border-bottom: 1px solid rgba(225, 29, 72, 0.22) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME 21: MONOKAI PRO DEVELOPER [data-theme="monokai"]
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="monokai"] {
+    --primary-50: rgba(166, 226, 46, 0.18);
+    --primary-500: #a6e22e;
+    --primary-600: #66d9ef;
+    --surface: #272822;
+    --surface-dim: #1e1f1c;
+    --surface-container: #34352f;
+    --surface-elevated: #414339;
+    --border-color: rgba(166, 226, 46, 0.25);
+    --border-focus: #f92672;
+    --text-primary: #f8f8f2;
+    --text-secondary: #fd971f;
+    --text-muted: #e6db74;
+}
+[data-theme="monokai"] body, [data-theme="monokai"] .app {
+    background: #1b1c18 !important;
+    color: #f8f8f2 !important;
+}
+[data-theme="monokai"] .card, [data-theme="monokai"] .kpi-card, [data-theme="monokai"] .dialog {
+    background: #2b2c26 !important;
+    border: 1px solid rgba(166, 226, 46, 0.25) !important;
+}
+[data-theme="monokai"] .sidebar {
+    background: #171813 !important;
+    border-right: 1px solid rgba(166, 226, 46, 0.2) !important;
+}
+[data-theme="monokai"] .topbar {
+    background: #20211b !important;
+    border-bottom: 1px solid rgba(166, 226, 46, 0.2) !important;
+}
+
 
 

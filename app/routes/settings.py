@@ -14,6 +14,7 @@ settings_bp = Blueprint('settings', __name__, url_prefix='/settings')
 
 
 @settings_bp.route('')
+@settings_bp.route('/')
 @login_required
 def index():
     """Settings overview page."""

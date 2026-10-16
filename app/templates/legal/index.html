@@ -1,0 +1,568 @@
+{% extends "legal/base_legal.html" %}
+
+{% block title %}Unified Legal & Compliance Portal — {{ company_name }}{% endblock %}
+{% block meta_description %}Official Unified Compliance Portal for {{ company_name }}. Contains Privacy Policy, Terms of Service, Meta WhatsApp Cloud API Policy, and User Data Deletion Instructions.{% endblock %}
+
+{% block legal_content %}
+<div class="legal-wrapper">
+    <!-- Hero Banner -->
+    <div class="legal-hero">
+        <div class="legal-meta-badge" style="display:inline-flex;align-items:center;gap:6px;background:rgba(37,99,235,0.1);color:var(--primary-500);padding:6px 16px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid rgba(37,99,235,0.25);margin-bottom:var(--space-4);">
+            <span class="material-symbols-outlined" style="font-size:16px;">verified_user</span>
+            Meta Cloud API & GDPR Certified Compliance Hub
+        </div>
+        <h1 style="font-size:var(--text-3xl);font-weight:800;color:var(--text-primary);margin:0 0 10px;letter-spacing:-0.5px;">
+            Legal, Privacy & Compliance Hub
+        </h1>
+        <p style="max-width:720px;margin:0 auto 16px;font-size:var(--text-base);color:var(--text-secondary);line-height:1.6;">
+            All official legal agreements, data protection disclosures, WhatsApp business policies, and user erasure tools for <strong>{{ company_name }}</strong> unified in one interactive portal.
+        </p>
+        <div style="font-size:var(--text-xs);color:var(--text-tertiary);display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
+            <span><strong>Entity:</strong> {{ company_name }}</span>
+            <span>&bull;</span>
+            <span><strong>Support:</strong> {{ contact_email }}</span>
+            <span>&bull;</span>
+            <span><strong>Phone:</strong> {{ contact_phone }}</span>
+            <span>&bull;</span>
+            <span><strong>Effective:</strong> January 1, 2026</span>
+        </div>
+    </div>
+
+    <!-- Unified Interactive Tab Switcher -->
+    <div style="margin-bottom:var(--space-6);position:sticky;top:65px;z-index:90;background:var(--bg-app);padding:var(--space-2) 0;">
+        <div class="unified-legal-tabs" style="display:flex;background:var(--surface-container);padding:6px;border-radius:var(--radius-xl);border:1px solid var(--border-color);gap:6px;overflow-x:auto;box-shadow:0 4px 20px rgba(0,0,0,0.06);">
+            <button type="button" class="legal-tab-btn {% if active_tab == 'privacy' or not active_tab %}active{% endif %}" onclick="switchLegalTab('privacy')" data-tab="privacy" style="flex:1;min-width:170px;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border:none;border-radius:var(--radius-lg);font-weight:600;font-size:13px;cursor:pointer;transition:all 0.2s ease;">
+                <span class="material-symbols-outlined" style="font-size:18px;">policy</span> Privacy Policy
+            </button>
+            <button type="button" class="legal-tab-btn {% if active_tab == 'terms' %}active{% endif %}" onclick="switchLegalTab('terms')" data-tab="terms" style="flex:1;min-width:170px;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border:none;border-radius:var(--radius-lg);font-weight:600;font-size:13px;cursor:pointer;transition:all 0.2s ease;">
+                <span class="material-symbols-outlined" style="font-size:18px;">gavel</span> Terms of Service
+            </button>
+            <button type="button" class="legal-tab-btn {% if active_tab == 'deletion' or active_tab == 'data_deletion' %}active{% endif %}" onclick="switchLegalTab('deletion')" data-tab="deletion" style="flex:1;min-width:180px;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border:none;border-radius:var(--radius-lg);font-weight:600;font-size:13px;cursor:pointer;transition:all 0.2s ease;">
+                <span class="material-symbols-outlined" style="font-size:18px;">delete_forever</span> User Data Deletion
+            </button>
+            <button type="button" class="legal-tab-btn {% if active_tab == 'whatsapp' %}active{% endif %}" onclick="switchLegalTab('whatsapp')" data-tab="whatsapp" style="flex:1;min-width:180px;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border:none;border-radius:var(--radius-lg);font-weight:600;font-size:13px;cursor:pointer;transition:all 0.2s ease;">
+                <span class="material-symbols-outlined" style="font-size:18px;">chat</span> WhatsApp Policy
+            </button>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         TAB PANE 1: PRIVACY POLICY
+         ═══════════════════════════════════════════════════════════ -->
+    <div id="pane-privacy" class="legal-tab-pane" style="display:{% if active_tab == 'privacy' or not active_tab %}block{% else %}none{% endif %};">
+        <div class="legal-layout-grid">
+            <aside class="legal-sidebar">
+                <div class="legal-sidebar-title">Privacy Sections</div>
+                <ul class="legal-toc-list">
+                    <li><a href="#priv-overview">1. Overview & Scope</a></li>
+                    <li><a href="#priv-data">2. Information We Collect</a></li>
+                    <li><a href="#priv-meta">3. WhatsApp & Meta Cloud API</a></li>
+                    <li><a href="#priv-use">4. How We Use Data</a></li>
+                    <li><a href="#priv-third">5. Third-Party Processors</a></li>
+                    <li><a href="#priv-retention">6. Data Retention</a></li>
+                    <li><a href="#priv-optout">7. Immediate Opt-Out</a></li>
+                    <li><a href="#priv-rights">8. User Rights (GDPR / DPDP)</a></li>
+                    <li><a href="#priv-security">9. Security Architecture</a></li>
+                    <li><a href="#priv-contact">10. Grievance Officer</a></li>
+                </ul>
+            </aside>
+
+            <main class="legal-content-card">
+                <section id="priv-overview">
+                    <h2><span class="material-symbols-outlined">info</span> 1. Overview & Scope</h2>
+                    <p>
+                        This Privacy Policy describes how <strong>{{ company_name }}</strong> ("we", "our", or "us"), operating the <strong>Flixora AI Sales Automation Platform</strong>, collects, protects, uses, and discloses information when business leads, clients, and partners interact with our automated outreach, website audit engine, customer support systems, and official WhatsApp Business channels.
+                    </p>
+                    <p>
+                        By engaging with our automated messaging channels, submitting your contact details, or receiving an automated website proposal from our system, you acknowledge the terms of this Privacy Policy.
+                    </p>
+                    <div class="legal-callout">
+                        <strong>Zero-Spam Commitment:</strong> {{ company_name }} maintains a strict zero-spam policy. We only reach out to verifiable business entities regarding digital modernization, responsive website audits, and performance consulting. We provide instantaneous opt-out capabilities on all communications.
+                    </div>
+                </section>
+
+                <section id="priv-data">
+                    <h2><span class="material-symbols-outlined">dataset</span> 2. Information We Collect</h2>
+                    <p>We collect only the minimum information necessary to conduct tailored B2B website audits and communicate proposals:</p>
+                    <ul>
+                        <li><strong>Public Business Contact Details:</strong> Business name, industry category, official contact phone number, public business website address, and location.</li>
+                        <li><strong>WhatsApp Messaging Data:</strong> Sender phone number, verified WhatsApp profile name, incoming message content, conversation timestamps, and message delivery status receipts provided by Meta Platforms, Inc.</li>
+                        <li><strong>Technical Audit Information:</strong> Public website performance metrics, mobile viewport responsiveness scores, SSL configuration, and technology stack indicators gathered for the purpose of generating digital proposals.</li>
+                        <li><strong>User Preferences:</strong> Communication opt-in records, conversation status tags, and language preferences.</li>
+                    </ul>
+                </section>
+
+                <section id="priv-meta">
+                    <h2><span class="material-symbols-outlined">chat</span> 3. WhatsApp Business & Meta Cloud API Compliance</h2>
+                    <p>
+                        Our messaging operations strictly abide by the <strong>Meta Platform Terms</strong>, <strong>WhatsApp Business Messaging Policy</strong>, and <strong>WhatsApp Commerce Policy</strong>:
+                    </p>
+                    <ul>
+                        <li><strong>Authorized API Integration:</strong> All WhatsApp interactions are transmitted exclusively through the official <em>Meta WhatsApp Cloud API</em>. We do not use unofficial scrapers, unauthorized modified WhatsApp clients, or spoofed devices.</li>
+                        <li><strong>Template Pre-Approval:</strong> Outbound business-initiated conversations utilize pre-approved Meta WhatsApp templates compliant with regional guidelines.</li>
+                        <li><strong>Customer Service Window:</strong> Inbound conversations adhere strictly to Meta's 24-hour customer care service window. Free-form AI conversational assistance is offered exclusively while responding to direct inquiries initiated by the user.</li>
+                        <li><strong>No Reselling of Contact Information:</strong> We never sell, lease, or monetize your phone number, chat records, or business identifiers to third-party data brokers or advertising networks.</li>
+                    </ul>
+                </section>
+
+                <section id="priv-use">
+                    <h2><span class="material-symbols-outlined">engineering</span> 4. How We Use Your Information</h2>
+                    <p>The information we collect is utilized strictly for the following purposes:</p>
+                    <ol>
+                        <li>To deliver automated website audit summaries and personalized interactive design demos requested by prospective clients.</li>
+                        <li>To answer technical inquiries, pricing questions, feature explanations, and scope clarifications via our Flixora AI Autonomous Assistant.</li>
+                        <li>To connect interested prospects with our human sales engineers and design team when requested.</li>
+                        <li>To monitor system uptime, prevent denial-of-service abuse, and verify message delivery fidelity.</li>
+                        <li>To enforce compliance with legal obligations, prevent fraudulent inquiries, and honor immediate opt-out directives.</li>
+                    </ol>
+                </section>
+
+                <section id="priv-third">
+                    <h2><span class="material-symbols-outlined">hub</span> 5. Third-Party Service Processors</h2>
+                    <p>
+                        To operate our high-speed, 24/7 AI sales infrastructure, we work with industry-standard, SOC2 and ISO27001-certified cloud infrastructure providers:
+                    </p>
+                    <ul>
+                        <li><strong>Meta Platforms, Inc. (WhatsApp Cloud API):</strong> Used for secure, enterprise message transport and webhook event dispatching.</li>
+                        <li><strong>AI Model Inference Providers (OpenRouter, OpenAI, Groq):</strong> Used for natural language processing of inquiries. Messages sent to inference engines are ephemeral and not used to train public foundation models.</li>
+                        <li><strong>Cloud Hosting & Database (Neon PostgreSQL, Render):</strong> Encrypted PostgreSQL storage located in ISO-certified datacenters with automated security patches.</li>
+                    </ul>
+                </section>
+
+                <section id="priv-retention">
+                    <h2><span class="material-symbols-outlined">timer</span> 6. Data Retention & Archival</h2>
+                    <p>
+                        Contact records and conversation histories are retained only as long as necessary to facilitate ongoing business communication. Unresponsive leads are purged from active follow-up pipelines within 90 days. If an opt-out directive or data deletion request is received, personal identifiers are immediately removed or redacted.
+                    </p>
+                </section>
+
+                <section id="priv-optout">
+                    <h2><span class="material-symbols-outlined">block</span> 7. Immediate Opt-Out & Stop Messaging</h2>
+                    <p>
+                        Every recipient possesses an absolute right to halt communications at any time. Simply reply to any message with <code>STOP</code>, <code>UNSUBSCRIBE</code>, <code>WRONG NUMBER</code>, or <code>NOT INTERESTED</code>. Our AI agent recognizes these directives instantly, registers an automated suppression tag, and halts all further messages.
+                    </p>
+                </section>
+
+                <section id="priv-rights">
+                    <h2><span class="material-symbols-outlined">security</span> 8. Your Data Protection Rights</h2>
+                    <p>Under GDPR, CCPA, and the Digital Personal Data Protection (DPDP) Act, you have the right to:</p>
+                    <ul>
+                        <li><strong>Right to Access:</strong> Request a full copy of your contact information and conversation transcript.</li>
+                        <li><strong>Right to Rectification:</strong> Request correction of inaccurate phone numbers, names, or website URLs.</li>
+                        <li><strong>Right to Erasure ("Right to Be Forgotten"):</strong> Request immediate and irreversible deletion of your data via our online self-service portal or email.</li>
+                    </ul>
+                </section>
+
+                <section id="priv-security">
+                    <h2><span class="material-symbols-outlined">lock</span> 9. Security Architecture</h2>
+                    <p>
+                        We apply bank-grade security protocols across all layers: 256-bit AES encryption at rest, TLS 1.3 encryption in transit, strict RBAC authorization, cryptographic webhook signature verification (X-Hub-Signature-256), and automated rate limiting.
+                    </p>
+                </section>
+
+                <section id="priv-contact">
+                    <h2><span class="material-symbols-outlined">contact_support</span> 10. Contact & Grievance Officer</h2>
+                    <p>If you have any questions or data requests, contact our compliance team directly:</p>
+                    <div style="background:var(--surface-container);padding:var(--space-4);border-radius:var(--radius-md);border:1px solid var(--border-color);line-height:1.8;">
+                        <strong>{{ company_name }} — Data Privacy Office</strong><br>
+                        Email: <a href="mailto:{{ contact_email }}" style="color:var(--primary-500);">{{ contact_email }}</a><br>
+                        Phone / WhatsApp: {{ contact_phone }}<br>
+                        Website: <a href="{{ website_url }}" target="_blank" style="color:var(--primary-500);">{{ website_url }}</a>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         TAB PANE 2: TERMS OF SERVICE
+         ═══════════════════════════════════════════════════════════ -->
+    <div id="pane-terms" class="legal-tab-pane" style="display:{% if active_tab == 'terms' %}block{% else %}none{% endif %};">
+        <div class="legal-layout-grid">
+            <aside class="legal-sidebar">
+                <div class="legal-sidebar-title">Terms Sections</div>
+                <ul class="legal-toc-list">
+                    <li><a href="#terms-accept">1. Acceptance of Terms</a></li>
+                    <li><a href="#terms-scope">2. Scope of Services</a></li>
+                    <li><a href="#terms-wa">3. WhatsApp Communication</a></li>
+                    <li><a href="#terms-ai">4. AI Responder Disclaimers</a></li>
+                    <li><a href="#terms-ip">5. Intellectual Property</a></li>
+                    <li><a href="#terms-prohibited">6. Prohibited Conduct</a></li>
+                    <li><a href="#terms-pricing">7. Pricing & Deliverables</a></li>
+                    <li><a href="#terms-liability">8. Limitation of Liability</a></li>
+                    <li><a href="#terms-law">9. Governing Law</a></li>
+                </ul>
+            </aside>
+
+            <main class="legal-content-card">
+                <section id="terms-accept">
+                    <h2><span class="material-symbols-outlined">handshake</span> 1. Acceptance of Terms</h2>
+                    <p>
+                        These Terms of Service ("Terms") constitute a legally binding agreement between you ("User", "Client", or "Lead") and <strong>{{ company_name }}</strong> ("Company", "we", "us", or "our") concerning your access to and use of the <strong>Flixora AI Sales Automation Platform</strong>, associated web properties, and our automated WhatsApp messaging services.
+                    </p>
+                    <p>
+                        By interacting with our platform, requesting a website analysis, communicating with our automated WhatsApp agent, or engaging our digital design services, you agree to be bound by these Terms.
+                    </p>
+                </section>
+
+                <section id="terms-scope">
+                    <h2><span class="material-symbols-outlined">design_services</span> 2. Scope of Services</h2>
+                    <p>{{ company_name }} provides cutting-edge digital agency and sales automation services, including:</p>
+                    <ul>
+                        <li><strong>Automated Website Audits:</strong> AI-driven evaluation of website speed, mobile responsiveness, SSL security, and user experience.</li>
+                        <li><strong>Interactive Prototype Previews:</strong> Customized mockups showcasing redesigned, modern web interfaces tailored for prospective businesses.</li>
+                        <li><strong>Autonomous WhatsApp Advisory:</strong> 24/7 intelligent answering of website design quotes, package deliverables, and onboarding steps.</li>
+                        <li><strong>Full-Stack Web Development:</strong> Custom responsive web design, booking engine integration, and SEO optimization.</li>
+                    </ul>
+                </section>
+
+                <section id="terms-wa">
+                    <h2><span class="material-symbols-outlined">forum</span> 3. WhatsApp Communication & Anti-Spam Conduct</h2>
+                    <p>
+                        We operate WhatsApp communication strictly according to Meta's Business Messaging guidelines. Our team will never spam, harass, or broadcast irrelevant promotions. Any prospect may immediately unsubscribe by typing <code>STOP</code> or requesting to speak with a human specialist.
+                    </p>
+                </section>
+
+                <section id="terms-ai">
+                    <h2><span class="material-symbols-outlined">smart_toy</span> 4. AI Autonomous Assistant Disclaimers</h2>
+                    <p>
+                        Our conversational sales agents are driven by state-of-the-art Large Language Models designed to assist with quotes and FAQs in real time. While engineered for high accuracy:
+                    </p>
+                    <ul>
+                        <li>AI-generated website quotes and turnaround estimates are initial commercial guidelines subject to final written scope validation.</li>
+                        <li>Formal contracts and technical milestones are confirmed in writing by authorized company project managers prior to invoicing.</li>
+                    </ul>
+                </section>
+
+                <section id="terms-ip">
+                    <h2><span class="material-symbols-outlined">copyright</span> 5. Intellectual Property Rights</h2>
+                    <p>
+                        All proprietary algorithms, prompt architectures, website design components, branding assets, and software code related to Flixora remain the exclusive intellectual property of {{ company_name }}. Client websites developed under paid commercial contracts become the property of the client upon final settlement of invoices.
+                    </p>
+                </section>
+
+                <section id="terms-prohibited">
+                    <h2><span class="material-symbols-outlined">block</span> 6. Prohibited Activities</h2>
+                    <p>Users and recipients agree not to:</p>
+                    <ul>
+                        <li>Use automated prompt-injection techniques or malicious scripts to disrupt our conversational agents.</li>
+                        <li>Attempt unauthorized access to our internal API keys, database credentials, or server endpoints.</li>
+                        <li>Misrepresent authority to negotiate or bind commercial entities without legitimate authorization.</li>
+                    </ul>
+                </section>
+
+                <section id="terms-pricing">
+                    <h2><span class="material-symbols-outlined">payments</span> 7. Packages, Pricing & Payment Terms</h2>
+                    <p>
+                        Standard web design and digital modernization packages (Starter, Professional, Enterprise) are invoiced in accordance with published pricing. Invoices include standard milestone schedules (e.g., 50% upon contract signing, 50% upon live domain deployment).
+                    </p>
+                </section>
+
+                <section id="terms-liability">
+                    <h2><span class="material-symbols-outlined">gavel</span> 8. Limitation of Liability</h2>
+                    <p>
+                        To the maximum extent permitted by applicable law, {{ company_name }} shall not be liable for any indirect, incidental, special, or consequential damages arising from WhatsApp downtime, third-party network carrier delays, or temporary website audit inaccuracies.
+                    </p>
+                </section>
+
+                <section id="terms-law">
+                    <h2><span class="material-symbols-outlined">balance</span> 9. Governing Law & Jurisdiction</h2>
+                    <p>
+                        These Terms shall be governed by and construed in accordance with the laws of India. Any disputes arising under these Terms shall be subject to the exclusive jurisdiction of the competent courts of Maharashtra, India.
+                    </p>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         TAB PANE 3: USER DATA DELETION PORTAL
+         ═══════════════════════════════════════════════════════════ -->
+    <div id="pane-deletion" class="legal-tab-pane" style="display:{% if active_tab == 'deletion' or active_tab == 'data_deletion' %}block{% else %}none{% endif %};">
+        <div class="legal-layout-grid">
+            <aside class="legal-sidebar">
+                <div class="legal-sidebar-title">Data Deletion Guide</div>
+                <ul class="legal-toc-list">
+                    <li><a href="#del-portal">1. Instant Erasure Form</a></li>
+                    <li><a href="#del-methods">2. Deletion Methods</a></li>
+                    <li><a href="#del-what">3. What Gets Erased</a></li>
+                    <li><a href="#del-timeline">4. Timelines & SLA</a></li>
+                    <li><a href="#del-contact">5. DPO Contact</a></li>
+                </ul>
+            </aside>
+
+            <main class="legal-content-card">
+                <!-- Confirmation Banner -->
+                {% if confirmation_code %}
+                <div style="background:rgba(16, 185, 129, 0.12);border:1.5px solid #10b981;border-radius:var(--radius-lg);padding:var(--space-5);margin-bottom:var(--space-8);">
+                    <div style="display:flex;align-items:center;gap:10px;color:#10b981;font-weight:700;font-size:var(--text-base);margin-bottom:6px;">
+                        <span class="material-symbols-outlined">check_circle</span>
+                        Data Deletion Request Executed Successfully
+                    </div>
+                    <p style="margin:0;font-size:var(--text-sm);color:var(--text-primary);line-height:1.6;">
+                        Your request has been verified and permanently executed. All contact records, AI chat histories, and phone numbers have been scrubbed from our database.
+                    </p>
+                    <div style="margin-top:12px;display:flex;align-items:center;gap:10px;">
+                        <span style="font-size:var(--text-xs);font-weight:600;color:var(--text-secondary);">Confirmation Code:</span>
+                        <code style="background:var(--bg-app);padding:4px 10px;border-radius:4px;font-size:14px;font-weight:700;color:var(--primary-500);border:1px solid var(--border-color);">{{ confirmation_code }}</code>
+                    </div>
+                </div>
+                {% endif %}
+
+                <section id="del-portal">
+                    <h2><span class="material-symbols-outlined">delete_sweep</span> 1. Instant Self-Service Deletion Form</h2>
+                    <p>
+                        Enter your WhatsApp phone number or business email address below to immediately trigger an automated deletion request across all {{ company_name }} outreach databases and AI chat logs:
+                    </p>
+
+                    <form method="POST" action="{{ url_for('legal.data_deletion') }}" style="background:var(--surface-container);padding:var(--space-6);border-radius:var(--radius-lg);border:1px solid var(--border-color);margin:var(--space-6) 0;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div style="margin-bottom:var(--space-4);">
+                            <label style="display:block;font-size:var(--text-sm);font-weight:600;margin-bottom:6px;color:var(--text-primary);">
+                                Phone Number (with Country Code) or Email Address *
+                            </label>
+                            <input type="text" name="identifier" required placeholder="+91 9876543210 or contact@business.com" class="form-input" style="width:100%;font-size:var(--text-sm);">
+                            <span style="font-size:var(--text-xs);color:var(--text-tertiary);margin-top:4px;display:block;">
+                                Example: +91 7841925620 or user@example.com
+                            </span>
+                        </div>
+
+                        <div style="margin-bottom:var(--space-6);">
+                            <label style="display:block;font-size:var(--text-sm);font-weight:600;margin-bottom:6px;color:var(--text-primary);">
+                                Reason for Deletion (Optional)
+                            </label>
+                            <select name="reason" class="form-input" style="width:100%;font-size:var(--text-sm);">
+                                <option value="Opt-out of all communications">Opt-out of all communications</option>
+                                <option value="Number reached by mistake">Number reached by mistake (Wrong Number)</option>
+                                <option value="General privacy preference">General privacy preference</option>
+                                <option value="GDPR / DPDP Right to be Forgotten">GDPR / DPDP Right to be Forgotten</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--space-4);">
+                            <button type="submit" class="btn btn-danger" style="display:flex;align-items:center;gap:6px;">
+                                <span class="material-symbols-outlined" style="font-size:18px;">delete_forever</span>
+                                Submit Permanent Data Erasure Request
+                            </button>
+                            <span style="font-size:var(--text-xs);color:var(--text-tertiary);">
+                                Instant execution &bull; Real-time tracking code provided
+                            </span>
+                        </div>
+                    </form>
+                </section>
+
+                <section id="del-methods">
+                    <h2><span class="material-symbols-outlined">checklist</span> 2. Alternative Deletion Methods</h2>
+                    <p>In addition to the interactive form above, you can request immediate data erasure via:</p>
+                    <ul>
+                        <li><strong>Direct WhatsApp Message:</strong> Reply with <code>STOP</code>, <code>DELETE MY DATA</code>, or <code>REMOVE ME</code> on our official WhatsApp number.</li>
+                        <li><strong>Email Request:</strong> Send an email with subject line <em>"Data Erasure Request"</em> to <a href="mailto:{{ contact_email }}" style="color:var(--primary-500);">{{ contact_email }}</a>.</li>
+                    </ul>
+                </section>
+
+                <section id="del-what">
+                    <h2><span class="material-symbols-outlined">fact_check</span> 3. What Data Is Erased</h2>
+                    <p>When an erasure request is executed, the following information is permanently purged:</p>
+                    <ul>
+                        <li>Full name, business address, and website URL records.</li>
+                        <li>WhatsApp phone number and Meta recipient ID (redacted and blocked).</li>
+                        <li>All historical chat logs, conversation turns, and incoming inquiries.</li>
+                        <li>Scheduled follow-ups, outreach reminders, and analytical tags.</li>
+                    </ul>
+                </section>
+
+                <section id="del-timeline">
+                    <h2><span class="material-symbols-outlined">speed</span> 4. Timelines & Confirmation SLA</h2>
+                    <p>
+                        Form submissions and WhatsApp <code>STOP</code> triggers execute <strong>instantly in real-time</strong>. Email requests are verified and processed within 24 to 48 business hours. You receive a cryptographic confirmation code upon completion.
+                    </p>
+                </section>
+
+                <section id="del-contact">
+                    <h2><span class="material-symbols-outlined">badge</span> 5. Data Protection Officer (DPO)</h2>
+                    <p>For questions or verification of deletion status, contact:</p>
+                    <div style="background:var(--surface-container);padding:var(--space-4);border-radius:var(--radius-md);border:1px solid var(--border-color);line-height:1.8;">
+                        <strong>{{ company_name }} — Data Protection Officer</strong><br>
+                        Email: <a href="mailto:{{ contact_email }}" style="color:var(--primary-500);">{{ contact_email }}</a><br>
+                        Phone: {{ contact_phone }}
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         TAB PANE 4: WHATSAPP MESSAGING & ANTI-SPAM POLICY
+         ═══════════════════════════════════════════════════════════ -->
+    <div id="pane-whatsapp" class="legal-tab-pane" style="display:{% if active_tab == 'whatsapp' %}block{% else %}none{% endif %};">
+        <div class="legal-layout-grid">
+            <aside class="legal-sidebar">
+                <div class="legal-sidebar-title">WhatsApp Policy</div>
+                <ul class="legal-toc-list">
+                    <li><a href="#wa-principles">1. Core Principles</a></li>
+                    <li><a href="#wa-optin">2. Consent & Opt-In</a></li>
+                    <li><a href="#wa-stop">3. Immediate Opt-Out (STOP)</a></li>
+                    <li><a href="#wa-limits">4. Rate Limits & Quality</a></li>
+                    <li><a href="#wa-window">5. 24-Hour Service Window</a></li>
+                    <li><a href="#wa-prohibited">6. Prohibited Messaging</a></li>
+                    <li><a href="#wa-escalation">7. Human Escalation</a></li>
+                </ul>
+            </aside>
+
+            <main class="legal-content-card">
+                <section id="wa-principles">
+                    <h2><span class="material-symbols-outlined">stars</span> 1. Core Principles</h2>
+                    <p>
+                        {{ company_name }} is committed to maintaining the highest messaging quality standards on the WhatsApp platform. We strictly adhere to the <strong>WhatsApp Business Messaging Policy</strong>, ensuring that all communications deliver authentic, high-value consulting insights regarding digital web modernization.
+                    </p>
+                </section>
+
+                <section id="wa-optin">
+                    <h2><span class="material-symbols-outlined">check_circle</span> 2. Consent & Opt-In Policy</h2>
+                    <p>We value consumer privacy and only initiate outreach under established business-to-business guidelines:</p>
+                    <ul>
+                        <li>Outreach is limited to publicly listed commercial enterprises where modern web architecture, mobile optimization, or website redesign services offer tangible value.</li>
+                        <li>Inbound inquiries received on our WhatsApp number are treated as explicit opt-in for our AI sales assistant to answer the prospect's direct queries.</li>
+                        <li>We clearly introduce ourselves in our initial greeting: <em>"Hello! I'm Flixora AI, your digital sales and web assistant from {{ company_name }}."</em></li>
+                    </ul>
+                </section>
+
+                <section id="wa-stop">
+                    <h2><span class="material-symbols-outlined">block</span> 3. Immediate Opt-Out & Honoring STOP</h2>
+                    <p>Recipients maintain full control over communications. We offer zero-barrier opt-out triggers:</p>
+                    <div class="legal-callout warning">
+                        <strong>Zero Questions Asked Opt-Out:</strong> Replying with words such as <code>STOP</code>, <code>UNSUBSCRIBE</code>, <code>WRONG NUMBER</code>, or <code>NOT INTERESTED</code> immediately halts all automated messages.
+                    </div>
+                    <p>
+                        Our system records this status in real-time, suppresses automated scheduled follow-ups, and archives the conversation.
+                    </p>
+                </section>
+
+                <section id="wa-limits">
+                    <h2><span class="material-symbols-outlined">thumb_up</span> 4. Message Quality, Rate Limits & Frequency</h2>
+                    <p>To prevent notification fatigue and maintain a superior Meta Quality Rating:</p>
+                    <ul>
+                        <li><strong>Strict Rate Limiting:</strong> We never broadcast bulk blasts. Automated outreach is paced with intelligent delays (minimum 30–60 seconds between deliveries).</li>
+                        <li><strong>Maximum Outreach Attempts:</strong> If a lead does not engage after an initial audit proposal and scheduled follow-up, communications cease automatically.</li>
+                        <li><strong>Relevant Content:</strong> Messages are customized specifically to the recipient's website diagnostics, rather than generic spam templates.</li>
+                    </ul>
+                </section>
+
+                <section id="wa-window">
+                    <h2><span class="material-symbols-outlined">schedule</span> 5. 24-Hour Customer Care Window</h2>
+                    <p>
+                        When a lead replies to our message, Meta's 24-hour customer service window opens. During this period, our autonomous AI assistant promptly answers questions regarding website cost, portfolio examples, timeline, and design aesthetics.
+                    </p>
+                    <p>
+                        Once the 24-hour window expires, free-form messaging terminates, and only Meta-approved customer care update templates may be utilized.
+                    </p>
+                </section>
+
+                <section id="wa-prohibited">
+                    <h2><span class="material-symbols-outlined">warning</span> 6. Prohibited Messaging Categories</h2>
+                    <p>In accordance with WhatsApp Commerce and Messaging Policies, our platform strictly prohibits:</p>
+                    <ul>
+                        <li>Transmission of spam, bulk automated broadcasts, or deceptive marketing messages.</li>
+                        <li>Solicitation of financial services, multi-level marketing schemes, or prohibited goods.</li>
+                        <li>Aggressive, repetitive outreach after an opt-out directive has been indicated.</li>
+                    </ul>
+                </section>
+
+                <section id="wa-escalation">
+                    <h2><span class="material-symbols-outlined">support_agent</span> 7. Human Escalation Support</h2>
+                    <p>
+                        Our AI system is equipped with intelligent sentiment detection. If a prospect expresses complex requirements, requests a phone call, or asks to speak with a human team member, our system immediately tags the conversation as <code>HUMAN_TAKEOVER_REQUESTED</code> and alerts our staff to step in.
+                    </p>
+                </section>
+            </main>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Active Tab Button Styling */
+.legal-tab-btn {
+    background: transparent;
+    color: var(--text-secondary);
+}
+.legal-tab-btn:hover {
+    color: var(--text-primary);
+    background: var(--surface);
+}
+.legal-tab-btn.active {
+    background: var(--primary-500) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+}
+.legal-tab-pane {
+    animation: fadeInTab 0.25s ease-in-out;
+}
+@keyframes fadeInTab {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<script>
+function switchLegalTab(tabName) {
+    if (!tabName) tabName = 'privacy';
+    
+    // Normalize tab name
+    if (tabName === 'data_deletion' || tabName === 'deletion') {
+        tabName = 'deletion';
+    }
+
+    // 1. Hide all tab panes
+    document.querySelectorAll('.legal-tab-pane').forEach(pane => {
+        pane.style.display = 'none';
+    });
+
+    // 2. Remove active class from buttons
+    document.querySelectorAll('.legal-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // 3. Show matching pane
+    const targetPane = document.getElementById('pane-' + tabName);
+    if (targetPane) {
+        targetPane.style.display = 'block';
+    }
+
+    // 4. Highlight matching button
+    const targetBtn = document.querySelector(`.legal-tab-btn[data-tab="${tabName}"]`);
+    if (targetBtn) {
+        targetBtn.classList.add('active');
+    }
+
+    // 5. Update browser URL hash/state seamlessly without reloading
+    try {
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('tab', tabName);
+        window.history.replaceState({ tab: tabName }, '', newUrl.toString());
+    } catch (e) {
+        window.location.hash = tabName;
+    }
+
+    // 6. Scroll smoothly to top of tabs
+    const tabsBar = document.querySelector('.unified-legal-tabs');
+    if (tabsBar) {
+        tabsBar.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+// Handle browser back/forward or hash on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    const hash = window.location.hash.replace('#', '');
+    
+    if (tabParam) {
+        switchLegalTab(tabParam);
+    } else if (hash && ['privacy', 'terms', 'deletion', 'data_deletion', 'whatsapp'].includes(hash)) {
+        switchLegalTab(hash);
+    }
+});
+</script>
+{% endblock %}

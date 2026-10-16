@@ -1,28 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}Appearance & Typography (80+ Fonts) — Flixora{% endblock %}
-{% block page_title %}Themes & Typography{% endblock %}
+{% block title %}Appearance & Typography Studio (21 Themes, 700+ Fonts) — Flixora{% endblock %}
+{% block page_title %}Appearance Studio{% endblock %}
 
 {% block content %}
-<div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--space-4);">
+<div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--space-4);margin-bottom:var(--space-6);">
     <div>
         <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2);">
             <a href="{{ url_for('settings.index') }}" class="btn btn-secondary btn-sm" style="display:inline-flex;align-items:center;gap:4px;">
                 <span class="material-symbols-outlined" style="font-size:16px;">arrow_back</span> Settings
             </a>
-            <span style="color:var(--text-muted);font-size:var(--text-sm);">/ Appearance</span>
+            <span style="color:var(--text-muted);font-size:var(--text-sm);">/ Appearance Studio</span>
         </div>
-        <h1 style="margin:0;font-size:var(--text-2xl);font-weight:700;">Themes & Typography Engine</h1>
+        <h1 style="margin:0;font-size:var(--text-2xl);font-weight:700;">Appearance & Typography Studio</h1>
         <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:4px;">
-            Customize your workspace with 10 hand-crafted visual themes and 80+ premium Google typography fonts.
+            Customize your entire workspace with 21 luxury UI themes and 700+ Google Fonts including cursive, calligraphy, serif, and modern styles.
         </p>
     </div>
-    <div style="display:flex;gap:var(--space-3);align-items:center;">
+    <div style="display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap;">
         <span class="badge badge-primary" style="display:flex;align-items:center;gap:6px;padding:6px 12px;font-size:12px;">
-            <span class="material-symbols-outlined" style="font-size:16px;">palette</span> 10 Themes Active
+            <span class="material-symbols-outlined" style="font-size:16px;">palette</span> 21 Themes Active
         </span>
         <span class="badge badge-secondary" style="display:flex;align-items:center;gap:6px;padding:6px 12px;font-size:12px;">
-            <span class="material-symbols-outlined" style="font-size:16px;">text_fields</span> 80+ Google Fonts
+            <span class="material-symbols-outlined" style="font-size:16px;">draw</span> 700+ Google Fonts
         </span>
     </div>
 </div>
@@ -34,21 +34,21 @@
     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-3);">
         <div style="display:flex;align-items:center;gap:var(--space-2);">
             <span class="material-symbols-outlined" style="color:var(--primary-500);font-size:22px;">visibility</span>
-            <h3 style="margin:0;font-size:var(--text-lg);font-weight:700;">Interactive Typography Live Preview</h3>
-            <span id="fontPreviewName" class="badge badge-primary" style="font-size:11px;">Inter</span>
+            <h3 style="margin:0;font-size:var(--text-lg);font-weight:700;">Live Typography & Appearance Canvas</h3>
+            <span id="fontPreviewName" class="badge badge-primary" style="font-size:12px;font-weight:700;">Inter</span>
         </div>
-        <div style="display:flex;align-items:center;gap:var(--space-4);">
+        <div style="display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap;">
             <div style="display:flex;align-items:center;gap:var(--space-2);">
-                <label style="font-size:var(--text-xs);font-weight:600;color:var(--text-secondary);margin:0;">Font Scale:</label>
-                <input type="range" min="85" max="125" step="5" value="100" id="fontScaleSlider" oninput="applyFontScale(this.value)" style="width:110px;cursor:pointer;">
+                <label style="font-size:var(--text-xs);font-weight:600;color:var(--text-secondary);margin:0;">Scale:</label>
+                <input type="range" min="85" max="130" step="5" value="100" id="fontScaleSlider" oninput="applyFontScale(this.value)" style="width:110px;cursor:pointer;">
                 <span id="fontScaleValue" style="font-size:var(--text-xs);font-weight:700;color:var(--primary-500);min-width:36px;">100%</span>
             </div>
-            <button class="btn btn-secondary btn-sm" onclick="resetFontDefaults()" style="font-size:11px;padding:4px 8px;">Reset Default</button>
+            <button class="btn btn-secondary btn-sm" onclick="resetFontDefaults()" style="font-size:11px;padding:4px 8px;">Reset Defaults</button>
         </div>
     </div>
     <div class="card-body">
         <div style="margin-bottom:var(--space-4);">
-            <input type="text" id="sampleTextInput" class="form-input" placeholder="Type custom test phrase here (e.g. The Royal Spice Bistro & Bar)..." oninput="updatePreviewText(this.value)" style="font-size:var(--text-sm);">
+            <input type="text" id="sampleTextInput" class="form-input" placeholder="Type test phrase here (e.g., Luxury Watches, Handcrafted Pastries & Fine Dining)..." oninput="updatePreviewText(this.value)" style="font-size:var(--text-sm);">
         </div>
         <div id="fontPreviewBox" style="padding:var(--space-5);border-radius:var(--radius-lg);background:var(--surface-container);border:1px dashed var(--border-color);transition:font-family 0.2s ease;">
             <h2 id="previewHeading" style="margin:0 0 8px;font-size:var(--text-2xl);font-weight:700;color:var(--text-primary);">
@@ -70,181 +70,357 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
-     THEMES SELECTOR (10 THEMES)
+     THEMES SELECTOR (21 THEMES)
      ═══════════════════════════════════════════════════════════ -->
 <div class="card" style="margin-bottom: var(--space-6);">
-    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-2);">
         <div>
             <h3 style="margin:0;font-size:var(--text-lg);font-weight:700;">Design Themes & Color Palettes</h3>
             <p style="font-size:var(--text-xs);color:var(--text-secondary);margin-top:2px;">
-                Select from 10 distinct UI aesthetic styles. Changes are saved automatically.
+                Select from 21 distinct visual aesthetic styles. Your preference is saved instantly.
             </p>
         </div>
         <span class="badge badge-primary" style="display:flex;align-items:center;gap:4px;">
-            <span class="material-symbols-outlined" style="font-size:14px;">brush</span> 10 Themes
+            <span class="material-symbols-outlined" style="font-size:14px;">brush</span> 21 Themes Available
         </span>
     </div>
     <div class="card-body">
-        <div class="theme-selector-grid">
+        <div class="theme-selector-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:var(--space-3);">
             
             <!-- 1. Light SaaS -->
             <div class="theme-card-option" data-theme="light" onclick="selectTheme('light')">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <strong style="font-size:14px;color:var(--text-primary);">Clean SaaS (Light)</strong>
-                    <span class="badge badge-secondary" style="font-size:10px;">Default</span>
+                    <strong style="font-size:13px;color:var(--text-primary);">Clean SaaS</strong>
+                    <span class="badge badge-secondary" style="font-size:10px;">Light Default</span>
                 </div>
-                <div style="height:55px;border-radius:8px;background:#f8fafc;border:1px solid #e2e8f0;display:flex;align-items:center;padding:8px;gap:8px;">
-                    <div style="width:24px;height:24px;border-radius:6px;background:#2563eb;"></div>
+                <div style="height:48px;border-radius:6px;background:#f8fafc;border:1px solid #e2e8f0;display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:4px;background:#2563eb;"></div>
                     <div style="flex:1;">
-                        <div style="height:6px;background:#cbd5e1;border-radius:3px;width:70%;margin-bottom:4px;"></div>
-                        <div style="height:5px;background:#e2e8f0;border-radius:3px;width:45%;"></div>
+                        <div style="height:5px;background:#cbd5e1;border-radius:3px;width:70%;margin-bottom:3px;"></div>
+                        <div style="height:4px;background:#e2e8f0;border-radius:3px;width:45%;"></div>
                     </div>
                 </div>
-                <div style="font-size:11px;color:var(--text-secondary);">Clean, crisp white workspace with royal blue accents.</div>
+                <div style="font-size:11px;color:var(--text-secondary);">Crisp white workspace with royal blue accents.</div>
             </div>
 
             <!-- 2. Pure Obsidian Dark -->
             <div class="theme-card-option" data-theme="dark" onclick="selectTheme('dark')">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <strong style="font-size:14px;color:var(--text-primary);">Obsidian Dark</strong>
+                    <strong style="font-size:13px;color:var(--text-primary);">Obsidian Dark</strong>
                     <span class="badge badge-primary" style="font-size:10px;">Matte Dark</span>
                 </div>
-                <div style="height:55px;border-radius:8px;background:#111827;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;padding:8px;gap:8px;">
-                    <div style="width:24px;height:24px;border-radius:6px;background:#3b82f6;"></div>
+                <div style="height:48px;border-radius:6px;background:#111827;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:4px;background:#3b82f6;"></div>
                     <div style="flex:1;">
-                        <div style="height:6px;background:#374151;border-radius:3px;width:70%;margin-bottom:4px;"></div>
-                        <div style="height:5px;background:#1f2937;border-radius:3px;width:45%;"></div>
+                        <div style="height:5px;background:#374151;border-radius:3px;width:70%;margin-bottom:3px;"></div>
+                        <div style="height:4px;background:#1f2937;border-radius:3px;width:45%;"></div>
                     </div>
                 </div>
-                <div style="font-size:11px;color:var(--text-secondary);">Deep matte charcoal & slate night mode for high contrast reading.</div>
+                <div style="font-size:11px;color:var(--text-secondary);">Deep matte charcoal & slate for high contrast.</div>
             </div>
 
             <!-- 3. Liquid Frosted Glassmorphism -->
             <div class="theme-card-option" data-theme="glass" onclick="selectTheme('glass')">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <strong style="font-size:14px;color:var(--text-primary);">Glassmorphism</strong>
-                    <span class="badge" style="background:rgba(99,102,241,0.2);color:#818cf8;border:1px solid rgba(99,102,241,0.4);font-size:10px;">Frosted Glass</span>
+                    <strong style="font-size:13px;color:var(--text-primary);">Glassmorphism</strong>
+                    <span class="badge" style="background:rgba(99,102,241,0.2);color:#818cf8;border:1px solid rgba(99,102,241,0.4);font-size:10px;">Frosted</span>
                 </div>
-                <div style="height:55px;border-radius:8px;background:radial-gradient(circle,rgba(99,102,241,0.3),rgba(236,72,153,0.2)),#0b0f19;border:1px solid rgba(255,255,255,0.25);backdrop-filter:blur(12px);display:flex;align-items:center;padding:8px;gap:8px;">
-                    <div style="width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);box-shadow:0 0 10px rgba(99,102,241,0.6);"></div>
+                <div style="height:48px;border-radius:6px;background:radial-gradient(circle,rgba(99,102,241,0.3),rgba(236,72,153,0.2)),#0b0f19;border:1px solid rgba(255,255,255,0.25);display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:4px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);box-shadow:0 0 8px rgba(99,102,241,0.6);"></div>
                     <div style="flex:1;">
-                        <div style="height:6px;background:rgba(255,255,255,0.3);border-radius:3px;width:70%;margin-bottom:4px;"></div>
-                        <div style="height:5px;background:rgba(255,255,255,0.15);border-radius:3px;width:45%;"></div>
+                        <div style="height:5px;background:rgba(255,255,255,0.3);border-radius:3px;width:70%;margin-bottom:3px;"></div>
+                        <div style="height:4px;background:rgba(255,255,255,0.15);border-radius:3px;width:45%;"></div>
                     </div>
                 </div>
-                <div style="font-size:11px;color:var(--text-secondary);">Translucent frosted glass, aurora glow background, crystal acrylic panels.</div>
+                <div style="font-size:11px;color:var(--text-secondary);">Translucent frosted glass with aurora glow.</div>
             </div>
 
-            <!-- 4. Emerald Glass -->
+            <!-- 4. Emerald Forest -->
             <div class="theme-card-option" data-theme="emerald" onclick="selectTheme('emerald')">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <strong style="font-size:14px;color:var(--text-primary);">Emerald Forest</strong>
-                    <span class="badge badge-success" style="font-size:10px;">Luxury Green</span>
+                    <strong style="font-size:13px;color:var(--text-primary);">Emerald Forest</strong>
+                    <span class="badge badge-success" style="font-size:10px;">Jade</span>
                 </div>
-                <div style="height:55px;border-radius:8px;background:#061913;border:1px solid rgba(16,185,129,0.3);display:flex;align-items:center;padding:8px;gap:8px;">
-                    <div style="width:24px;height:24px;border-radius:6px;background:#10b981;box-shadow:0 0 10px rgba(16,185,129,0.5);"></div>
+                <div style="height:48px;border-radius:6px;background:#061913;border:1px solid rgba(16,185,129,0.3);display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:4px;background:#10b981;"></div>
                     <div style="flex:1;">
-                        <div style="height:6px;background:#10b981;border-radius:3px;width:70%;margin-bottom:4px;opacity:0.8;"></div>
-                        <div style="height:5px;background:#0b251d;border-radius:3px;width:45%;"></div>
+                        <div style="height:5px;background:#10b981;border-radius:3px;width:70%;margin-bottom:3px;opacity:0.8;"></div>
+                        <div style="height:4px;background:#0b251d;border-radius:3px;width:45%;"></div>
                     </div>
                 </div>
-                <div style="font-size:11px;color:var(--text-secondary);">Deep emerald night backdrop with vivid jade and mint luminescence.</div>
+                <div style="font-size:11px;color:var(--text-secondary);">Deep emerald night with mint luminescence.</div>
             </div>
 
             <!-- 5. Midnight Violet -->
             <div class="theme-card-option" data-theme="midnight" onclick="selectTheme('midnight')">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <strong style="font-size:14px;color:var(--text-primary);">Midnight Violet</strong>
-                    <span class="badge" style="background:rgba(139,92,246,0.2);color:#a78bfa;font-size:10px;">Indigo Night</span>
+                    <strong style="font-size:13px;color:var(--text-primary);">Midnight Violet</strong>
+                    <span class="badge" style="background:rgba(139,92,246,0.2);color:#a78bfa;font-size:10px;">Indigo</span>
                 </div>
-                <div style="height:55px;border-radius:8px;background:#0d0b18;border:1px solid rgba(139,92,246,0.3);display:flex;align-items:center;padding:8px;gap:8px;">
-                    <div style="width:24px;height:24px;border-radius:6px;background:#8b5cf6;box-shadow:0 0 10px rgba(139,92,246,0.5);"></div>
+                <div style="height:48px;border-radius:6px;background:#0d0b18;border:1px solid rgba(139,92,246,0.3);display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:4px;background:#8b5cf6;"></div>
                     <div style="flex:1;">
-                        <div style="height:6px;background:#8b5cf6;border-radius:3px;width:70%;margin-bottom:4px;opacity:0.8;"></div>
-                        <div style="height:5px;background:#161226;border-radius:3px;width:45%;"></div>
+                        <div style="height:5px;background:#8b5cf6;border-radius:3px;width:70%;margin-bottom:3px;opacity:0.8;"></div>
+                        <div style="height:4px;background:#161226;border-radius:3px;width:45%;"></div>
                     </div>
                 </div>
-                <div style="font-size:11px;color:var(--text-secondary);">Dark celestial obsidian with electric violet and lavender accents.</div>
+                <div style="font-size:11px;color:var(--text-secondary);">Celestial obsidian with violet & lavender.</div>
             </div>
 
             <!-- 6. Sunset Crimson -->
             <div class="theme-card-option" data-theme="sunset" onclick="selectTheme('sunset')">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <strong style="font-size:14px;color:var(--text-primary);">Sunset Crimson</strong>
-                    <span class="badge" style="background:rgba(244,63,94,0.2);color:#fb7185;font-size:10px;">Amber Rose</span>
+                    <strong style="font-size:13px;color:var(--text-primary);">Sunset Crimson</strong>
+                    <span class="badge" style="background:rgba(244,63,94,0.2);color:#fb7185;font-size:10px;">Amber</span>
                 </div>
-                <div style="height:55px;border-radius:8px;background:#1a0b12;border:1px solid rgba(244,63,94,0.3);display:flex;align-items:center;padding:8px;gap:8px;">
-                    <div style="width:24px;height:24px;border-radius:6px;background:#f43f5e;box-shadow:0 0 10px rgba(244,63,94,0.5);"></div>
+                <div style="height:48px;border-radius:6px;background:#1a0b12;border:1px solid rgba(244,63,94,0.3);display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:4px;background:#f43f5e;"></div>
                     <div style="flex:1;">
-                        <div style="height:6px;background:#f43f5e;border-radius:3px;width:70%;margin-bottom:4px;opacity:0.8;"></div>
-                        <div style="height:5px;background:#26101b;border-radius:3px;width:45%;"></div>
+                        <div style="height:5px;background:#f43f5e;border-radius:3px;width:70%;margin-bottom:3px;opacity:0.8;"></div>
+                        <div style="height:4px;background:#26101b;border-radius:3px;width:45%;"></div>
                     </div>
                 </div>
-                <div style="font-size:11px;color:var(--text-secondary);">Warm wine-dark backdrop with crimson ruby and amber rose glows.</div>
+                <div style="font-size:11px;color:var(--text-secondary);">Warm wine-dark backdrop with crimson ruby glows.</div>
             </div>
 
             <!-- 7. Cyberpunk Neon -->
             <div class="theme-card-option" data-theme="cyberpunk" onclick="selectTheme('cyberpunk')">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <strong style="font-size:14px;color:var(--text-primary);">Cyberpunk</strong>
-                    <span class="badge" style="background:rgba(0,240,255,0.15);color:#00f0ff;border:1px solid #00f0ff;font-size:10px;">Neon</span>
+                    <strong style="font-size:13px;color:var(--text-primary);">Cyberpunk Neon</strong>
+                    <span class="badge" style="background:rgba(0,240,255,0.15);color:#00f0ff;border:1px solid #00f0ff;font-size:10px;">Cyan</span>
                 </div>
-                <div style="height:55px;border-radius:8px;background:#050811;border:1px solid #00f0ff;box-shadow:0 0 10px rgba(0,240,255,0.3);display:flex;align-items:center;padding:8px;gap:8px;">
-                    <div style="width:24px;height:24px;border-radius:4px;background:#00f0ff;box-shadow:0 0 10px #00f0ff;"></div>
+                <div style="height:48px;border-radius:6px;background:#050811;border:1px solid #00f0ff;display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:4px;background:#00f0ff;box-shadow:0 0 6px #00f0ff;"></div>
                     <div style="flex:1;">
-                        <div style="height:6px;background:#00f0ff;border-radius:2px;width:70%;margin-bottom:4px;opacity:0.8;"></div>
-                        <div style="height:5px;background:#ff0055;border-radius:2px;width:45%;"></div>
+                        <div style="height:5px;background:#00f0ff;border-radius:2px;width:70%;margin-bottom:3px;opacity:0.8;"></div>
+                        <div style="height:4px;background:#ff0055;border-radius:2px;width:45%;"></div>
                     </div>
                 </div>
-                <div style="font-size:11px;color:var(--text-secondary);">High-tech cyber black, neon cyan & laser magenta futuristic vibes.</div>
+                <div style="font-size:11px;color:var(--text-secondary);">Cyber black, laser cyan & magenta futuristic glow.</div>
             </div>
 
-            <!-- 8. Synthwave / Arcade -->
+            <!-- 8. Synthwave Arcade -->
             <div class="theme-card-option" data-theme="synthwave" onclick="selectTheme('synthwave')">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <strong style="font-size:14px;color:var(--text-primary);">Synthwave Retro</strong>
+                    <strong style="font-size:13px;color:var(--text-primary);">Synthwave 80s</strong>
                     <span class="badge" style="background:rgba(236,72,153,0.15);color:#ec4899;border:1px solid #ec4899;font-size:10px;">Arcade</span>
                 </div>
-                <div style="height:55px;border-radius:8px;background:#130924;border:1px solid #ec4899;box-shadow:0 0 12px rgba(236,72,153,0.3);display:flex;align-items:center;padding:8px;gap:8px;">
-                    <div style="width:24px;height:24px;border-radius:4px;background:linear-gradient(135deg,#ec4899,#8b5cf6);box-shadow:0 0 10px #ec4899;"></div>
+                <div style="height:48px;border-radius:6px;background:#130924;border:1px solid #ec4899;display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:4px;background:linear-gradient(135deg,#ec4899,#8b5cf6);"></div>
                     <div style="flex:1;">
-                        <div style="height:6px;background:#ec4899;border-radius:2px;width:70%;margin-bottom:4px;"></div>
-                        <div style="height:5px;background:#8b5cf6;border-radius:2px;width:45%;"></div>
+                        <div style="height:5px;background:#ec4899;border-radius:2px;width:70%;margin-bottom:3px;"></div>
+                        <div style="height:4px;background:#8b5cf6;border-radius:2px;width:45%;"></div>
                     </div>
                 </div>
-                <div style="font-size:11px;color:var(--text-secondary);">Midnight purple, vibrant neon sunset gradients, 80s arcade feel.</div>
+                <div style="font-size:11px;color:var(--text-secondary);">Midnight purple & sunset neon arcade style.</div>
             </div>
 
             <!-- 9. Neo-Brutalism -->
             <div class="theme-card-option" data-theme="neo-brutalism" onclick="selectTheme('neo-brutalism')">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <strong style="font-size:14px;color:var(--text-primary);">Neo-Brutalism</strong>
+                    <strong style="font-size:13px;color:var(--text-primary);">Neo-Brutalism</strong>
                     <span class="badge" style="background:#ffe600;color:#000;border:1.5px solid #000;font-size:10px;font-weight:800;">Bold</span>
                 </div>
-                <div style="height:55px;border-radius:4px;background:#fffdf5;border:2px solid #000;box-shadow:3px 3px 0px #000;display:flex;align-items:center;padding:8px;gap:8px;">
-                    <div style="width:24px;height:24px;border-radius:4px;background:#ffe600;border:1.5px solid #000;box-shadow:2px 2px 0px #000;"></div>
+                <div style="height:48px;border-radius:4px;background:#fffdf5;border:2px solid #000;box-shadow:2px 2px 0px #000;display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:2px;background:#ffe600;border:1.5px solid #000;"></div>
                     <div style="flex:1;">
-                        <div style="height:6px;background:#000;border-radius:0;width:70%;margin-bottom:4px;"></div>
-                        <div style="height:5px;background:#000;border-radius:0;width:45%;"></div>
+                        <div style="height:5px;background:#000;border-radius:0;width:70%;margin-bottom:3px;"></div>
+                        <div style="height:4px;background:#000;border-radius:0;width:45%;"></div>
                     </div>
                 </div>
-                <div style="font-size:11px;color:var(--text-secondary);">Heavy black outlines, hard offset drop shadows, energetic pop colors.</div>
+                <div style="font-size:11px;color:var(--text-secondary);">Bold black borders, hard drop shadows, punchy yellow.</div>
             </div>
 
             <!-- 10. Flat UI Design -->
             <div class="theme-card-option" data-theme="flat" onclick="selectTheme('flat')">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <strong style="font-size:14px;color:var(--text-primary);">Flat UI Design</strong>
+                    <strong style="font-size:13px;color:var(--text-primary);">Flat UI Modern</strong>
                     <span class="badge badge-secondary" style="font-size:10px;">Turquoise</span>
                 </div>
-                <div style="height:55px;border-radius:4px;background:#ecf0f1;border:1.5px solid #bdc3c7;display:flex;align-items:center;padding:8px;gap:8px;">
-                    <div style="width:24px;height:24px;border-radius:3px;background:#1abc9c;"></div>
+                <div style="height:48px;border-radius:4px;background:#ecf0f1;border:1px solid #bdc3c7;display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:3px;background:#1abc9c;"></div>
                     <div style="flex:1;">
-                        <div style="height:6px;background:#2c3e50;border-radius:0;width:70%;margin-bottom:4px;"></div>
-                        <div style="height:5px;background:#bdc3c7;border-radius:0;width:45%;"></div>
+                        <div style="height:5px;background:#2c3e50;border-radius:0;width:70%;margin-bottom:3px;"></div>
+                        <div style="height:4px;background:#bdc3c7;border-radius:0;width:45%;"></div>
                     </div>
                 </div>
-                <div style="font-size:11px;color:var(--text-secondary);">Clouds grey backdrop, dark asphalt sidebar, flat turquoise accents.</div>
+                <div style="font-size:11px;color:var(--text-secondary);">Clean flat grey, dark asphalt, turquoise accents.</div>
+            </div>
+
+            <!-- 11. Tokyo Night -->
+            <div class="theme-card-option" data-theme="tokyo" onclick="selectTheme('tokyo')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:13px;color:var(--text-primary);">Tokyo Night</strong>
+                    <span class="badge" style="background:rgba(125,207,255,0.2);color:#7dcfff;font-size:10px;">Tokyo</span>
+                </div>
+                <div style="height:48px;border-radius:6px;background:#1a1b26;border:1px solid rgba(122,162,247,0.3);display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:4px;background:#7dcfff;"></div>
+                    <div style="flex:1;">
+                        <div style="height:5px;background:#7aa2f7;border-radius:3px;width:70%;margin-bottom:3px;"></div>
+                        <div style="height:4px;background:#24283b;border-radius:3px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Deep Tokyo midnight navy with calm ice blue highlights.</div>
+            </div>
+
+            <!-- 12. Rose Gold Velvet -->
+            <div class="theme-card-option" data-theme="rose" onclick="selectTheme('rose')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:13px;color:var(--text-primary);">Rose Gold Luxury</strong>
+                    <span class="badge" style="background:rgba(251,113,133,0.2);color:#fb7185;font-size:10px;">Rose Gold</span>
+                </div>
+                <div style="height:48px;border-radius:6px;background:#1e1924;border:1px solid rgba(251,113,133,0.3);display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:4px;background:#fb7185;"></div>
+                    <div style="flex:1;">
+                        <div style="height:5px;background:#fda4af;border-radius:3px;width:70%;margin-bottom:3px;"></div>
+                        <div style="height:4px;background:#2b2333;border-radius:3px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Velvet plum background with warm luxury rose gold.</div>
+            </div>
+
+            <!-- 13. Warm Espresso & Latte -->
+            <div class="theme-card-option" data-theme="coffee" onclick="selectTheme('coffee')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:13px;color:var(--text-primary);">Espresso & Latte</strong>
+                    <span class="badge" style="background:rgba(217,119,6,0.2);color:#f59e0b;font-size:10px;">Warm Cafe</span>
+                </div>
+                <div style="height:48px;border-radius:6px;background:#1e1915;border:1px solid rgba(217,119,6,0.3);display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:4px;background:#d97706;"></div>
+                    <div style="flex:1;">
+                        <div style="height:5px;background:#f59e0b;border-radius:3px;width:70%;margin-bottom:3px;"></div>
+                        <div style="height:4px;background:#2b231e;border-radius:3px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Rich dark roast coffee with warm amber caramel tones.</div>
+            </div>
+
+            <!-- 14. Nordic Arctic Frost -->
+            <div class="theme-card-option" data-theme="nordic" onclick="selectTheme('nordic')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:13px;color:var(--text-primary);">Nordic Frost</strong>
+                    <span class="badge" style="background:rgba(56,189,248,0.2);color:#38bdf8;font-size:10px;">Arctic</span>
+                </div>
+                <div style="height:48px;border-radius:6px;background:#0f172a;border:1px solid rgba(56,189,248,0.3);display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:4px;background:#38bdf8;"></div>
+                    <div style="flex:1;">
+                        <div style="height:5px;background:#7dd3fc;border-radius:3px;width:70%;margin-bottom:3px;"></div>
+                        <div style="height:4px;background:#1e293b;border-radius:3px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Minimalist Scandinavian arctic frost & sky blue.</div>
+            </div>
+
+            <!-- 15. Dracula Gothic Night -->
+            <div class="theme-card-option" data-theme="dracula" onclick="selectTheme('dracula')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:13px;color:var(--text-primary);">Dracula Gothic</strong>
+                    <span class="badge" style="background:rgba(189,147,249,0.2);color:#bd93f9;font-size:10px;">Gothic</span>
+                </div>
+                <div style="height:48px;border-radius:6px;background:#282a36;border:1px solid rgba(189,147,249,0.3);display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:4px;background:#bd93f9;"></div>
+                    <div style="flex:1;">
+                        <div style="height:5px;background:#ff79c6;border-radius:3px;width:70%;margin-bottom:3px;"></div>
+                        <div style="height:4px;background:#383a59;border-radius:3px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Iconic developer gothic dark theme with pastel accents.</div>
+            </div>
+
+            <!-- 16. Retro Outrun Vaporwave -->
+            <div class="theme-card-option" data-theme="outrun" onclick="selectTheme('outrun')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:13px;color:var(--text-primary);">Retro Outrun</strong>
+                    <span class="badge" style="background:rgba(255,42,133,0.2);color:#ff2a85;font-size:10px;">Vaporwave</span>
+                </div>
+                <div style="height:48px;border-radius:6px;background:#170d30;border:1px solid rgba(255,42,133,0.3);display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:4px;background:#ff2a85;"></div>
+                    <div style="flex:1;">
+                        <div style="height:5px;background:#00f0ff;border-radius:3px;width:70%;margin-bottom:3px;"></div>
+                        <div style="height:4px;background:#26164d;border-radius:3px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Hot magenta pink, laser cyan, synthwave vaporwave energy.</div>
+            </div>
+
+            <!-- 17. Forest Matcha Zen -->
+            <div class="theme-card-option" data-theme="matcha" onclick="selectTheme('matcha')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:13px;color:var(--text-primary);">Forest Matcha</strong>
+                    <span class="badge" style="background:rgba(52,211,153,0.2);color:#34d399;font-size:10px;">Matcha Zen</span>
+                </div>
+                <div style="height:48px;border-radius:6px;background:#14221b;border:1px solid rgba(52,211,153,0.3);display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:4px;background:#34d399;"></div>
+                    <div style="flex:1;">
+                        <div style="height:5px;background:#6ee7b7;border-radius:3px;width:70%;margin-bottom:3px;"></div>
+                        <div style="height:4px;background:#1e3328;border-radius:3px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Gentle organic matcha green tea & soothing botanical slate.</div>
+            </div>
+
+            <!-- 18. Imperial Amethyst -->
+            <div class="theme-card-option" data-theme="amethyst" onclick="selectTheme('amethyst')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:13px;color:var(--text-primary);">Imperial Amethyst</strong>
+                    <span class="badge" style="background:rgba(168,85,247,0.2);color:#a855f7;font-size:10px;">Regal</span>
+                </div>
+                <div style="height:48px;border-radius:6px;background:#1b1130;border:1px solid rgba(168,85,247,0.3);display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:4px;background:#a855f7;"></div>
+                    <div style="flex:1;">
+                        <div style="height:5px;background:#c084fc;border-radius:3px;width:70%;margin-bottom:3px;"></div>
+                        <div style="height:4px;background:#281a47;border-radius:3px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Regal imperial purple velvet with luminous lavender jewels.</div>
+            </div>
+
+            <!-- 19. Solarized Dark Studio -->
+            <div class="theme-card-option" data-theme="solarized" onclick="selectTheme('solarized')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:13px;color:var(--text-primary);">Solarized Dark</strong>
+                    <span class="badge" style="background:rgba(42,161,152,0.2);color:#2aa198;font-size:10px;">Precision</span>
+                </div>
+                <div style="height:48px;border-radius:6px;background:#002b36;border:1px solid rgba(42,161,152,0.3);display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:4px;background:#2aa198;"></div>
+                    <div style="flex:1;">
+                        <div style="height:5px;background:#268bd2;border-radius:3px;width:70%;margin-bottom:3px;"></div>
+                        <div style="height:4px;background:#073642;border-radius:3px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Ethan Schoonover's legendary scientific color system.</div>
+            </div>
+
+            <!-- 20. Blood Crimson & Onyx -->
+            <div class="theme-card-option" data-theme="crimson" onclick="selectTheme('crimson')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:13px;color:var(--text-primary);">Blood Crimson</strong>
+                    <span class="badge" style="background:rgba(225,29,72,0.2);color:#e11d48;font-size:10px;">Onyx</span>
+                </div>
+                <div style="height:48px;border-radius:6px;background:#12090c;border:1px solid rgba(225,29,72,0.3);display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:4px;background:#e11d48;"></div>
+                    <div style="flex:1;">
+                        <div style="height:5px;background:#f43f5e;border-radius:3px;width:70%;margin-bottom:3px;"></div>
+                        <div style="height:4px;background:#1e0d13;border-radius:3px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Pitch onyx darkness with striking blood crimson highlights.</div>
+            </div>
+
+            <!-- 21. Monokai Pro Developer -->
+            <div class="theme-card-option" data-theme="monokai" onclick="selectTheme('monokai')">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong style="font-size:13px;color:var(--text-primary);">Monokai Pro</strong>
+                    <span class="badge" style="background:rgba(166,226,46,0.2);color:#a6e22e;font-size:10px;">Dev Choice</span>
+                </div>
+                <div style="height:48px;border-radius:6px;background:#272822;border:1px solid rgba(166,226,46,0.3);display:flex;align-items:center;padding:6px;gap:6px;margin:6px 0;">
+                    <div style="width:20px;height:20px;border-radius:4px;background:#a6e22e;"></div>
+                    <div style="flex:1;">
+                        <div style="height:5px;background:#66d9ef;border-radius:3px;width:70%;margin-bottom:3px;"></div>
+                        <div style="height:4px;background:#34352f;border-radius:3px;width:45%;"></div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-secondary);">Sublime & VS Code classic coding aesthetic with lime green.</div>
             </div>
 
         </div>
@@ -252,43 +428,172 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
-     80+ GOOGLE FONTS TYPOGRAPHY BROWSER
+     700+ GOOGLE FONTS & CURSIVE STYLES STUDIO
      ═══════════════════════════════════════════════════════════ -->
 <div class="card">
     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-3);">
         <div>
-            <h3 style="margin:0;font-size:var(--text-lg);font-weight:700;">80+ Curated Google Fonts</h3>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <h3 style="margin:0;font-size:var(--text-lg);font-weight:700;">700+ Google Fonts & Cursive Script Engine</h3>
+                <span class="badge badge-success" style="font-size:11px;">✍️ Cursive & Stylish Added</span>
+            </div>
             <p style="font-size:var(--text-xs);color:var(--text-secondary);margin-top:2px;">
-                Click any font card to apply it instantly across your entire dashboard.
+                Browse curated handwriting/cursive scripts or type ANY font available on Google Fonts to load and apply on-demand!
             </p>
         </div>
-        <div style="width:280px;">
-            <input type="text" id="fontSearchInput" class="form-input form-input-sm" placeholder="🔍 Search 80+ fonts..." oninput="filterFonts(this.value)">
+        <div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;">
+            <div style="position:relative;width:240px;">
+                <input type="text" id="fontSearchInput" class="form-input form-input-sm" placeholder="🔍 Search fonts catalog..." oninput="filterFonts(this.value)">
+            </div>
         </div>
+    </div>
+
+    <!-- Custom Font Universal Loader Bar -->
+    <div style="padding:var(--space-4) var(--space-6);background:var(--surface-container);border-bottom:1px solid var(--border-color);display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;">
+        <span class="material-symbols-outlined" style="color:var(--primary-500);font-size:20px;">magic_button</span>
+        <div style="flex:1;min-width:260px;">
+            <input type="text" id="customFontInput" class="form-input form-input-sm" list="googleFontsList" placeholder="Type ANY Google Font name (e.g. Pacifico, Sacramento, Satisfy, Caveat, Alex Brush, Lobster, Great Vibes)..." onkeydown="if(event.key==='Enter') applyCustomGoogleFont()">
+            <datalist id="googleFontsList">
+                <!-- Cursive & Stylish -->
+                <option value="Dancing Script">
+                <option value="Pacifico">
+                <option value="Great Vibes">
+                <option value="Sacramento">
+                <option value="Lobster">
+                <option value="Caveat">
+                <option value="Alex Brush">
+                <option value="Satisfy">
+                <option value="Parisienne">
+                <option value="Tangerine">
+                <option value="Courgette">
+                <option value="Shadows Into Light">
+                <option value="Marck Script">
+                <option value="Allura">
+                <option value="Kaushan Script">
+                <option value="Yellowtail">
+                <option value="Bad Script">
+                <option value="Cookie">
+                <option value="Damion">
+                <option value="Homemade Apple">
+                <option value="Nothing You Could Do">
+                <option value="Reenie Beanie">
+                <option value="Rochester">
+                <option value="Zeyada">
+                <option value="Cedarville Cursive">
+                <option value="Stalemate">
+                <option value="Herr Von Muellerhoff">
+                <option value="Clicker Script">
+                <option value="Playball">
+                <option value="Rouge Script">
+                <option value="Italianno">
+                <option value="Qwigley">
+                <option value="Grand Hotel">
+                <option value="Montez">
+                <option value="Berkshire Swash">
+                <option value="Pinyon Script">
+                <option value="Kalam">
+                <option value="Gloria Hallelujah">
+                <option value="Indie Flower">
+                <option value="Amatic SC">
+                <!-- Popular Sans / Serif -->
+                <option value="Inter">
+                <option value="Roboto">
+                <option value="Poppins">
+                <option value="Montserrat">
+                <option value="Open Sans">
+                <option value="Lato">
+                <option value="Outfit">
+                <option value="Plus Jakarta Sans">
+                <option value="Space Grotesk">
+                <option value="Playfair Display">
+                <option value="Lora">
+                <option value="Merriweather">
+                <option value="Cinzel">
+                <option value="Bodoni Moda">
+                <option value="JetBrains Mono">
+                <option value="Fira Code">
+            </datalist>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="applyCustomGoogleFont()" style="display:flex;align-items:center;gap:4px;">
+            <span class="material-symbols-outlined" style="font-size:16px;">bolt</span> Apply Any Google Font
+        </button>
     </div>
 
     <!-- Category Filter Tabs -->
     <div style="padding:var(--space-3) var(--space-6);border-bottom:1px solid var(--border-color);display:flex;gap:var(--space-2);overflow-x:auto;flex-wrap:wrap;">
-        <button class="btn btn-primary btn-sm font-cat-btn" data-cat="all" onclick="filterFontCategory('all')">All Fonts (80+)</button>
-        <button class="btn btn-secondary btn-sm font-cat-btn" data-cat="sans" onclick="filterFontCategory('sans')">Clean Sans-Serif</button>
-        <button class="btn btn-secondary btn-sm font-cat-btn" data-cat="geometric" onclick="filterFontCategory('geometric')">Modern & Startup</button>
-        <button class="btn btn-secondary btn-sm font-cat-btn" data-cat="serif" onclick="filterFontCategory('serif')">Luxury & Editorial Serif</button>
-        <button class="btn btn-secondary btn-sm font-cat-btn" data-cat="mono" onclick="filterFontCategory('mono')">Developer Monospace</button>
-        <button class="btn btn-secondary btn-sm font-cat-btn" data-cat="display" onclick="filterFontCategory('display')">Bold & Display</button>
-        <button class="btn btn-secondary btn-sm font-cat-btn" data-cat="friendly" onclick="filterFontCategory('friendly')">Friendly & Rounded</button>
+        <button class="btn btn-primary btn-sm font-cat-btn" data-cat="cursive" onclick="filterFontCategory('cursive')">✍️ Cursive & Stylish</button>
+        <button class="btn btn-secondary btn-sm font-cat-btn" data-cat="all" onclick="filterFontCategory('all')">🌐 All Curated (120+)</button>
+        <button class="btn btn-secondary btn-sm font-cat-btn" data-cat="sans" onclick="filterFontCategory('sans')">🚀 Clean Sans</button>
+        <button class="btn btn-secondary btn-sm font-cat-btn" data-cat="geometric" onclick="filterFontCategory('geometric')">✨ Startup Geometric</button>
+        <button class="btn btn-secondary btn-sm font-cat-btn" data-cat="serif" onclick="filterFontCategory('serif')">💎 Luxury Serif</button>
+        <button class="btn btn-secondary btn-sm font-cat-btn" data-cat="mono" onclick="filterFontCategory('mono')">💻 Developer Mono</button>
+        <button class="btn btn-secondary btn-sm font-cat-btn" data-cat="display" onclick="filterFontCategory('display')">🎨 Bold Display</button>
+        <button class="btn btn-secondary btn-sm font-cat-btn" data-cat="friendly" onclick="filterFontCategory('friendly')">🧸 Friendly & Playful</button>
     </div>
 
     <div class="card-body">
-        <div class="font-selector-grid" id="fontsGrid" style="grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: var(--space-3);">
+        <div class="font-selector-grid" id="fontsGrid" style="grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: var(--space-3);">
             <!-- Fonts populated by script -->
         </div>
     </div>
 </div>
 
 <script>
-// 80+ Curated Google Fonts Catalog
+// 120+ Curated Google Fonts Catalog with extensive Cursive & Stylish section
 const FONTS_CATALOG = [
-    // ── 1. Clean Sans-Serif (20)
+    // ═══════════════════════════════════════════════════════════
+    // 1. CURSIVE, CALLIGRAPHY & STYLISH SCRIPTS (45+)
+    // ═══════════════════════════════════════════════════════════
+    { name: "Dancing Script", category: "cursive", desc: "Lively bouncy casual cursive script" },
+    { name: "Pacifico", category: "cursive", desc: "Delicious retro Hawaiian surf script" },
+    { name: "Great Vibes", category: "cursive", desc: "Flowing elegant calligraphy cursive" },
+    { name: "Sacramento", category: "cursive", desc: "Delicate connected monoline script" },
+    { name: "Satisfy", category: "cursive", desc: "Smooth modern brush script with flair" },
+    { name: "Caveat", category: "cursive", desc: "Warm natural handwritten signature" },
+    { name: "Alex Brush", category: "cursive", desc: "Flowing classic formal brush script" },
+    { name: "Lobster", category: "cursive", desc: "Bold retro cursive display script" },
+    { name: "Parisienne", category: "cursive", desc: "Romantic Parisian vintage cursive" },
+    { name: "Tangerine", category: "cursive", desc: "Tall delicate chancery calligraphy" },
+    { name: "Courgette", category: "cursive", desc: "Compact medium-contrast brush cursive" },
+    { name: "Shadows Into Light", category: "cursive", desc: "Neat clean personal handwritten style" },
+    { name: "Marck Script", category: "cursive", desc: "Flowing fountain pen quill script" },
+    { name: "Allura", category: "cursive", desc: "Ultra-luxurious feminine cursive" },
+    { name: "Kaushan Script", category: "cursive", desc: "Rustic uninhibited natural brush" },
+    { name: "Yellowtail", category: "cursive", desc: "1930s sign painter flat brush script" },
+    { name: "Bad Script", category: "cursive", desc: "Casual everyday notebook handwriting" },
+    { name: "Cookie", category: "cursive", desc: "1950s advertisements retro script" },
+    { name: "Damion", category: "cursive", desc: "Casual mid-century script style" },
+    { name: "Homemade Apple", category: "cursive", desc: "Classic cursive pencil handwriting" },
+    { name: "Nothing You Could Do", category: "cursive", desc: "Carefree authentic photographer note" },
+    { name: "Reenie Beanie", category: "cursive", desc: "Fun loose ballpoint pen scrawl" },
+    { name: "Rochester", category: "cursive", desc: "Early Victorian calligraphy elegance" },
+    { name: "Zeyada", category: "cursive", desc: "Energetic scribbled ink signature" },
+    { name: "Cedarville Cursive", category: "cursive", desc: "Charming traditional script lessons" },
+    { name: "Stalemate", category: "cursive", desc: "Modern edgy vintage calligraphy" },
+    { name: "Herr Von Muellerhoff", category: "cursive", desc: "Traditional 19th-century cursive" },
+    { name: "Clicker Script", category: "cursive", desc: "Playful ribbon script with bounce" },
+    { name: "Playball", category: "cursive", desc: "Sporty athletic vintage cursive" },
+    { name: "Rouge Script", category: "cursive", desc: "Soft romantic curves with flair" },
+    { name: "Italianno", category: "cursive", desc: "High ascender Italian formal cursive" },
+    { name: "Qwigley", category: "cursive", desc: "Extravagant flowing luxury swirls" },
+    { name: "Grand Hotel", category: "cursive", desc: "Artisan bakery & cafe ribbon script" },
+    { name: "Montez", category: "cursive", desc: "Pointed brush beauty for beauty brands" },
+    { name: "Berkshire Swash", category: "cursive", desc: "Gentle romantic semi-cursive swashes" },
+    { name: "Pinyon Script", category: "cursive", desc: "Aristocratic royalty calligraphy" },
+    { name: "Kalam", category: "cursive", desc: "Organic Devanagari & Latin ballpoint" },
+    { name: "Gloria Hallelujah", category: "cursive", desc: "Chalkboard bouncy handwriting" },
+    { name: "Indie Flower", category: "cursive", desc: "Bubbling creative carefree handwriting" },
+    { name: "Amatic SC", category: "cursive", desc: "Hand-drawn rustic indie poster script" },
+    { name: "Rock Salt", category: "cursive", desc: "Thick felt marker handwriting" },
+    { name: "Walter Turncoat", category: "cursive", desc: "Expressive chalk graffiti script" },
+    { name: "Rancho", category: "cursive", desc: "Southwestern brush calligraphy" },
+    { name: "Calligraffitti", category: "cursive", desc: "Urban calligraphy with street style" },
+    { name: "Euphoria Script", category: "cursive", desc: "Disconnected buoyant joyful script" },
+    { name: "Mr De Haviland", category: "cursive", desc: "Classic historic engraved cursive" },
+
+    // ═══════════════════════════════════════════════════════════
+    // 2. CLEAN SANS-SERIF (18)
+    // ═══════════════════════════════════════════════════════════
     { name: "Inter", category: "sans", desc: "Clean modern SaaS standard" },
     { name: "Roboto", category: "sans", desc: "Google material balance" },
     { name: "Open Sans", category: "sans", desc: "Highly readable neutral" },
@@ -307,33 +612,32 @@ const FONTS_CATALOG = [
     { name: "Albert Sans", category: "sans", desc: "Modern Scandinavian clean" },
     { name: "Public Sans", category: "sans", desc: "Government-grade clarity" },
     { name: "Red Hat Display", category: "sans", desc: "Enterprise open-source flair" },
-    { name: "Hanken Grotesk", category: "sans", desc: "Versatile editorial neo-grotesk" },
-    { name: "Overpass", category: "sans", desc: "Signage inspired bold look" },
 
-    // ── 2. Modern Geometric & Startup (15)
+    // ═══════════════════════════════════════════════════════════
+    // 3. STARTUP & GEOMETRIC (12)
+    // ═══════════════════════════════════════════════════════════
     { name: "Outfit", category: "geometric", desc: "Commercial startup favorite" },
-    { name: "Plus Jakarta Sans", category: "geometric", desc: "Modern Indonesian tech design" },
+    { name: "Plus Jakarta Sans", category: "geometric", desc: "Modern tech design" },
     { name: "Space Grotesk", category: "geometric", desc: "Futuristic brutalist tech" },
     { name: "Syne", category: "geometric", desc: "Avant-garde artistic layout" },
-    { name: "Lexend", category: "geometric", desc: "Engineered for maximum reading speed" },
+    { name: "Lexend", category: "geometric", desc: "Engineered reading speed" },
     { name: "Spline Sans", category: "geometric", desc: "Sharp industrial tech look" },
-    { name: "Epilogue", category: "geometric", desc: "Bold variable display typography" },
+    { name: "Epilogue", category: "geometric", desc: "Bold variable display" },
     { name: "Archivo", category: "geometric", desc: "High performance headlines" },
-    { name: "Chivo", category: "geometric", desc: "Grotesque neo-vintage appeal" },
-    { name: "Kumbh Sans", category: "geometric", desc: "Modern geometric clarity" },
-    { name: "Mohave", category: "geometric", desc: "Smooth modern corporate headline" },
+    { name: "Chivo", category: "geometric", desc: "Neo-vintage appeal" },
     { name: "Jost", category: "geometric", desc: "Futura-inspired German Bauhaus" },
     { name: "Be Vietnam Pro", category: "geometric", desc: "Engineered neo-grotesque" },
     { name: "Sen", category: "geometric", desc: "Sensible geometric proportions" },
-    { name: "Metrophobic", category: "geometric", desc: "Minimalist aerodynamic tech" },
 
-    // ── 3. Luxury & Editorial Serif (15)
+    // ═══════════════════════════════════════════════════════════
+    // 4. LUXURY & EDITORIAL SERIF (14)
+    // ═══════════════════════════════════════════════════════════
     { name: "Playfair Display", category: "serif", desc: "Editorial luxury & haute couture" },
     { name: "Lora", category: "serif", desc: "Contemporary brushed literary" },
     { name: "Merriweather", category: "serif", desc: "Optimized for long-form reading" },
     { name: "Cormorant Garamond", category: "serif", desc: "Classic traditional sophistication" },
     { name: "Cinzel", category: "serif", desc: "Roman classical inscriptions" },
-    { name: "PT Serif", category: "serif", desc: "Russian universal news serif" },
+    { name: "PT Serif", category: "serif", desc: "Universal news serif" },
     { name: "Bodoni Moda", category: "serif", desc: "Vogue Italian extreme contrast" },
     { name: "Spectral", category: "serif", desc: "Google Docs premium book serif" },
     { name: "EB Garamond", category: "serif", desc: "16th-century humanist Renaissance" },
@@ -341,22 +645,25 @@ const FONTS_CATALOG = [
     { name: "Prata", category: "serif", desc: "Elegant teardrop terminals" },
     { name: "Castoro", category: "serif", desc: "Scholarly academic journal style" },
     { name: "Domine", category: "serif", desc: "Warm rounded editorial news" },
-    { name: "Marcellus", category: "serif", desc: "Trajan classical column style" },
     { name: "Cinzel Decorative", category: "serif", desc: "Regal ceremonial inscriptions" },
 
-    // ── 4. Developer Monospace (10)
+    // ═══════════════════════════════════════════════════════════
+    // 5. DEVELOPER MONOSPACE (10)
+    // ═══════════════════════════════════════════════════════════
     { name: "JetBrains Mono", category: "mono", desc: "Top developer code font" },
     { name: "Fira Code", category: "mono", desc: "Clean programmatic ligatures" },
-    { name: "Source Code Pro", category: "mono", desc: "Adobe developer terminal standard" },
+    { name: "Source Code Pro", category: "mono", desc: "Adobe terminal standard" },
     { name: "Space Mono", category: "mono", desc: "Retro 1960s lunar tech" },
-    { name: "IBM Plex Mono", category: "mono", desc: "Engineered corporate industrial" },
+    { name: "IBM Plex Mono", category: "mono", desc: "Engineered industrial monospace" },
     { name: "Inconsolata", category: "mono", desc: "Clear monospaced code beauty" },
     { name: "Roboto Mono", category: "mono", desc: "Material design technical look" },
     { name: "Ubuntu Mono", category: "mono", desc: "Linux command line clarity" },
     { name: "Courier Prime", category: "mono", desc: "Hollywood screenplay typewriter" },
     { name: "Overpass Mono", category: "mono", desc: "Technical architectural terminal" },
 
-    // ── 5. Bold & Display (12)
+    // ═══════════════════════════════════════════════════════════
+    // 6. BOLD & DISPLAY (10)
+    // ═══════════════════════════════════════════════════════════
     { name: "Bebas Neue", category: "display", desc: "Tall monumental movie poster" },
     { name: "Oswald", category: "display", desc: "Classic gothic condensed headline" },
     { name: "Anton", category: "display", desc: "Ultra-heavy billboard impactful" },
@@ -365,25 +672,23 @@ const FONTS_CATALOG = [
     { name: "Orbitron", category: "display", desc: "Sci-fi HUD spacecraft interface" },
     { name: "Audiowide", category: "display", desc: "Cyber techno gamer display" },
     { name: "Rajdhani", category: "display", desc: "Angular esports typography" },
-    { name: "Chakra Petch", category: "display", desc: "Military tech squared curves" },
-    { name: "Teko", category: "display", desc: "Condensed athletic sports display" },
     { name: "Titan One", category: "display", desc: "Fun cartoon punchy weight" },
     { name: "Bangers", category: "display", desc: "Comic book superhero action" },
 
-    // ── 6. Friendly & Rounded (10)
+    // ═══════════════════════════════════════════════════════════
+    // 7. FRIENDLY & PLAYFUL (8)
+    // ═══════════════════════════════════════════════════════════
     { name: "Quicksand", category: "friendly", desc: "Delicate geometric rounded ends" },
     { name: "Comfortaa", category: "friendly", desc: "Ultra-smooth rounded lowercase" },
-    { name: "Baloo 2", category: "friendly", desc: "Playful bubbly Indian curves" },
     { name: "Fredoka", category: "friendly", desc: "Chubby lovable gaming brand" },
+    { name: "Baloo 2", category: "friendly", desc: "Playful bubbly curves" },
     { name: "Dosis", category: "friendly", desc: "Tall rounded modern display" },
     { name: "Varela Round", category: "friendly", desc: "Gentle welcoming UI interface" },
     { name: "Sniglet", category: "friendly", desc: "Cheerful bouncy creative" },
-    { name: "Mali", category: "friendly", desc: "Lighthearted handwritten charm" },
-    { name: "Patrick Hand", category: "friendly", desc: "Natural classroom whiteboard handwriting" },
-    { name: "Caveat", category: "friendly", desc: "Casual fast signature cursive" }
+    { name: "Patrick Hand", category: "friendly", desc: "Natural classroom handwriting" }
 ];
 
-let activeFontCategory = 'all';
+let activeFontCategory = 'cursive'; // Start with cursive & stylish highlighted!
 
 function renderFonts() {
     const grid = document.getElementById('fontsGrid');
@@ -398,14 +703,15 @@ function renderFonts() {
 
     grid.innerHTML = filtered.map(f => {
         const isSelected = f.name.toLowerCase() === currentActive.toLowerCase();
+        const isCursive = f.category === 'cursive';
         return `
-            <div class="font-card-option ${isSelected ? 'selected' : ''}" data-font="${f.name}" onclick="selectFont('${f.name}')">
+            <div class="font-card-option ${isSelected ? 'selected' : ''}" data-font="${f.name}" onclick="selectFont('${f.name}')" style="cursor:pointer;padding:12px;border-radius:var(--radius-md);border:1px solid ${isSelected ? 'var(--primary-500)' : 'var(--border-color)'};background:var(--surface);transition:all 0.15s ease;">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <strong style="font-size:14px;color:var(--text-primary);">${f.name}</strong>
-                    <span class="badge ${isSelected ? 'badge-primary' : 'badge-secondary'}" style="font-size:9px;text-transform:capitalize;">${f.category}</span>
+                    <strong style="font-size:13px;color:var(--text-primary);">${f.name}</strong>
+                    <span class="badge ${isCursive ? 'badge-primary' : (isSelected ? 'badge-primary' : 'badge-secondary')}" style="font-size:9px;text-transform:capitalize;">${f.category}</span>
                 </div>
-                <div style="font-family:'${f.name}',sans-serif;font-size:15px;color:var(--text-primary);margin:4px 0;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                    The quick brown fox
+                <div style="font-family:'${f.name}',cursive,sans-serif;font-size:${isCursive ? '20px' : '15px'};color:var(--text-primary);margin:6px 0;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    ${isCursive ? 'Signature Cursive Style' : 'The quick brown fox'}
                 </div>
                 <div style="font-size:11px;color:var(--text-secondary);line-height:1.3;">
                     ${f.desc}

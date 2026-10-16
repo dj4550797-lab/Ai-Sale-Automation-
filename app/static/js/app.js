@@ -329,10 +329,24 @@ function selectTheme(themeName) {
         'light': 'Clean SaaS (Light)',
         'dark': 'Obsidian Dark (Matte)',
         'glass': 'Liquid Frosted Glassmorphism',
-        'flat': 'Flat UI Design',
-        'neo-brutalism': 'Neo-Brutalism',
-        'cyberpunk': 'Cyberpunk Neon',
-        'synthwave': 'Retro-Futurism / Synthwave'
+        'emerald': 'Emerald Forest Zen',
+        'midnight': 'Midnight Violet Celestial',
+        'sunset': 'Sunset Crimson Ruby',
+        'cyberpunk': 'Cyberpunk Neon Matrix',
+        'synthwave': '80s Synthwave Arcade',
+        'neo-brutalism': 'Neo-Brutalism High Contrast',
+        'flat': 'Flat UI Turquoise Modern',
+        'tokyo': 'Tokyo Night Synthwave',
+        'rose': 'Rose Gold Velvet Luxury',
+        'coffee': 'Warm Espresso & Latte',
+        'nordic': 'Nordic Arctic Frost',
+        'dracula': 'Dracula Gothic Night',
+        'outrun': 'Retro Outrun Vaporwave',
+        'matcha': 'Forest Matcha Zen',
+        'amethyst': 'Imperial Amethyst Luxury',
+        'solarized': 'Solarized Dark Developer',
+        'crimson': 'Blood Crimson & Onyx',
+        'monokai': 'Monokai Pro Developer'
     };
     showToast(`🎨 Theme applied: ${themeTitles[themeName] || themeName}`, 'info', 2200);
 }
@@ -352,7 +366,7 @@ function applyTheme(theme) {
     });
 }
 
-// ── Typography Font Selection (80+ Google Fonts Engine) ──────────────
+// ── Typography Font Selection (700+ Google Fonts Engine) ──────────────
 function initAppFont() {
     const currentFont = localStorage.getItem('flixora_font') || 'Inter';
     const currentScale = localStorage.getItem('flixora_font_scale') || '100';
@@ -367,6 +381,16 @@ function selectFont(fontName) {
     showToast(`🔤 Font applied: ${fontName}`, 'info', 2200);
 }
 
+function applyCustomGoogleFont() {
+    const customInput = document.getElementById('customFontInput');
+    if (!customInput || !customInput.value.trim()) {
+        showToast('Please type a Google font name (e.g. Pacifico, Sacramento, Satisfy, Caveat)', 'warning');
+        return;
+    }
+    const fontName = customInput.value.trim();
+    selectFont(fontName);
+}
+
 function applyFont(fontName) {
     if (!fontName) fontName = 'Inter';
     const safeName = fontName.trim();
@@ -374,7 +398,9 @@ function applyFont(fontName) {
     // 1. Dynamically inject Google Font stylesheet if not already present
     const linkId = 'gfont-' + safeName.replace(/\s+/g, '-').toLowerCase();
     if (!document.getElementById(linkId) && safeName !== 'System Default') {
-        const fontUrl = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(safeName)}:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap`;
+        // Universal query without fixed weight axes so ALL cursive, script, display and standard fonts load without 400 error:
+        const cleanParam = encodeURIComponent(safeName).replace(/%20/g, '+');
+        const fontUrl = `https://fonts.googleapis.com/css2?family=${cleanParam}&display=swap`;
         const linkEl = document.createElement('link');
         linkEl.id = linkId;
         linkEl.rel = 'stylesheet';
@@ -385,7 +411,7 @@ function applyFont(fontName) {
     // 2. Apply font family globally to root variables and body
     const fontStack = safeName === 'System Default' 
         ? "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
-        : `'${safeName}', system-ui, -apple-system, sans-serif`;
+        : `'${safeName}', cursive, system-ui, -apple-system, sans-serif`;
     
     document.documentElement.style.setProperty('--font-sans', fontStack);
     document.documentElement.style.setProperty('--font-family-base', fontStack);

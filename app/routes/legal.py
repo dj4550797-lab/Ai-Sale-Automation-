@@ -57,28 +57,44 @@ def get_company_context():
     }
 
 
+@legal_bp.route('/legal', endpoint='legal_portal')
+@legal_bp.route('/legal', endpoint='legal_hub')
+@legal_bp.route('/compliance')
+def legal_portal():
+    """Unified Legal & Compliance Portal."""
+    context = get_company_context()
+    active_tab = request.args.get('tab', 'privacy')
+    context['active_tab'] = active_tab
+    return render_template('legal/index.html', **context)
+
+legal_hub = legal_portal
+
+
 @legal_bp.route('/privacy-policy')
 @legal_bp.route('/privacy')
 def privacy_policy():
-    """Public Privacy Policy for Meta Verification & GDPR compliance."""
+    """Public Privacy Policy for Meta Verification & GDPR compliance (Unified Portal)."""
     context = get_company_context()
-    return render_template('legal/privacy.html', **context)
+    context['active_tab'] = 'privacy'
+    return render_template('legal/index.html', **context)
 
 
 @legal_bp.route('/terms')
 @legal_bp.route('/terms-of-service')
 def terms_of_service():
-    """Public Terms of Service agreement."""
+    """Public Terms of Service agreement (Unified Portal)."""
     context = get_company_context()
-    return render_template('legal/terms.html', **context)
+    context['active_tab'] = 'terms'
+    return render_template('legal/index.html', **context)
 
 
 @legal_bp.route('/whatsapp-policy')
 @legal_bp.route('/whatsapp-messaging-policy')
 def whatsapp_policy():
-    """Public WhatsApp Business Messaging and Anti-Spam Policy."""
+    """Public WhatsApp Business Messaging and Anti-Spam Policy (Unified Portal)."""
     context = get_company_context()
-    return render_template('legal/whatsapp_policy.html', **context)
+    context['active_tab'] = 'whatsapp'
+    return render_template('legal/index.html', **context)
 
 
 @legal_bp.route('/data-deletion', methods=['GET', 'POST'])
@@ -86,7 +102,7 @@ def whatsapp_policy():
 @csrf.exempt  # Exempt so Meta automated server-to-server callback can POST signed_request
 def data_deletion():
     """
-    Meta Data Deletion Callback & Self-Service User Data Deletion Portal.
+    Meta Data Deletion Callback & Self-Service User Data Deletion Portal (Unified Portal).
     
     Requirements fulfilled:
     - Meta App Review Data Deletion Request URL
@@ -94,6 +110,7 @@ def data_deletion():
     - Signed request parsing and JSON response with confirmation_code & status URL
     """
     context = get_company_context()
+    context['active_tab'] = 'deletion'
 
     if request.method == 'POST':
         # Generate unique confirmation code for tracking
@@ -157,12 +174,12 @@ def data_deletion():
                 'confirmation_code': confirmation_code
             })
 
-        # Render HTML page with confirmation
+        # Render HTML page with confirmation on unified portal
         context['confirmation_code'] = confirmation_code
         flash(f'Data deletion request accepted. Confirmation Code: {confirmation_code}', 'success')
-        return render_template('legal/data_deletion.html', **context)
+        return render_template('legal/index.html', **context)
 
-    return render_template('legal/data_deletion.html', **context)
+    return render_template('legal/index.html', **context)
 
 
 @legal_bp.route('/data-deletion/status/<confirmation_code>')
@@ -182,4 +199,5 @@ def deletion_status(confirmation_code):
     context = get_company_context()
     context['confirmation_code'] = clean_code
     context['status_data'] = response_data
-    return render_template('legal/data_deletion.html', **context)
+    context['active_tab'] = 'deletion'
+    return render_template('legal/index.html', **context)
