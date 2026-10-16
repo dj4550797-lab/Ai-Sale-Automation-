@@ -24,7 +24,7 @@ from app.routes.demos import demos_bp
 from app.routes.outreach import outreach_bp
 from app.routes.followups import followups_bp
 from app.routes.sales import sales_bp
-from app.routes.conversations import conversations_bp
+from app.routes.conversations import conversations_bp, webhooks_alias_bp
 from app.routes.legal import legal_bp
 
 
@@ -45,6 +45,7 @@ def register_blueprints(app):
     app.register_blueprint(demos_bp)
     app.register_blueprint(outreach_bp)
     app.register_blueprint(conversations_bp)
+    app.register_blueprint(webhooks_alias_bp)
     app.register_blueprint(followups_bp)
     app.register_blueprint(sales_bp)
     app.register_blueprint(analytics_bp)

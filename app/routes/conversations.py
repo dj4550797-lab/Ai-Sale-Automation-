@@ -175,6 +175,14 @@ def _async_process_inbound_ai_reply(app, conv_id, to_phone, msg_content):
             thread_logger.error(f"Error in async AI auto reply to {to_phone}: {e_reply}")
 
 
+webhooks_alias_bp = Blueprint('webhooks_alias', __name__)
+
+@webhooks_alias_bp.route('/webhooks/whatsapp', methods=['GET', 'POST'])
+@csrf.exempt
+def whatsapp_webhook_alias():
+    return webhook()
+
+
 @conversations_bp.route('/webhook', methods=['GET', 'POST'])
 @csrf.exempt
 def webhook():
