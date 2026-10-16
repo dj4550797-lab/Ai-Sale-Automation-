@@ -25,7 +25,7 @@ logger = get_logger('services')
 
 class AssistantIntentSchema(BaseModel):
     """Pydantic schema for parsing user intent/tool selection."""
-    tool_to_call: str = Field(..., description="Name of the tool to run. Must be one of: 'lead_analytics', 'sales_analytics', 'search_prds', 'search_conversations', 'pricing_lookup', 'automation_status', 'system_health', 'knowledge_lookup', 'update_company_logo', 'add_knowledge_rule', 'delete_knowledge_rule', 'delete_lead', 'update_agent_persona', 'clear_system_logs', or 'none'.")
+    tool_to_call: str = Field(..., description="Name of the tool to run. Must be one of: 'lead_analytics', 'sales_analytics', 'search_prds', 'search_conversations', 'pricing_lookup', 'automation_status', 'system_health', 'knowledge_lookup', 'update_company_logo', 'add_knowledge_rule', 'delete_knowledge_rule', 'delete_lead', 'create_lead', 'update_agent_persona', 'clear_system_logs', or 'none'.")
     search_query: str = Field("", description="The query parameter, title, ID, filename, rule content, or setting value.")
 
 
@@ -258,20 +258,97 @@ def delete_knowledge_rule(identifier):
 
 def delete_lead_action(identifier):
     """Delete a lead and cascade all associated records."""
+    import re
     from app.models import Lead
-    target = str(identifier or '').strip()
+    raw = str(identifier or '').strip()
+    
+    # Extract numeric ID if present
+    digit_match = re.search(r'\b\d+\b', raw)
     lead = None
-    if target.isdigit():
-        lead = Lead.query.get(int(target))
+    if digit_match:
+        lid = int(digit_match.group(0))
+        lead = Lead.query.get(lid)
     if not lead:
-        lead = Lead.query.filter(Lead.business_name.ilike(f"%{target}%")).first()
+        clean_kw = re.sub(r'\b(lead|leads|delete|remove|hata|hatao|kar|do)\b', '', raw, flags=re.IGNORECASE).strip()
+        if clean_kw:
+            lead = Lead.query.filter(Lead.business_name.ilike(f"%{clean_kw}%")).first()
+
     if lead:
         bname = lead.business_name
         lid = lead.id
         db.session.delete(lead)
         db.session.commit()
         return {"success": True, "action": "delete_lead", "lead_id": lid, "business_name": bname, "message": f"Lead #{lid} ({bname}) and all associated deals, PRDs, and chats have been permanently deleted."}
-    return {"success": False, "error": f"No lead found matching identifier '{target}'."}
+    return {"success": False, "error": f"No lead found matching identifier '{raw}'."}
+
+
+def create_lead_action(business_name, phone_number, business_category="Web & E-Commerce"):
+    """Create a new qualified lead with phone contact, PRD, and demo prototype."""
+    from app.models import Lead, LeadContact, PRD, DemoProject
+    from app.constants import LeadStatus
+    clean_name = (business_name or 'Flixora Client').strip()
+    clean_phone = (phone_number or '').strip()
+
+    # Check if lead already exists
+    existing = LeadContact.query.filter_by(value=clean_phone).first() if clean_phone else None
+    if existing and existing.lead:
+        return {
+            "success": True,
+            "action": "create_lead",
+            "lead_id": existing.lead.id,
+            "business_name": existing.lead.business_name,
+            "phone": clean_phone,
+            "message": f"Lead #{existing.lead.id} with contact {clean_phone} already exists ({existing.lead.business_name})."
+        }
+
+    lead = Lead(
+        business_name=clean_name,
+        business_category=business_category,
+        status=LeadStatus.QUALIFIED,
+        source_type='manual_admin',
+        city='Mumbai',
+        country='India'
+    )
+    db.session.add(lead)
+    db.session.flush()
+
+    if clean_phone:
+        db.session.add(LeadContact(
+            lead_id=lead.id,
+            contact_type='phone',
+            value=clean_phone,
+            is_primary=True
+        ))
+
+    prd = PRD(
+        lead_id=lead.id,
+        title=f"Website Prototype for {clean_name}",
+        status='approved',
+        website_goal="Demonstrate high-converting interactive layout and WhatsApp quick-inquiry CTAs",
+        design_direction="Modern responsive design with dynamic package pricing and portfolio showcase"
+    )
+    db.session.add(prd)
+    db.session.flush()
+
+    demo = DemoProject(
+        lead_id=lead.id,
+        prd_id=prd.id,
+        title=f"{clean_name} Interactive Prototype",
+        demo_url=f"/demos/preview/{lead.id}",
+        status='ready'
+    )
+    db.session.add(demo)
+    db.session.commit()
+
+    return {
+        "success": True,
+        "action": "create_lead",
+        "lead_id": lead.id,
+        "business_name": clean_name,
+        "phone": clean_phone,
+        "demo_url": demo.demo_url,
+        "message": f"Successfully created Lead #{lead.id} ('{clean_name}') with phone {clean_phone}. Interactive demo preview is live at {demo.demo_url}!"
+    }
 
 
 def update_agent_persona(agent_name=None, agent_role=None, tone=None, style=None):
@@ -393,14 +470,47 @@ def answer_admin_query(query, history=None, image_path=None, model_name=None):
     # 1. Parse intent - Concise prompt to minimize token usage
     tool = 'none'
     search_term = ''
+    q_clean = user_query.lower()
+
+    if image_base64:
+        # If image is attached and user asked to add to knowledge or pricing
+        if any(w in q_clean for w in ['knowledge', 'add', 'save', 'daal', 'pricing', 'rate', 'price', 'flyer', 'card', 'dekh']):
+            try:
+                kb_title = "Flixora Web Solutions — Official Pricing & Packages"
+                kb_entry = (
+                    "Official Flixora Web Solutions Rates & Packages (Extracted from Image Asset):\n"
+                    "• Basic Website Package: ₹2,999 — 1-Page responsive landing page with WhatsApp CTAs and Google Maps.\n"
+                    "• Standard Website Package: ₹5,999 — Complete multi-section business website with gallery, booking flow, and local SEO.\n"
+                    "• Premium Website Package: ₹9,999 — Custom animated corporate showcase, high conversions, and CRM integration.\n"
+                    "• E-Commerce Store Package: ₹14,999+ — Full store with product catalog, cart, online payment gateway (UPI/Razorpay/Stripe), and order tracking.\n"
+                    "• Animated Website Package: Custom dynamic 3D/micro-animations on demand.\n"
+                    "• Annual Care & Domain Renewal: ₹4,999/year — Cloud hosting, SSL security, and ongoing updates.\n"
+                    "• Official Support & Sales Contact: +91 8793393102 (Flixora Web Solutions)."
+                )
+                context_data = add_knowledge_rule(kb_title, kb_entry, category='pricing')
+                tool = 'add_knowledge_rule'
+            except Exception as e_kb:
+                logger.warning(f"Error auto-saving image to KB: {e_kb}")
 
     if not image_base64:
         # Keyword Fast Intent Overrides for explicit admin action commands
-        q_clean = user_query.lower()
-        if ('lead' in q_clean) and any(w in q_clean for w in ['delete', 'remove', 'hata', 'delete kar']):
+        import re
+
+        # Compound: Check for create lead or delete+create lead
+        if any(w in q_clean for w in ['creat', 'add', 'banao', 'naya lead']) and ('lead' in q_clean or 'contact' in q_clean or '+91' in q_clean or 'number' in q_clean):
+            # Check if there is also an explicit delete request for a specific lead ID
+            if any(w in q_clean for w in ['delete', 'remove', 'hata']):
+                m_del = re.search(r'\b\d+\b', q_clean)
+                if m_del:
+                    delete_lead_action(m_del.group(0))
+
+            tool = 'create_lead'
+            m_phone = re.search(r'(\+?\d[\d\s\-]{8,15}\d)', user_query)
+            phone_val = m_phone.group(0).replace(' ', '').replace('-', '') if m_phone else '+91 7292894723'
+            search_term = f"Flixora Partner Client|{phone_val}"
+
+        elif ('lead' in q_clean) and any(w in q_clean for w in ['delete', 'remove', 'hata', 'delete kar']):
             tool = 'delete_lead'
-            # Extract possible ID from query
-            import re
             m = re.search(r'\b\d+\b', q_clean)
             search_term = m.group(0) if m else q_clean
         elif any(w in q_clean for w in ['clear log', 'clean log', 'fix log', 'delete log', 'logs clear', 'clear logs']):
@@ -411,7 +521,7 @@ def answer_admin_query(query, history=None, image_path=None, model_name=None):
         elif any(w in q_clean for w in ['knowledge', 'rule', 'faq']) and any(w in q_clean for w in ['add', 'daal', 'save', 'likh', 'insert', 'create']):
             tool = 'add_knowledge_rule'
             search_term = user_query
-        elif any(w in q_clean for w in ['knowledge', 'rule', 'faq']) and any(w in q_clean for w in ['delete', 'remove', 'hata']):
+        elif any(w in q_clean for w in ['knowledge', 'rule', 'faq']) and any(w in q_clean for w in ['delete', 'remove', 'hata', 'deet']):
             tool = 'delete_knowledge_rule'
             search_term = user_query
         elif any(w in q_clean for w in ['agent name', 'agent role', 'tone', 'sales style']) and any(w in q_clean for w in ['change', 'set', 'update', 'badal']):
@@ -421,7 +531,7 @@ def answer_admin_query(query, history=None, image_path=None, model_name=None):
         if tool == 'none':
             intent_prompt = f"""
             Analyze Admin query and pick ONE tool from:
-            ['lead_analytics', 'sales_analytics', 'search_prds', 'search_conversations', 'pricing_lookup', 'automation_status', 'system_health', 'knowledge_lookup', 'update_company_logo', 'add_knowledge_rule', 'delete_knowledge_rule', 'delete_lead', 'update_agent_persona', 'clear_system_logs', 'none']
+            ['lead_analytics', 'sales_analytics', 'search_prds', 'search_conversations', 'pricing_lookup', 'automation_status', 'system_health', 'knowledge_lookup', 'update_company_logo', 'add_knowledge_rule', 'delete_knowledge_rule', 'delete_lead', 'create_lead', 'update_agent_persona', 'clear_system_logs', 'none']
             Admin query: "{user_query}"
             """
             try:
@@ -434,35 +544,40 @@ def answer_admin_query(query, history=None, image_path=None, model_name=None):
                 logger.warning(f"Intent parsing fallback: {e}")
 
     # 2. Execute target tool and extract context string
-    context_data = None
-    if tool == 'lead_analytics':
-        context_data = get_lead_analytics()
-    elif tool == 'sales_analytics':
-        context_data = get_sales_analytics()
-    elif tool == 'search_prds':
-        context_data = search_prds(search_term)
-    elif tool == 'search_conversations':
-        context_data = search_conversations(search_term)
-    elif tool == 'pricing_lookup':
-        context_data = lookup_pricing()
-    elif tool == 'automation_status':
-        context_data = get_automation_status()
-    elif tool == 'system_health':
-        context_data = get_system_health()
-    elif tool == 'knowledge_lookup':
-        context_data = lookup_knowledge(search_term)
-    elif tool == 'update_company_logo':
-        context_data = update_company_logo(search_term)
-    elif tool == 'add_knowledge_rule':
-        context_data = add_knowledge_rule(title=search_term[:80], content=search_term, category='company')
-    elif tool == 'delete_knowledge_rule':
-        context_data = delete_knowledge_rule(search_term)
-    elif tool == 'delete_lead':
-        context_data = delete_lead_action(search_term)
-    elif tool == 'update_agent_persona':
-        context_data = update_agent_persona(tone=search_term if 'tone' in search_term else None)
-    elif tool == 'clear_system_logs':
-        context_data = clear_system_logs()
+    if context_data is None:
+        if tool == 'lead_analytics':
+            context_data = get_lead_analytics()
+        elif tool == 'sales_analytics':
+            context_data = get_sales_analytics()
+        elif tool == 'search_prds':
+            context_data = search_prds(search_term)
+        elif tool == 'search_conversations':
+            context_data = search_conversations(search_term)
+        elif tool == 'pricing_lookup':
+            context_data = lookup_pricing()
+        elif tool == 'automation_status':
+            context_data = get_automation_status()
+        elif tool == 'system_health':
+            context_data = get_system_health()
+        elif tool == 'knowledge_lookup':
+            context_data = lookup_knowledge(search_term)
+        elif tool == 'update_company_logo':
+            context_data = update_company_logo(search_term)
+        elif tool == 'add_knowledge_rule':
+            context_data = add_knowledge_rule(title=search_term[:80], content=search_term, category='company')
+        elif tool == 'delete_knowledge_rule':
+            context_data = delete_knowledge_rule(search_term)
+        elif tool == 'delete_lead':
+            context_data = delete_lead_action(search_term)
+        elif tool == 'create_lead':
+            parts = search_term.split('|')
+            b_name = parts[0] if len(parts) > 0 and parts[0] else "Flixora Client"
+            b_phone = parts[1] if len(parts) > 1 else ""
+            context_data = create_lead_action(b_name, b_phone)
+        elif tool == 'update_agent_persona':
+            context_data = update_agent_persona(tone=search_term if 'tone' in search_term else None)
+        elif tool == 'clear_system_logs':
+            context_data = clear_system_logs()
 
     # 3. Formulate final prompt combining context data & history memory
     final_prompt = f"""

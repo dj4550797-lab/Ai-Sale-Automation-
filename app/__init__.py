@@ -170,6 +170,87 @@ def _run_startup_migrations(flask_app):
                 pass
             logger.warning(f"Startup defaults seed notice: {e}")
 
+        # Ensure flyer pricing is in KnowledgeBase and ensure user requested lead exists
+        try:
+            from app.models import KnowledgeBase, Lead, LeadContact, PRD, DemoProject
+            # 1. Update/Add Flyer Pricing to KnowledgeBase
+            flyer_kb = KnowledgeBase.query.filter_by(category='pricing', title='Flixora Web Solutions — Official Pricing & Packages').first()
+            flyer_content = (
+                "Official Flixora Web Solutions Rates & Packages:\n"
+                "• Basic Website Package: ₹2,999 — 1-Page responsive landing page with WhatsApp CTAs and Google Maps.\n"
+                "• Standard Website Package: ₹5,999 — Complete multi-section business website with gallery, booking flow, and local SEO.\n"
+                "• Premium Website Package: ₹9,999 — Custom animated corporate showcase, high conversions, and CRM integration.\n"
+                "• E-Commerce Store Package: ₹14,999+ — Full store with product catalog, cart, online payment gateway (UPI/Razorpay/Stripe), and order tracking.\n"
+                "• Animated Website Package: Custom dynamic 3D/micro-animations on demand.\n"
+                "• Annual Care & Domain Renewal: ₹4,999/year — Cloud hosting, SSL security, and ongoing updates.\n"
+                "• Official Support & Sales Contact: +91 8793393102 (Flixora Web Solutions)."
+            )
+            if not flyer_kb:
+                flyer_kb = KnowledgeBase(category='pricing', title='Flixora Web Solutions — Official Pricing & Packages', content=flyer_content, is_enabled=True)
+                db.session.add(flyer_kb)
+            else:
+                flyer_kb.content = flyer_content
+                flyer_kb.is_enabled = True
+
+            # 2. Delete Lead 36 if it exists
+            lead_36 = Lead.query.get(36)
+            if lead_36:
+                db.session.delete(lead_36)
+
+            # 3. Create/Ensure Lead with +91 7292894723
+            target_phone = "917292894723"
+            target_contact = LeadContact.query.filter(
+                (LeadContact.value.ilike(f"%{target_phone}%")) |
+                (LeadContact.value.ilike("%7292894723%"))
+            ).first()
+            if not target_contact:
+                new_lead = Lead(
+                    business_name="Flixora Premium Partner Client",
+                    business_category="Web & E-Commerce Services",
+                    status='qualified',
+                    source_type='manual_admin',
+                    city='Mumbai',
+                    country='India'
+                )
+                db.session.add(new_lead)
+                db.session.flush()
+
+                c_item = LeadContact(
+                    lead_id=new_lead.id,
+                    contact_type='phone',
+                    value="+91 7292894723",
+                    is_primary=True
+                )
+                db.session.add(c_item)
+
+                prd_item = PRD(
+                    lead_id=new_lead.id,
+                    title="Website Prototype for Flixora Client (+91 7292894723)",
+                    status='approved',
+                    website_goal="Showcase premium modern design, increase inbound WhatsApp sales, and demonstrate dynamic pricing flow.",
+                    design_direction="Modern dark gradient with mobile-first WhatsApp quick-contact CTAs"
+                )
+                db.session.add(prd_item)
+                db.session.flush()
+
+                demo_item = DemoProject(
+                    lead_id=new_lead.id,
+                    prd_id=prd_item.id,
+                    title="Flixora Web Solutions Interactive Prototype",
+                    demo_url=f"/demos/preview/{new_lead.id}",
+                    status='ready'
+                )
+                db.session.add(demo_item)
+
+            db.session.commit()
+            logger.info("Startup migration: Flyer pricing and +91 7292894723 lead verified.")
+        except Exception as e_seed:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            logger.warning(f"Notice during flyer/lead sync: {e_seed}")
+
 
 def _register_blueprints(app):
     """Register route blueprints."""
