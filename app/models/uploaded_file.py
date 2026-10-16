@@ -19,7 +19,7 @@ class UploadedFile(db.Model):
 
     # Optional project association
     lead_id = db.Column(db.Integer, db.ForeignKey('leads.id'), default=None)
-    prd_id = db.Column(db.Integer, db.ForeignKey('prds.id'), default=None)
+    prd_id = db.Column(db.Integer, db.ForeignKey('prds.id', ondelete='SET NULL'), default=None)
 
     uploaded_by = db.Column(db.Integer, db.ForeignKey('users.id'), default=None)
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

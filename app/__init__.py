@@ -183,10 +183,46 @@ def _run_startup_migrations(flask_app):
                 flyer_kb.content = flyer_content
                 flyer_kb.is_enabled = True
 
-            # 2. Delete Lead 36 if it exists
+            # Ensure PostgreSQL foreign key constraints have ON DELETE SET NULL
+            if db.engine.name == 'postgresql':
+                try:
+                    from sqlalchemy import text
+                    db.session.execute(text("""
+                        DO $$
+                        BEGIN
+                            IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'outreach_campaigns_demo_id_fkey') THEN
+                                ALTER TABLE outreach_campaigns DROP CONSTRAINT outreach_campaigns_demo_id_fkey;
+                                ALTER TABLE outreach_campaigns ADD CONSTRAINT outreach_campaigns_demo_id_fkey 
+                                    FOREIGN KEY (demo_id) REFERENCES demo_projects(id) ON DELETE SET NULL;
+                            END IF;
+                            IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'sales_deals_demo_id_fkey') THEN
+                                ALTER TABLE sales_deals DROP CONSTRAINT sales_deals_demo_id_fkey;
+                                ALTER TABLE sales_deals ADD CONSTRAINT sales_deals_demo_id_fkey 
+                                    FOREIGN KEY (demo_id) REFERENCES demo_projects(id) ON DELETE SET NULL;
+                            END IF;
+                            IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'sales_deals_prd_id_fkey') THEN
+                                ALTER TABLE sales_deals DROP CONSTRAINT sales_deals_prd_id_fkey;
+                                ALTER TABLE sales_deals ADD CONSTRAINT sales_deals_prd_id_fkey 
+                                    FOREIGN KEY (prd_id) REFERENCES prds(id) ON DELETE SET NULL;
+                            END IF;
+                            IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'followups_outreach_id_fkey') THEN
+                                ALTER TABLE followups DROP CONSTRAINT followups_outreach_id_fkey;
+                                ALTER TABLE followups ADD CONSTRAINT followups_outreach_id_fkey 
+                                    FOREIGN KEY (outreach_id) REFERENCES outreach_campaigns(id) ON DELETE SET NULL;
+                            END IF;
+                        END $$;
+                    """))
+                    db.session.commit()
+                except Exception as fk_e:
+                    db.session.rollback()
+                    logger.debug(f"FK constraint update note: {fk_e}")
+
+            # 2. Delete Lead 36 if it exists (using safe cascade)
             lead_36 = Lead.query.get(36)
             if lead_36:
-                db.session.delete(lead_36)
+                from app.services.lead_service import purge_lead_safely
+                purge_lead_safely(36)
+                db.session.commit()
 
             # 3. Create/Ensure Lead with +91 7292894723
             target_phone = "917292894723"

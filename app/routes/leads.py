@@ -231,27 +231,19 @@ def delete_lead(id):
     """Delete a single lead — soft archive into Storage or permanent purge."""
     lead = Lead.query.get_or_404(id)
     name = lead.business_name
-    permanent = (request.args.get('permanent') == '1' or 
-                 request.form.get('permanent') in ['1', 'true', 'on'])
+    is_archive = (request.args.get('archive') == '1' or 
+                  request.form.get('archive') in ['1', 'true', 'on'])
     try:
-        if permanent:
-            try:
-                import os, shutil
-                from flask import current_app
-                upload_base = current_app.config.get('UPLOAD_FOLDER', 'uploads')
-                demo_dir = os.path.join(upload_base, 'demos', str(id))
-                if os.path.exists(demo_dir):
-                    shutil.rmtree(demo_dir, ignore_errors=True)
-            except Exception:
-                pass
-            db.session.delete(lead)
-            db.session.commit()
-            flash(f"Lead '{name}' permanently deleted.", "success")
-        else:
+        if is_archive:
             lead.status = LeadStatus.ARCHIVED
             lead.updated_at = datetime.now(timezone.utc)
             db.session.commit()
             flash(f"Lead '{name}' moved to Storage & Recycle Bin. You can recover it anytime from Storage Hub.", "success")
+        else:
+            from app.services.lead_service import purge_lead_safely
+            purge_lead_safely(id)
+            db.session.commit()
+            flash(f"Lead '{name}' permanently deleted.", "success")
     except Exception as e:
         db.session.rollback()
         flash(f"Error deleting lead: {str(e)}", "error")
@@ -279,8 +271,8 @@ def delete_multiple():
         flash("No leads were selected for deletion.", "warning")
         return redirect(request.referrer or url_for('leads.index'))
 
-    permanent = (request.args.get('permanent') == '1' or 
-                 request.form.get('permanent') in ['1', 'true', 'on'])
+    is_archive = (request.args.get('archive') == '1' or 
+                  request.form.get('archive') in ['1', 'true', 'on'])
     
     count = 0
     try:
@@ -288,19 +280,20 @@ def delete_multiple():
             try:
                 lead = Lead.query.get(int(lid))
                 if lead:
-                    if permanent:
-                        db.session.delete(lead)
-                    else:
+                    if is_archive:
                         lead.status = LeadStatus.ARCHIVED
                         lead.updated_at = datetime.now(timezone.utc)
+                    else:
+                        from app.services.lead_service import purge_lead_safely
+                        purge_lead_safely(int(lid))
                     count += 1
             except (ValueError, TypeError):
                 continue
         db.session.commit()
-        if permanent:
-            msg = f"Permanently purged {count} selected leads."
-        else:
+        if is_archive:
             msg = f"Moved {count} leads to Storage & Recycle Bin. You can recover them anytime."
+        else:
+            msg = f"Permanently purged {count} selected leads."
         
         if request.is_json:
             return jsonify({"success": True, "message": msg})

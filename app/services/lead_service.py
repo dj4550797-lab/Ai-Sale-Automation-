@@ -243,3 +243,57 @@ def _calculate_lead_score(item):
         score += 15
         
     return min(score, 100)
+
+
+def purge_lead_safely(lead_id):
+    """
+    Safely delete a lead and cascade all relationships in foreign-key dependency order.
+    Ensures that cross-table foreign key constraints (such as outreach_campaigns.demo_id,
+    sales_deals.demo_id, sales_deals.prd_id, followups.outreach_id) never trigger ForeignKeyViolation.
+    """
+    from app.models import (
+        Lead, OutreachCampaign, OutreachEvent, SalesDeal, FollowUp,
+        DemoProject, PRD, UploadedFile, Conversation, Message
+    )
+
+    lead = Lead.query.get(lead_id)
+    if not lead:
+        return False
+
+    # 1. Nullify demo references in outreach campaigns and sales deals
+    demos = DemoProject.query.filter_by(lead_id=lead_id).all()
+    demo_ids = [d.id for d in demos]
+    if demo_ids:
+        OutreachCampaign.query.filter(OutreachCampaign.demo_id.in_(demo_ids)).update({'demo_id': None}, synchronize_session=False)
+        SalesDeal.query.filter(SalesDeal.demo_id.in_(demo_ids)).update({'demo_id': None}, synchronize_session=False)
+
+    # 2. Nullify PRD references in sales deals and uploaded files
+    prds = PRD.query.filter_by(lead_id=lead_id).all()
+    prd_ids = [p.id for p in prds]
+    if prd_ids:
+        SalesDeal.query.filter(SalesDeal.prd_id.in_(prd_ids)).update({'prd_id': None}, synchronize_session=False)
+        UploadedFile.query.filter(UploadedFile.prd_id.in_(prd_ids)).update({'prd_id': None}, synchronize_session=False)
+
+    # 3. Clean up outreach campaigns & events & followups
+    campaigns = OutreachCampaign.query.filter_by(lead_id=lead_id).all()
+    camp_ids = [c.id for c in campaigns]
+    if camp_ids:
+        FollowUp.query.filter(FollowUp.outreach_id.in_(camp_ids)).update({'outreach_id': None}, synchronize_session=False)
+        OutreachEvent.query.filter(OutreachEvent.campaign_id.in_(camp_ids)).delete(synchronize_session=False)
+        OutreachCampaign.query.filter_by(lead_id=lead_id).delete(synchronize_session=False)
+
+    # 4. Clean up disk demo assets if any
+    try:
+        import os, shutil
+        from flask import current_app
+        upload_base = current_app.config.get('UPLOAD_FOLDER', 'uploads')
+        demo_dir = os.path.join(upload_base, 'demos', str(lead_id))
+        if os.path.exists(demo_dir):
+            shutil.rmtree(demo_dir, ignore_errors=True)
+    except Exception:
+        pass
+
+    # 5. Delete the lead
+    db.session.delete(lead)
+    return True
+

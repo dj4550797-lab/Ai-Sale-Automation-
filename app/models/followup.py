@@ -12,7 +12,7 @@ class FollowUp(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     lead_id = db.Column(db.Integer, db.ForeignKey('leads.id'), nullable=False, index=True)
-    outreach_id = db.Column(db.Integer, db.ForeignKey('outreach_campaigns.id'), default=None)
+    outreach_id = db.Column(db.Integer, db.ForeignKey('outreach_campaigns.id', ondelete='SET NULL'), default=None)
 
     followup_number = db.Column(db.Integer, default=1)
     channel = db.Column(db.String(30), default='')

@@ -276,7 +276,8 @@ def delete_lead_action(identifier):
     if lead:
         bname = lead.business_name
         lid = lead.id
-        db.session.delete(lead)
+        from app.services.lead_service import purge_lead_safely
+        purge_lead_safely(lid)
         db.session.commit()
         return {"success": True, "action": "delete_lead", "lead_id": lid, "business_name": bname, "message": f"Lead #{lid} ({bname}) and all associated deals, PRDs, and chats have been permanently deleted."}
     return {"success": False, "error": f"No lead found matching identifier '{raw}'."}

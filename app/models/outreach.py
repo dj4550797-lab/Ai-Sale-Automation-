@@ -12,7 +12,7 @@ class OutreachCampaign(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     lead_id = db.Column(db.Integer, db.ForeignKey('leads.id'), nullable=False, index=True)
-    demo_id = db.Column(db.Integer, db.ForeignKey('demo_projects.id'), default=None)
+    demo_id = db.Column(db.Integer, db.ForeignKey('demo_projects.id', ondelete='SET NULL'), default=None)
 
     channel = db.Column(db.String(30), nullable=False)  # whatsapp, instagram, email
     message_content = db.Column(db.Text, default='')

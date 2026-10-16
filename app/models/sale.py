@@ -12,8 +12,8 @@ class SalesDeal(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     lead_id = db.Column(db.Integer, db.ForeignKey('leads.id'), nullable=False, index=True)
-    prd_id = db.Column(db.Integer, db.ForeignKey('prds.id'), default=None)
-    demo_id = db.Column(db.Integer, db.ForeignKey('demo_projects.id'), default=None)
+    prd_id = db.Column(db.Integer, db.ForeignKey('prds.id', ondelete='SET NULL'), default=None)
+    demo_id = db.Column(db.Integer, db.ForeignKey('demo_projects.id', ondelete='SET NULL'), default=None)
     pricing_plan_id = db.Column(db.Integer, db.ForeignKey('pricing_plans.id'), default=None)
 
     stage = db.Column(db.String(30), default=PipelineStage.NEW, index=True)
