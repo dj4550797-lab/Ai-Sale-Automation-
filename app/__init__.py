@@ -112,6 +112,10 @@ def _run_startup_migrations(flask_app):
                 pass
 
         # Safe ALTER statements for newly added columns across tables
+        try:
+            db.session.execute(text("SET statement_timeout = '3000'"))
+        except Exception:
+            pass
         migration_statements = [
             "ALTER TABLE outreach_campaigns ADD COLUMN media_url VARCHAR(500) DEFAULT NULL",
             "ALTER TABLE outreach_campaigns ADD COLUMN media_type VARCHAR(20) DEFAULT NULL",

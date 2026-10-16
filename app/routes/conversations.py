@@ -2,7 +2,7 @@
 Flixora AI Sales Automation Agent — Client Conversations Routes
 """
 from datetime import datetime, timezone
-from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
+from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
 
 from app.models import Conversation, Lead
