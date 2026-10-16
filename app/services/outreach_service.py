@@ -30,6 +30,12 @@ def generate_outreach_message(lead_id, channel):
 
     logger.info(f"Generating personalized outreach pitch for {lead.business_name} via {channel}")
 
+    # Ensure full absolute URL with domain
+    base_domain = "https://ai-sale-automation.onrender.com"
+    demo_full_url = demo.demo_url if (demo and demo.demo_url) else f"/demos/preview/{lead.id}"
+    if not demo_full_url.startswith('http'):
+        demo_full_url = f"{base_domain}{demo_full_url if demo_full_url.startswith('/') else '/' + demo_full_url}"
+
     # Prompt matching PRD specs (§40)
     prompt = f"""
     You are an expert sales outreach copywriter for Flixora.
@@ -40,17 +46,18 @@ def generate_outreach_message(lead_id, channel):
     Context:
     - Approved PRD Website Goal: {prd.website_goal}
     - Visual design focus: {prd.design_direction}
-    - Demo link: {demo.demo_url}
+    - Demo link (MUST include full URL): {demo_full_url}
     - Channel: {channel}
     
     Structure requirements (§40):
     1. A warm personal greeting (e.g. 👋 Hello [Name] / Team)
     2. A specific, non-fabricated line mentioning their category/aesthetics or how their current site can be improved (from PRD).
-    3. A clear demo link reference where they can preview the concept.
+    3. A clear demo link reference where they can preview the concept: {demo_full_url}.
     4. A single, very simple, low-friction call to action (e.g., "Let me know if this color theme looks right for you").
     
     Strict constraints:
     - Do NOT invent facts or statistics about the business.
+    - Always use the complete link {demo_full_url} (never relative path).
     - Keep it short (under 4-5 sentences).
     - Return only the raw text message. Do not wrap in quotes or markdown.
     """
@@ -60,13 +67,12 @@ def generate_outreach_message(lead_id, channel):
         return {"success": True, "message": message.strip()}
     except Exception as e:
         logger.warning(f"LLM outreach generation unavailable ({e}). Generating personalized deterministic pitch.")
-        demo_url = demo.demo_url if demo and demo.demo_url else "our live showcase"
         cat = lead.business_category or "your industry"
         b_name = lead.business_name
         fallback_msg = (
             f"Hello Team {b_name}! 👋\n\n"
             f"We noticed your business in {cat} and designed a high-converting, modern interactive prototype website tailored specifically for {b_name}.\n\n"
-            f"You can view your prototype concept here: {demo_url}\n\n"
+            f"You can view your prototype concept here: {demo_full_url}\n\n"
             f"Would you be open to a quick 2-minute chat on WhatsApp to see if this design matches your vision?"
         )
         return {"success": True, "message": fallback_msg}

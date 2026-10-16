@@ -85,25 +85,38 @@ def reply(conversation_id):
     if not content.strip():
         return jsonify({"success": False, "error": "Message content cannot be empty."}), 400
 
+    conv = Conversation.query.get(conversation_id)
+    if not conv:
+        return jsonify({"success": False, "error": "Conversation not found."}), 404
+
+    # Automatically activate human takeover when admin sends a message so AI doesn't talk over admin
+    conv.status = ConversationStatus.ADMIN_ACTIVE
+    conv.taken_over_by = current_user.id
+    conv.taken_over_at = datetime.now(timezone.utc)
+
     msg = add_message(conversation_id, 'admin', content, sender_name=current_user.display_name)
     if not msg:
         return jsonify({"success": False, "error": "Could not save message."}), 500
 
     # Dispatch via WhatsApp if lead has a phone number
-    conv = Conversation.query.get(conversation_id)
     wa_result = None
-    if conv and conv.lead:
+    if conv.lead:
         phone = conv.lead.primary_phone
         if phone:
+            import re
+            clean_phone = re.sub(r'\D', '', phone)
             from app.integrations.whatsapp_adapter import WhatsAppAdapter
             from app.utils.logger import get_logger
             logger = get_logger('whatsapp_outreach')
             wa_adapter = WhatsAppAdapter()
-            wa_result = wa_adapter.send_text_message(phone, content)
-            logger.info(f"Admin WhatsApp dispatch to {phone}: {wa_result}")
+            wa_result = wa_adapter.send_text_message(clean_phone, content)
+            logger.info(f"Admin WhatsApp dispatch to {clean_phone}: {wa_result}")
+
+    db.session.commit()
 
     return jsonify({
         "success": True,
+        "conversation_status": conv.status,
         "whatsapp_dispatched": wa_result.get('success') if wa_result else False,
         "whatsapp_notice": wa_result.get('error') or wa_result.get('notice') if wa_result else None,
         "message": {

@@ -353,6 +353,12 @@ function submitAdminReply() {
         if (data.success) {
             appendMessageBubble(data.message);
             scrollToBottom();
+
+            // Notify if WhatsApp delivery was blocked or had an error
+            if (data.whatsapp_dispatched === false) {
+                const notice = data.whatsapp_notice || 'Phone number format or WhatsApp API sandbox limit prevented automated WhatsApp delivery. You can click green "Open WhatsApp Chat" button to chat with zero restrictions!';
+                alert("⚠️ WhatsApp Notice:\n" + notice);
+            }
         } else {
             alert("Error: " + data.error);
         }

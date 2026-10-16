@@ -71,9 +71,19 @@ def test_generate_chatbot_reply_retrieval(app):
         db.session.add_all([kb, plan])
         
         # Seed settings
-        set_name = Setting(category='agent', key='agent_name', value='Sophia')
-        set_role = Setting(category='agent', key='agent_role', value='Representative')
-        db.session.add_all([set_name, set_role])
+        set_name = Setting.query.filter_by(category='agent', key='agent_name').first()
+        if not set_name:
+            set_name = Setting(category='agent', key='agent_name', value='Sophia')
+            db.session.add(set_name)
+        else:
+            set_name.value = 'Sophia'
+
+        set_role = Setting.query.filter_by(category='agent', key='agent_role').first()
+        if not set_role:
+            set_role = Setting(category='agent', key='agent_role', value='Representative')
+            db.session.add(set_role)
+        else:
+            set_role.value = 'Representative'
         db.session.commit()
 
         conv = create_or_get_conversation(lead.id, 'whatsapp')
