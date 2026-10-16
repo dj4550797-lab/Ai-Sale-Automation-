@@ -199,7 +199,6 @@ def _run_startup_migrations(flask_app):
                     business_name="Flixora Premium Partner Client",
                     business_category="Web & E-Commerce Services",
                     status='qualified',
-                    source_type='manual_admin',
                     city='Mumbai',
                     country='India'
                 )
@@ -214,6 +213,14 @@ def _run_startup_migrations(flask_app):
                 )
                 db.session.add(c_item)
 
+                from app.models import LeadSource
+                s_item = LeadSource(
+                    lead_id=new_lead.id,
+                    source_type='manual_admin',
+                    source_category="Web & E-Commerce Services"
+                )
+                db.session.add(s_item)
+
                 prd_item = PRD(
                     lead_id=new_lead.id,
                     title="Website Prototype for Flixora Client (+91 7292894723)",
@@ -226,10 +233,9 @@ def _run_startup_migrations(flask_app):
 
                 demo_item = DemoProject(
                     lead_id=new_lead.id,
-                    prd_id=prd_item.id,
-                    title="Flixora Web Solutions Interactive Prototype",
-                    demo_url=f"/demos/preview/{new_lead.id}",
-                    status='ready'
+                    demo_name="Flixora Web Solutions Interactive Prototype",
+                    business_name="Flixora Premium Partner Client",
+                    demo_url=f"/demos/preview/{new_lead.id}"
                 )
                 db.session.add(demo_item)
 

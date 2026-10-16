@@ -305,12 +305,18 @@ def create_lead_action(business_name, phone_number, business_category="Web & E-C
         business_name=clean_name,
         business_category=business_category,
         status=LeadStatus.QUALIFIED,
-        source_type='manual_admin',
         city='Mumbai',
         country='India'
     )
     db.session.add(lead)
     db.session.flush()
+
+    from app.models import LeadSource
+    db.session.add(LeadSource(
+        lead_id=lead.id,
+        source_type='manual_admin',
+        source_category=business_category
+    ))
 
     if clean_phone:
         db.session.add(LeadContact(
@@ -332,10 +338,9 @@ def create_lead_action(business_name, phone_number, business_category="Web & E-C
 
     demo = DemoProject(
         lead_id=lead.id,
-        prd_id=prd.id,
-        title=f"{clean_name} Interactive Prototype",
-        demo_url=f"/demos/preview/{lead.id}",
-        status='ready'
+        demo_name=f"{clean_name} Interactive Prototype",
+        business_name=clean_name,
+        demo_url=f"/demos/preview/{lead.id}"
     )
     db.session.add(demo)
     db.session.commit()

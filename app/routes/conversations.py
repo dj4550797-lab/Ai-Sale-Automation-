@@ -275,6 +275,13 @@ def webhook():
                     )
                     db.session.add(lead)
                     db.session.flush()
+
+                    from app.models import LeadSource
+                    db.session.add(LeadSource(
+                        lead_id=lead.id,
+                        source_type='whatsapp_inbound',
+                        source_category='Inbound WhatsApp Lead'
+                    ))
                     
                     contact = LeadContact(
                         lead_id=lead.id,
