@@ -590,6 +590,17 @@ def _seed_defaults(db):
         from app.utils.logger import get_logger
         get_logger('system').warning(f"Could not seed knowledge base / pricing: {e}")
 
+    # 6. Seed Flixora Company Logo Setting
+    try:
+        c_logo_stg = Setting.query.filter_by(category='company', key='company_logo').first()
+        if not c_logo_stg:
+            c_logo_stg = Setting(category='company', key='company_logo', value='/static/img/logo-icon.svg')
+            db.session.add(c_logo_stg)
+        elif not c_logo_stg.value or c_logo_stg.value == '/static/img/logo.svg':
+            c_logo_stg.value = '/static/img/logo-icon.svg'
+    except Exception:
+        pass
+
     try:
         db.session.commit()
     except Exception as e:
@@ -599,9 +610,34 @@ def _seed_defaults(db):
 
 
 def _register_error_handlers(app):
-    """Register error page handlers."""
-    from flask import render_template
+    """Register error page handlers and root static assets."""
+    from flask import render_template, send_from_directory
     from app.extensions import db
+    import os
+
+    @app.route('/favicon.ico')
+    def favicon_ico():
+        return send_from_directory(
+            os.path.join(app.root_path, 'static'),
+            'favicon.ico',
+            mimetype='image/vnd.microsoft.icon'
+        )
+
+    @app.route('/favicon.svg')
+    def favicon_svg():
+        return send_from_directory(
+            os.path.join(app.root_path, 'static'),
+            'favicon.svg',
+            mimetype='image/svg+xml'
+        )
+
+    @app.route('/apple-touch-icon.png')
+    def apple_touch_icon():
+        return send_from_directory(
+            os.path.join(app.root_path, 'static'),
+            'apple-touch-icon.png',
+            mimetype='image/png'
+        )
 
     @app.errorhandler(404)
     def not_found(e):
@@ -643,7 +679,7 @@ def _register_context(app):
     def inject_globals():
         unread_notifications = 0
         company_name = 'Flixora'
-        company_logo = '/static/img/logo.svg'
+        company_logo = '/static/img/logo-icon.svg'
         try:
             if current_user and current_user.is_authenticated:
                 unread_notifications = Notification.query.filter_by(

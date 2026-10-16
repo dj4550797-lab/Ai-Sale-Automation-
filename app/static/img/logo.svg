@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 54">
   <defs>
     <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#4f46e5" />
@@ -6,8 +6,14 @@
     </linearGradient>
   </defs>
   <!-- Icon Mark -->
-  <rect x="5" y="8" width="44" height="44" rx="10" fill="url(#logoGrad)" />
-  <path d="M19 20h18v5.5H24.5v5.5H35v5.5H24.5V42H19V20z" fill="#ffffff" />
-  <!-- Brand Text -->
-  <text x="60" y="38" font-family="'Inter', sans-serif" font-size="24" font-weight="800" fill="#ffffff" letter-spacing="2">FLIXORA</text>
+  <rect x="2" y="3" width="48" height="48" rx="12" fill="url(#logoGrad)" />
+  <g fill="#ffffff">
+    <rect x="15" y="14" width="7.5" height="26" rx="2" />
+    <rect x="15" y="14" width="21" height="7" rx="2" />
+    <rect x="15" y="24" width="15" height="6.5" rx="2" />
+    <circle cx="39" cy="17.5" r="2.2" />
+  </g>
+  <!-- Brand Name -->
+  <text x="60" y="30" font-family="'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" font-size="21" font-weight="800" fill="#1e293b" letter-spacing="1">FLIXORA</text>
+  <text x="60" y="44" font-family="'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" font-size="9" font-weight="700" fill="#6366f1" letter-spacing="2.5">WEB SOLUTIONS</text>
 </svg>
