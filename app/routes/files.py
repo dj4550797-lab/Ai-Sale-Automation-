@@ -138,9 +138,13 @@ def download_file(file_id):
 
 @files_bp.route('/assistant/<filename>')
 def serve_assistant_file(filename):
-    """Serve uploaded assistant chat media."""
+    """Serve uploaded assistant chat media with fallback to prevent 404 errors."""
     import os
     from flask import current_app, send_from_directory
-    upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'assistant')
-    return send_from_directory(upload_dir, filename)
+    upload_dir = os.path.join(current_app.config.get('UPLOAD_FOLDER', 'uploads'), 'assistant')
+    target_path = os.path.join(upload_dir, filename)
+    if os.path.exists(target_path):
+        return send_from_directory(upload_dir, filename)
+    # Graceful fallback: return logo-icon.svg to eliminate 404 console errors
+    return send_from_directory(os.path.join(current_app.root_path, 'static', 'img'), 'logo-icon.svg', mimetype='image/svg+xml')
 

@@ -65,15 +65,6 @@ def create_app(config_name=None):
             app.logger.error(f"Health check failed: {str(e)}")
             return {"status": "unhealthy", "database": "error", "error": str(e)}, 500
 
-    # Favicon endpoints to eliminate 404 console errors
-    @app.route('/favicon.ico')
-    @app.route('/favicon.svg')
-    def favicon():
-        """Serve application favicon directly to eliminate 404 errors."""
-        from flask import send_from_directory
-        return send_from_directory(os.path.join(app.root_path, 'static'),
-                                   'favicon.svg', mimetype='image/svg+xml')
-
     # Auto-run lightweight startup migrations and seeding
     _run_startup_migrations(app)
 
@@ -596,7 +587,7 @@ def _seed_defaults(db):
         if not c_logo_stg:
             c_logo_stg = Setting(category='company', key='company_logo', value='/static/img/logo-icon.svg')
             db.session.add(c_logo_stg)
-        elif not c_logo_stg.value or c_logo_stg.value == '/static/img/logo.svg':
+        elif not c_logo_stg.value or c_logo_stg.value in ['/static/img/logo.svg', 'logo.png', 'logo.svg'] or c_logo_stg.value.startswith('/files/'):
             c_logo_stg.value = '/static/img/logo-icon.svg'
     except Exception:
         pass
@@ -692,7 +683,25 @@ def _register_context(app):
 
             c_logo_stg = Setting.query.filter_by(category='company', key='company_logo').first()
             if c_logo_stg and c_logo_stg.value:
-                company_logo = c_logo_stg.value
+                raw_logo = c_logo_stg.value.strip()
+                import os
+                if raw_logo.startswith('data:image/') or raw_logo.startswith('http://') or raw_logo.startswith('https://'):
+                    company_logo = raw_logo
+                elif raw_logo.startswith('/static/'):
+                    rel_p = raw_logo[len('/static/'):]
+                    if os.path.exists(os.path.join(app.root_path, 'static', rel_p)):
+                        company_logo = raw_logo
+                    else:
+                        company_logo = '/static/img/logo-icon.svg'
+                elif raw_logo.startswith('/files/'):
+                    rel_p = raw_logo[len('/files/'):]
+                    upload_base = app.config.get('UPLOAD_FOLDER', 'uploads')
+                    if os.path.exists(os.path.join(upload_base, rel_p)):
+                        company_logo = raw_logo
+                    else:
+                        company_logo = '/static/img/logo-icon.svg'
+                else:
+                    company_logo = '/static/img/logo-icon.svg'
         except Exception:
             try:
                 db.session.rollback()

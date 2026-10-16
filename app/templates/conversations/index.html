@@ -145,7 +145,7 @@
         <div id="chat_messages_container" style="flex:1;padding:var(--space-4);overflow-y:auto;background:var(--background-light);display:flex;flex-direction:column;gap:12px;">
             {% for m in messages %}
             <!-- MESSAGE CARD -->
-            <div style="display:flex;flex-direction:column;max-width:75%;
+            <div data-msg-id="{{ m.id }}" style="display:flex;flex-direction:column;max-width:75%;
                         {% if m.sender_type == 'client' %}align-self:flex-start;{% else %}align-self:flex-end;align-items:flex-end;{% endif %}">
                 <!-- sender badge -->
                 <span style="font-size:9px;color:var(--text-tertiary);margin-bottom:2px;font-weight:600;display:flex;align-items:center;gap:4px;">
@@ -466,7 +466,49 @@ function appendMessageBubble(msg) {
         <span style="font-size:8px;color:var(--text-tertiary);margin-top:2px;">${msg.created_at}</span>
     `;
     
+    if (msg.id) {
+        bubbleWrapper.setAttribute('data-msg-id', msg.id);
+    }
     container.appendChild(bubbleWrapper);
+}
+
+// ----------------------------------------------------
+// Real-Time Live Message Polling (§LiveSync)
+// ----------------------------------------------------
+let currentConvId = {{ active_conv.id if active_conv else 0 }};
+let lastMessageId = 0;
+
+document.querySelectorAll('#chat_messages_container [data-msg-id]').forEach(el => {
+    const id = parseInt(el.getAttribute('data-msg-id'), 10);
+    if (id > lastMessageId) lastMessageId = id;
+});
+
+function pollLiveMessages() {
+    if (!currentConvId || currentConvId === 0) return;
+    
+    fetch(`/conversations/poll/${currentConvId}?after_id=${lastMessageId}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success && data.messages && data.messages.length > 0) {
+                let hasNew = false;
+                data.messages.forEach(msg => {
+                    if (msg.id > lastMessageId) {
+                        appendMessageBubble(msg);
+                        lastMessageId = msg.id;
+                        hasNew = true;
+                    }
+                });
+                if (hasNew) {
+                    scrollToBottom();
+                }
+            }
+        })
+        .catch(() => {});
+}
+
+if (currentConvId > 0) {
+    // Poll every 3.5 seconds
+    setInterval(pollLiveMessages, 3500);
 }
 
 function confirmDeleteConversation(id, business) {

@@ -444,6 +444,78 @@ function applyFontScale(scalePercent) {
     if (scaleLabel) scaleLabel.textContent = `${scale}%`;
 }
 
+// ── Global Live-Sync Heartbeat (No Page Reload Needed!) ────────────
+let lastNotifiedMsgId = 0;
+
+function initLiveSyncHeartbeat() {
+    if (!document.getElementById('sidebar')) return;
+
+    function checkLiveHeartbeat() {
+        fetch('/dashboard/heartbeat')
+            .then(r => {
+                if (r.status === 401 || r.status === 302) return null;
+                return r.json();
+            })
+            .then(data => {
+                if (!data || !data.success) return;
+
+                // 1. Live update notification bell badge without page reload
+                const badge = document.querySelector('.notification-badge') || document.querySelector('[data-badge="notifications"]');
+                if (badge) {
+                    if (data.unread_notifications > 0) {
+                        badge.textContent = data.unread_notifications;
+                        badge.style.display = 'inline-flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+
+                // 2. Pop up toast for newly arrived WhatsApp message if not already viewing it
+                if (data.recent_client_message && data.recent_client_message.id > lastNotifiedMsgId) {
+                    lastNotifiedMsgId = data.recent_client_message.id;
+                    
+                    const currentChatConv = window.currentConvId;
+                    if (!currentChatConv || currentChatConv !== data.recent_client_message.conversation_id) {
+                        showLiveMessageToast(data.recent_client_message);
+                    }
+                }
+            })
+            .catch(() => {});
+    }
+
+    setTimeout(checkLiveHeartbeat, 1500);
+    setInterval(checkLiveHeartbeat, 6000);
+}
+
+function showLiveMessageToast(msg) {
+    const container = document.querySelector('.toast-container') || createToastContainer();
+    const toast = document.createElement('div');
+    toast.className = 'toast info';
+    toast.style.cursor = 'pointer';
+    toast.style.borderLeft = '4px solid #25D366';
+    toast.innerHTML = `
+        <span class="material-symbols-outlined toast-icon" style="color:#25D366;">chat</span>
+        <div style="flex:1; min-width:0;">
+            <div style="font-weight:700; font-size:12px; color:var(--text-primary);">New WhatsApp Reply: ${msg.business_name || msg.sender}</div>
+            <div style="font-size:12px; color:var(--text-secondary); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">"${msg.content}"</div>
+        </div>
+        <a href="/conversations?id=${msg.conversation_id}" class="btn btn-sm" style="background:#25D366; color:#fff; font-size:11px; padding:3px 8px; border-radius:6px; text-decoration:none; margin-left:6px;">Open</a>
+        <button class="toast-close" onclick="event.stopPropagation(); this.parentElement.remove()">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+    `;
+    toast.onclick = function(e) {
+        if (!e.target.closest('.toast-close')) {
+            window.location.href = `/conversations?id=${msg.conversation_id}`;
+        }
+    };
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s ease forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 8000);
+}
+
 // ── Initialize ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     initAppTheme();
@@ -453,6 +525,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initDropdowns();
     initFlashMessages();
     initConfirmInterceptors();
+    initLiveSyncHeartbeat();
 
     // Sidebar overlay click
     const overlay = document.querySelector('.sidebar-overlay');

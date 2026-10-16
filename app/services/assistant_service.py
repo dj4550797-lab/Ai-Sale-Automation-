@@ -186,7 +186,7 @@ def update_company_logo(logo_path_or_url):
     # Determine logo value
     logo_val = raw
     if not ('.' in raw and any(ext in raw.lower() for ext in ['.png', '.jpg', '.jpeg', '.svg', '.webp'])) and not raw.startswith('/'):
-        logo_val = "/static/img/logo.svg"
+        logo_val = "/static/img/logo-icon.svg"
         
     stg = Setting.query.filter_by(category='company', key='company_logo').first()
     if not stg:
@@ -442,7 +442,7 @@ def answer_admin_query(query, history=None, image_path=None, model_name=None):
                 q_lower = user_query.lower()
                 if 'logo' in q_lower or 'logo' in fname:
                     from app.models import Setting
-                    logo_url = f"/files/assistant/{os.path.basename(full_path)}"
+                    logo_url = f"data:{image_mime};base64,{image_base64}"
                     stg = Setting.query.filter_by(category='company', key='company_logo').first()
                     if not stg:
                         stg = Setting(category='company', key='company_logo', value=logo_url)
@@ -450,7 +450,7 @@ def answer_admin_query(query, history=None, image_path=None, model_name=None):
                     else:
                         stg.value = logo_url
                     db.session.commit()
-                    logger.info(f"Auto-updated company_logo to {logo_url}")
+                    logger.info("Auto-updated company_logo as persistent Base64 Data URI")
 
                 if any(w in q_lower for w in ['price', 'prize', 'rate', 'cost', 'plan', 'package']) or any(w in fname for w in ['price', 'prize', 'rate']):
                     from app.models import KnowledgeBase

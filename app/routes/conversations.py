@@ -358,3 +358,26 @@ def delete_conversation(id):
         db.session.rollback()
         flash(f"Error deleting conversation: {str(e)}", "error")
     return redirect(url_for('conversations.index'))
+
+
+@conversations_bp.route('/poll/<int:conversation_id>')
+@login_required
+def poll_messages(conversation_id):
+    """Real-time poll endpoint to retrieve new incoming messages without page reload."""
+    after_id = request.args.get('after_id', 0, type=int)
+    conv = Conversation.query.get_or_404(conversation_id)
+    from app.models import Message
+    new_msgs = conv.messages.filter(Message.id > after_id).order_by(Message.created_at.asc()).all()
+    
+    return jsonify({
+        "success": True,
+        "conversation_id": conversation_id,
+        "status": conv.status,
+        "messages": [{
+            "id": m.id,
+            "sender_type": m.sender_type,
+            "sender_name": m.sender_name or ('Client' if m.sender_type == 'client' else 'Flixora AI'),
+            "content": m.content,
+            "created_at": m.created_at.strftime('%H:%M') if m.created_at else ''
+        } for m in new_msgs]
+    })

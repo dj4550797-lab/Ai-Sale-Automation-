@@ -73,8 +73,9 @@ def change_password_route():
 def company():
     """Company settings (§93)."""
     if request.method == 'POST':
+        # Text fields
         fields = ['company_name', 'company_description', 'website', 
-                  'business_email', 'business_phone', 'business_location', 'company_logo']
+                  'business_email', 'business_phone', 'business_location']
         for field in fields:
             value = sanitize_string(request.form.get(field, ''), max_length=1000)
             if value or field in request.form:
@@ -83,12 +84,34 @@ def company():
         # Handle logo file upload
         logo_file = request.files.get('logo_file')
         if logo_file and logo_file.filename:
+            import base64
             from werkzeug.utils import secure_filename
-            fname = secure_filename(logo_file.filename)
-            static_img_dir = os.path.join(current_app.root_path, 'static', 'img')
-            os.makedirs(static_img_dir, exist_ok=True)
-            logo_file.save(os.path.join(static_img_dir, fname))
-            _set_setting('company', 'company_logo', f"/static/img/{fname}")
+            file_bytes = logo_file.read()
+            if file_bytes:
+                content_type = logo_file.content_type or 'image/png'
+                b64_str = base64.b64encode(file_bytes).decode('utf-8')
+                data_uri = f"data:{content_type};base64,{b64_str}"
+                _set_setting('company', 'company_logo', data_uri)
+                
+                # Also save to disk if possible
+                try:
+                    fname = secure_filename(logo_file.filename)
+                    static_img_dir = os.path.join(current_app.root_path, 'static', 'img')
+                    os.makedirs(static_img_dir, exist_ok=True)
+                    with open(os.path.join(static_img_dir, fname), 'wb') as f:
+                        f.write(file_bytes)
+                except Exception:
+                    pass
+        else:
+            # Handle manual company_logo text input if no new file uploaded
+            raw_logo = sanitize_string(request.form.get('company_logo', ''), max_length=1000).strip()
+            if raw_logo:
+                if raw_logo.startswith('data:image/') or raw_logo.startswith('http://') or raw_logo.startswith('https://') or raw_logo.startswith('/static/'):
+                    _set_setting('company', 'company_logo', raw_logo)
+                elif raw_logo.endswith(('.svg', '.png', '.jpg', '.jpeg', '.webp')):
+                    _set_setting('company', 'company_logo', f"/static/img/{raw_logo}")
+                else:
+                    _set_setting('company', 'company_logo', '/static/img/logo-icon.svg')
 
         db.session.commit()
         flash('Company settings and logo updated successfully.', 'success')
