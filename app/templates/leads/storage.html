@@ -1,0 +1,657 @@
+{% extends "base.html" %}
+
+{% block title %}Storage, Archive & Recovery Hub — Flixora{% endblock %}
+{% block page_title %}Storage & Recovery Hub{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--space-4);margin-bottom:var(--space-6);">
+    <div>
+        <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2);">
+            <a href="{{ url_for('leads.index') }}" class="btn btn-secondary btn-sm" style="display:inline-flex;align-items:center;gap:4px;">
+                <span class="material-symbols-outlined" style="font-size:16px;">arrow_back</span> Leads Database
+            </a>
+            <span style="color:var(--text-muted);font-size:var(--text-sm);">/ Storage Hub</span>
+        </div>
+        <h1 style="margin:0;font-size:var(--text-2xl);font-weight:700;">Storage, Archive & Recovery Hub</h1>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:4px;">
+            Centralized repository for lead backups, recycle bin recovery, conversation message purges, and media assets.
+        </p>
+    </div>
+    <div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;">
+        {% if archived_leads|length > 0 %}
+        <form method="POST" action="{{ url_for('leads.restore_all') }}" style="margin:0;" onsubmit="return confirm('Recover all archived leads back to the active pipeline?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-primary" style="display:flex;align-items:center;gap:6px;background:var(--success);border-color:var(--success);">
+                <span class="material-symbols-outlined" style="font-size:18px;">restore_from_trash</span>
+                Recover All Leads ({{ archived_leads|length }})
+            </button>
+        </form>
+        {% endif %}
+        <a href="{{ url_for('leads.discover') }}" class="btn btn-secondary" style="display:flex;align-items:center;gap:6px;">
+            <span class="material-symbols-outlined" style="font-size:18px;">search</span> Discover New Leads
+        </a>
+    </div>
+</div>
+
+<!-- Storage Metrics Ribbon -->
+<div class="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:var(--space-4);margin-bottom:var(--space-6);">
+    <div class="card stat-card" style="border-left:4px solid var(--warning);padding:var(--space-4);">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:var(--text-xs);color:var(--text-secondary);text-transform:uppercase;font-weight:600;">Recycle Bin (Archived)</span>
+            <span class="material-symbols-outlined" style="color:var(--warning);font-size:20px;">delete_sweep</span>
+        </div>
+        <div style="font-size:var(--text-2xl);font-weight:700;margin-top:8px;color:var(--text-primary);">
+            {{ archived_leads|length }}
+        </div>
+        <div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:4px;">
+            Deleted leads waiting to recover
+        </div>
+    </div>
+
+    <div class="card stat-card" style="border-left:4px solid var(--primary-500);padding:var(--space-4);">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:var(--text-xs);color:var(--text-secondary);text-transform:uppercase;font-weight:600;">Active Pipeline Leads</span>
+            <span class="material-symbols-outlined" style="color:var(--primary-500);font-size:20px;">groups</span>
+        </div>
+        <div style="font-size:var(--text-2xl);font-weight:700;margin-top:8px;color:var(--text-primary);">
+            {{ active_leads|length }}
+        </div>
+        <div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:4px;">
+            Active prospects & businesses
+        </div>
+    </div>
+
+    <div class="card stat-card" style="border-left:4px solid #8b5cf6;padding:var(--space-4);">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:var(--text-xs);color:var(--text-secondary);text-transform:uppercase;font-weight:600;">Chat Histories</span>
+            <span class="material-symbols-outlined" style="color:#8b5cf6;font-size:20px;">forum</span>
+        </div>
+        <div style="font-size:var(--text-2xl);font-weight:700;margin-top:8px;color:var(--text-primary);">
+            {{ chat_dossiers|length }}
+        </div>
+        <div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:4px;">
+            Conversation threads recorded
+        </div>
+    </div>
+
+    <div class="card stat-card" style="border-left:4px solid var(--success);padding:var(--space-4);">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:var(--text-xs);color:var(--text-secondary);text-transform:uppercase;font-weight:600;">Media Assets</span>
+            <span class="material-symbols-outlined" style="color:var(--success);font-size:20px;">perm_media</span>
+        </div>
+        <div style="font-size:var(--text-2xl);font-weight:700;margin-top:8px;color:var(--text-primary);">
+            {{ media_files|length }}
+        </div>
+        <div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:4px;">
+            Logos, pitch attachments & files
+        </div>
+    </div>
+</div>
+
+<!-- Storage Section Tabs -->
+<div class="card" style="margin-bottom:var(--space-6);">
+    <div style="display:flex;border-bottom:1px solid var(--border-color);padding:0 var(--space-4);background:var(--surface-container);overflow-x:auto;">
+        <button class="tab-storage active" onclick="switchStorageTab('recycle')" id="tab-btn-recycle" style="display:flex;align-items:center;gap:8px;padding:var(--space-4) var(--space-5);border:none;background:transparent;cursor:pointer;font-weight:600;font-size:var(--text-sm);color:var(--primary-500);border-bottom:2px solid var(--primary-500);">
+            <span class="material-symbols-outlined" style="font-size:18px;">delete_sweep</span>
+            Recycle Bin ({{ archived_leads|length }})
+        </button>
+        <button class="tab-storage" onclick="switchStorageTab('active')" id="tab-btn-active" style="display:flex;align-items:center;gap:8px;padding:var(--space-4) var(--space-5);border:none;background:transparent;cursor:pointer;font-weight:600;font-size:var(--text-sm);color:var(--text-secondary);border-bottom:2px solid transparent;">
+            <span class="material-symbols-outlined" style="font-size:18px;">groups</span>
+            Active Leads Storage ({{ active_leads|length }})
+        </button>
+        <button class="tab-storage" onclick="switchStorageTab('chats')" id="tab-btn-chats" style="display:flex;align-items:center;gap:8px;padding:var(--space-4) var(--space-5);border:none;background:transparent;cursor:pointer;font-weight:600;font-size:var(--text-sm);color:var(--text-secondary);border-bottom:2px solid transparent;">
+            <span class="material-symbols-outlined" style="font-size:18px;">chat</span>
+            Chat Histories ({{ chat_dossiers|length }})
+        </button>
+        <button class="tab-storage" onclick="switchStorageTab('media')" id="tab-btn-media" style="display:flex;align-items:center;gap:8px;padding:var(--space-4) var(--space-5);border:none;background:transparent;cursor:pointer;font-weight:600;font-size:var(--text-sm);color:var(--text-secondary);border-bottom:2px solid transparent;">
+            <span class="material-symbols-outlined" style="font-size:18px;">photo_library</span>
+            Multi-Select Media Assets ({{ media_files|length }})
+        </button>
+    </div>
+
+    <div class="card-body" style="padding:0;">
+        
+        <!-- ═══════════════════════════════════════════════════════════
+             TAB 1: RECYCLE BIN & ARCHIVED LEADS
+             ═══════════════════════════════════════════════════════════ -->
+        <div id="storage-panel-recycle" class="storage-panel">
+            <div style="padding:var(--space-4) var(--space-6);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-3);background:var(--surface-dim);border-bottom:1px solid var(--border-color);">
+                <div style="display:flex;align-items:center;gap:var(--space-3);">
+                    <input type="checkbox" id="selectAllRecycle" onchange="toggleSelectGroup('recycle-cb', this.checked); updateRecycleBatchBar();" style="cursor:pointer;width:16px;height:16px;">
+                    <label for="selectAllRecycle" style="font-size:var(--text-sm);font-weight:600;cursor:pointer;margin:0;">Select All Archived</label>
+                    <span id="recycleSelectedBadge" class="badge badge-secondary" style="display:none;font-size:11px;">0 Selected</span>
+                </div>
+                <div id="recycleBatchActions" style="display:none;align-items:center;gap:var(--space-2);">
+                    <button class="btn btn-sm btn-primary" onclick="submitRecycleBatch('restore')" style="display:inline-flex;align-items:center;gap:4px;background:var(--success);border-color:var(--success);">
+                        <span class="material-symbols-outlined" style="font-size:16px;">restore</span> Recover Selected
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="submitRecycleBatch('purge')" style="display:inline-flex;align-items:center;gap:4px;">
+                        <span class="material-symbols-outlined" style="font-size:16px;">delete_forever</span> Permanently Purge Selected
+                    </button>
+                </div>
+            </div>
+
+            {% if archived_leads|length > 0 %}
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:40px;"></th>
+                            <th>Business Name</th>
+                            <th>Category</th>
+                            <th>Location</th>
+                            <th>Rating</th>
+                            <th>Archived Date</th>
+                            <th style="text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lead in archived_leads %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="recycle-cb" value="{{ lead.id }}" onchange="updateRecycleBatchBar()" style="cursor:pointer;width:16px;height:16px;">
+                            </td>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <div style="width:32px;height:32px;border-radius:8px;background:rgba(239,68,68,0.1);color:var(--error);display:grid;place-items:center;font-weight:700;font-size:12px;">
+                                        {{ lead.business_name[:1]|upper }}
+                                    </div>
+                                    <div>
+                                        <strong style="color:var(--text-primary);display:block;">{{ lead.business_name }}</strong>
+                                        <span style="font-size:var(--text-xs);color:var(--text-muted);">ID: #{{ lead.id }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge badge-secondary" style="text-transform:capitalize;">{{ lead.business_category or 'General' }}</span>
+                            </td>
+                            <td style="font-size:var(--text-sm);color:var(--text-secondary);">
+                                {{ lead.city or lead.address or '—' }}
+                            </td>
+                            <td>
+                                {% if lead.rating %}
+                                <span style="display:inline-flex;align-items:center;gap:2px;font-size:var(--text-sm);color:#f59e0b;font-weight:600;">
+                                    ★ {{ lead.rating }}
+                                </span>
+                                {% else %}
+                                <span style="color:var(--text-muted);font-size:var(--text-xs);">No Rating</span>
+                                {% endif %}
+                            </td>
+                            <td style="font-size:var(--text-xs);color:var(--text-muted);">
+                                {{ lead.updated_at.strftime('%Y-%m-%d %H:%M') if lead.updated_at else '—' }}
+                            </td>
+                            <td style="text-align:right;">
+                                <div style="display:inline-flex;gap:var(--space-2);">
+                                    <form method="POST" action="{{ url_for('leads.restore_lead', id=lead.id) }}" style="display:inline;margin:0;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-secondary" style="display:inline-flex;align-items:center;gap:4px;color:var(--success);border-color:var(--success);" title="Recover lead back to active list">
+                                            <span class="material-symbols-outlined" style="font-size:16px;">restore</span> Recover
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('leads.delete_lead', id=lead.id) }}?permanent=1" style="display:inline;margin:0;" onsubmit="return confirm('Permanently purge this lead forever? This cannot be undone.');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-danger btn-icon" title="Permanently delete forever">
+                                            <span class="material-symbols-outlined" style="font-size:16px;">delete_forever</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state" style="padding:var(--space-12) var(--space-6);text-align:center;">
+                <span class="material-symbols-outlined empty-state-icon" style="font-size:48px;color:var(--success);">check_circle</span>
+                <h3 style="margin-top:var(--space-3);margin-bottom:var(--space-1);">Recycle Bin is Empty</h3>
+                <p style="color:var(--text-secondary);font-size:var(--text-sm);max-width:420px;margin:0 auto;">
+                    No deleted leads in archive. When you delete leads from the database, they will safely land here for 1-click recovery.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             TAB 2: ACTIVE LEADS STORAGE MANAGER
+             ═══════════════════════════════════════════════════════════ -->
+        <div id="storage-panel-active" class="storage-panel" style="display:none;">
+            <div style="padding:var(--space-4) var(--space-6);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-3);background:var(--surface-dim);border-bottom:1px solid var(--border-color);">
+                <div style="display:flex;align-items:center;gap:var(--space-3);">
+                    <input type="checkbox" id="selectAllActive" onchange="toggleSelectGroup('active-cb', this.checked); updateActiveBatchBar();" style="cursor:pointer;width:16px;height:16px;">
+                    <label for="selectAllActive" style="font-size:var(--text-sm);font-weight:600;cursor:pointer;margin:0;">Select All Active</label>
+                    <span id="activeSelectedBadge" class="badge badge-secondary" style="display:none;font-size:11px;">0 Selected</span>
+                </div>
+                <div id="activeBatchActions" style="display:none;align-items:center;gap:var(--space-2);">
+                    <button class="btn btn-sm btn-warning" onclick="submitActiveBatch('archive')" style="display:inline-flex;align-items:center;gap:4px;">
+                        <span class="material-symbols-outlined" style="font-size:16px;">archive</span> Move to Recycle Bin
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="submitActiveBatch('purge')" style="display:inline-flex;align-items:center;gap:4px;">
+                        <span class="material-symbols-outlined" style="font-size:16px;">delete_forever</span> Permanent Purge
+                    </button>
+                </div>
+            </div>
+
+            {% if active_leads|length > 0 %}
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:40px;"></th>
+                            <th>Business Name</th>
+                            <th>Phone / WhatsApp</th>
+                            <th>Category</th>
+                            <th>Score</th>
+                            <th>Status</th>
+                            <th style="text-align:right;">Quick Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lead in active_leads %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="active-cb" value="{{ lead.id }}" onchange="updateActiveBatchBar()" style="cursor:pointer;width:16px;height:16px;">
+                            </td>
+                            <td>
+                                <a href="{{ url_for('leads.detail', id=lead.id) }}" style="font-weight:600;color:var(--text-primary);text-decoration:none;">
+                                    {{ lead.business_name }}
+                                </a>
+                            </td>
+                            <td style="font-family:monospace;font-size:var(--text-xs);">
+                                {{ lead.primary_phone or '—' }}
+                            </td>
+                            <td>
+                                <span class="badge badge-secondary" style="text-transform:capitalize;">{{ lead.business_category or 'General' }}</span>
+                            </td>
+                            <td>
+                                <span class="badge badge-primary">{{ lead.lead_score }}</span>
+                            </td>
+                            <td>
+                                <span class="badge badge-blue">{{ lead.status|title }}</span>
+                            </td>
+                            <td style="text-align:right;">
+                                <form method="POST" action="{{ url_for('leads.delete_lead', id=lead.id) }}" style="display:inline;margin:0;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sm btn-secondary btn-icon" title="Move to Recycle Bin">
+                                        <span class="material-symbols-outlined" style="font-size:16px;color:var(--warning);">archive</span>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state" style="padding:var(--space-12) var(--space-6);text-align:center;">
+                <span class="material-symbols-outlined empty-state-icon">groups</span>
+                <h3>No active leads in database</h3>
+                <a href="{{ url_for('leads.discover') }}" class="btn btn-primary" style="margin-top:var(--space-3);">Discover Leads</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             TAB 3: CHAT HISTORIES & CONVERSATION STORAGE
+             ═══════════════════════════════════════════════════════════ -->
+        <div id="storage-panel-chats" class="storage-panel" style="display:none;">
+            <div style="padding:var(--space-4) var(--space-6);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-3);background:var(--surface-dim);border-bottom:1px solid var(--border-color);">
+                <div style="display:flex;align-items:center;gap:var(--space-3);">
+                    <input type="checkbox" id="selectAllChats" onchange="toggleSelectGroup('chat-cb', this.checked); updateChatsBatchBar();" style="cursor:pointer;width:16px;height:16px;">
+                    <label for="selectAllChats" style="font-size:var(--text-sm);font-weight:600;cursor:pointer;margin:0;">Select All Chats</label>
+                    <span id="chatsSelectedBadge" class="badge badge-secondary" style="display:none;font-size:11px;">0 Selected</span>
+                </div>
+                <div id="chatsBatchActions" style="display:none;align-items:center;gap:var(--space-2);">
+                    <button class="btn btn-sm btn-danger" onclick="submitChatsBatch()" style="display:inline-flex;align-items:center;gap:4px;">
+                        <span class="material-symbols-outlined" style="font-size:16px;">delete_sweep</span> Clear Selected Chat Histories
+                    </button>
+                </div>
+            </div>
+
+            {% if chat_dossiers|length > 0 %}
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:40px;"></th>
+                            <th>Lead Business</th>
+                            <th>Channel</th>
+                            <th>Total Messages</th>
+                            <th>Latest Message Snippet</th>
+                            <th>Last Activity</th>
+                            <th style="text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in chat_dossiers %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="chat-cb" value="{{ item.lead.id }}" onchange="updateChatsBatchBar()" style="cursor:pointer;width:16px;height:16px;">
+                            </td>
+                            <td>
+                                <strong style="color:var(--text-primary);display:block;">{{ item.lead.business_name }}</strong>
+                                <span style="font-size:var(--text-xs);color:var(--text-muted);font-family:monospace;">{{ item.lead.primary_phone }}</span>
+                            </td>
+                            <td>
+                                <span class="badge" style="background:#dcfce7;color:#15803d;display:inline-flex;align-items:center;gap:4px;font-size:10px;">
+                                    <span class="material-symbols-outlined" style="font-size:12px;">chat</span> WhatsApp
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge badge-primary" style="font-weight:700;">{{ item.msg_count }} msgs</span>
+                            </td>
+                            <td style="max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:var(--text-xs);color:var(--text-secondary);">
+                                {% if item.last_msg %}
+                                <strong>{{ item.last_msg.sender_type|title }}:</strong> {{ item.last_msg.content }}
+                                {% else %}
+                                <em>No messages logged</em>
+                                {% endif %}
+                            </td>
+                            <td style="font-size:var(--text-xs);color:var(--text-muted);">
+                                {{ item.conversation.updated_at.strftime('%Y-%m-%d %H:%M') if item.conversation and item.conversation.updated_at else '—' }}
+                            </td>
+                            <td style="text-align:right;">
+                                <div style="display:inline-flex;gap:var(--space-2);">
+                                    <a href="{{ url_for('conversations.index') }}" class="btn btn-sm btn-secondary" title="View in Live Chat">
+                                        Open Chat
+                                    </a>
+                                    <form method="POST" action="{{ url_for('leads.delete_lead_chat', id=item.lead.id) }}" style="display:inline;margin:0;" onsubmit="return confirm('Clear all messages for this lead?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-danger btn-icon" title="Clear chat history">
+                                            <span class="material-symbols-outlined" style="font-size:16px;">delete</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state" style="padding:var(--space-12) var(--space-6);text-align:center;">
+                <span class="material-symbols-outlined empty-state-icon">chat</span>
+                <h3>No chat records logged</h3>
+                <p style="color:var(--text-secondary);font-size:var(--text-sm);">Conversations will appear here once WhatsApp outreach and client replies occur.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             TAB 4: MULTI-SELECT MEDIA ASSETS
+             ═══════════════════════════════════════════════════════════ -->
+        <div id="storage-panel-media" class="storage-panel" style="display:none;">
+            <div style="padding:var(--space-4) var(--space-6);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-3);background:var(--surface-dim);border-bottom:1px solid var(--border-color);">
+                <div style="display:flex;align-items:center;gap:var(--space-3);">
+                    <input type="checkbox" id="selectAllMedia" onchange="toggleSelectGroup('media-cb', this.checked); updateMediaBatchBar();" style="cursor:pointer;width:16px;height:16px;">
+                    <label for="selectAllMedia" style="font-size:var(--text-sm);font-weight:600;cursor:pointer;margin:0;">Select All Media</label>
+                    <span id="mediaSelectedBadge" class="badge badge-secondary" style="display:none;font-size:11px;">0 Selected</span>
+                </div>
+                <div id="mediaBatchActions" style="display:none;align-items:center;gap:var(--space-2);">
+                    <button class="btn btn-sm btn-danger" onclick="submitMediaBatch()" style="display:inline-flex;align-items:center;gap:4px;">
+                        <span class="material-symbols-outlined" style="font-size:16px;">delete</span> Delete Selected Media
+                    </button>
+                </div>
+            </div>
+
+            {% if media_files|length > 0 %}
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:40px;"></th>
+                            <th>Asset Preview</th>
+                            <th>Original File Name</th>
+                            <th>Type</th>
+                            <th>Size</th>
+                            <th>Uploaded At</th>
+                            <th style="text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for file in media_files %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="media-cb" value="{{ file.id }}" onchange="updateMediaBatchBar()" style="cursor:pointer;width:16px;height:16px;">
+                            </td>
+                            <td>
+                                <div style="width:44px;height:44px;border-radius:8px;background:var(--surface-container);display:grid;place-items:center;overflow:hidden;border:1px solid var(--border-color);">
+                                    {% if file.mime_type and 'image' in file.mime_type %}
+                                    <img src="{{ url_for('files.download_file', id=file.id) }}" alt="Thumbnail" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';">
+                                    <span class="material-symbols-outlined" style="display:none;font-size:22px;color:var(--text-muted);">image</span>
+                                    {% else %}
+                                    <span class="material-symbols-outlined" style="font-size:22px;color:var(--primary-500);">description</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <strong style="color:var(--text-primary);display:block;font-size:var(--text-sm);">{{ file.original_filename }}</strong>
+                                <span style="font-size:var(--text-xs);color:var(--text-muted);font-family:monospace;">{{ file.filename }}</span>
+                            </td>
+                            <td>
+                                <span class="badge badge-secondary" style="text-transform:capitalize;">{{ file.file_type or file.mime_type or 'Asset' }}</span>
+                            </td>
+                            <td style="font-size:var(--text-xs);color:var(--text-secondary);">
+                                {{ (file.file_size / 1024)|round(1) }} KB
+                            </td>
+                            <td style="font-size:var(--text-xs);color:var(--text-muted);">
+                                {{ file.created_at.strftime('%Y-%m-%d %H:%M') if file.created_at else '—' }}
+                            </td>
+                            <td style="text-align:right;">
+                                <div style="display:inline-flex;gap:var(--space-2);">
+                                    <a href="{{ url_for('files.download_file', id=file.id) }}" class="btn btn-sm btn-secondary btn-icon" title="Download">
+                                        <span class="material-symbols-outlined" style="font-size:16px;">download</span>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state" style="padding:var(--space-12) var(--space-6);text-align:center;">
+                <span class="material-symbols-outlined empty-state-icon">perm_media</span>
+                <h3>No media assets uploaded</h3>
+                <a href="{{ url_for('files.index') }}" class="btn btn-primary" style="margin-top:var(--space-3);">Upload Files & Logos</a>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+<!-- Forms for batch execution -->
+<form id="recycleBatchForm" method="POST" style="display:none;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+</form>
+
+<form id="activeBatchForm" method="POST" style="display:none;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+</form>
+
+<form id="chatsBatchForm" action="{{ url_for('leads.delete_chats_multiple') }}" method="POST" style="display:none;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+</form>
+
+<form id="mediaBatchForm" action="{{ url_for('leads.delete_media_multiple') }}" method="POST" style="display:none;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+</form>
+
+<script>
+function switchStorageTab(tab) {
+    const panels = ['recycle', 'active', 'chats', 'media'];
+    panels.forEach(p => {
+        const el = document.getElementById('storage-panel-' + p);
+        const btn = document.getElementById('tab-btn-' + p);
+        if (p === tab) {
+            el.style.display = 'block';
+            btn.style.color = 'var(--primary-500)';
+            btn.style.borderBottom = '2px solid var(--primary-500)';
+        } else {
+            el.style.display = 'none';
+            btn.style.color = 'var(--text-secondary)';
+            btn.style.borderBottom = '2px solid transparent';
+        }
+    });
+}
+
+function toggleSelectGroup(className, isChecked) {
+    document.querySelectorAll('.' + className).forEach(cb => {
+        cb.checked = isChecked;
+    });
+}
+
+// 1. Recycle Batch
+function updateRecycleBatchBar() {
+    const checked = Array.from(document.querySelectorAll('.recycle-cb:checked'));
+    const bar = document.getElementById('recycleBatchActions');
+    const badge = document.getElementById('recycleSelectedBadge');
+    if (checked.length > 0) {
+        bar.style.display = 'inline-flex';
+        badge.style.display = 'inline-block';
+        badge.innerText = `${checked.length} Selected`;
+    } else {
+        bar.style.display = 'none';
+        badge.style.display = 'none';
+        document.getElementById('selectAllRecycle').checked = false;
+    }
+}
+
+function submitRecycleBatch(action) {
+    const checked = Array.from(document.querySelectorAll('.recycle-cb:checked')).map(cb => cb.value);
+    if (checked.length === 0) return;
+
+    const form = document.getElementById('recycleBatchForm');
+    form.innerHTML = `<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">`;
+
+    checked.forEach(id => {
+        const inp = document.createElement('input');
+        inp.type = 'hidden';
+        inp.name = 'lead_ids[]';
+        inp.value = id;
+        form.appendChild(inp);
+    });
+
+    if (action === 'restore') {
+        form.action = "{{ url_for('leads.restore_all') }}";
+        form.submit();
+    } else if (action === 'purge') {
+        if (!confirm(`Permanently purge ${checked.length} selected leads forever? This is irreversible.`)) return;
+        form.action = "{{ url_for('leads.delete_multiple') }}?permanent=1";
+        form.submit();
+    }
+}
+
+// 2. Active Batch
+function updateActiveBatchBar() {
+    const checked = Array.from(document.querySelectorAll('.active-cb:checked'));
+    const bar = document.getElementById('activeBatchActions');
+    const badge = document.getElementById('activeSelectedBadge');
+    if (checked.length > 0) {
+        bar.style.display = 'inline-flex';
+        badge.style.display = 'inline-block';
+        badge.innerText = `${checked.length} Selected`;
+    } else {
+        bar.style.display = 'none';
+        badge.style.display = 'none';
+        document.getElementById('selectAllActive').checked = false;
+    }
+}
+
+function submitActiveBatch(action) {
+    const checked = Array.from(document.querySelectorAll('.active-cb:checked')).map(cb => cb.value);
+    if (checked.length === 0) return;
+
+    const form = document.getElementById('activeBatchForm');
+    form.innerHTML = `<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">`;
+
+    checked.forEach(id => {
+        const inp = document.createElement('input');
+        inp.type = 'hidden';
+        inp.name = 'lead_ids[]';
+        inp.value = id;
+        form.appendChild(inp);
+    });
+
+    if (action === 'archive') {
+        form.action = "{{ url_for('leads.delete_multiple') }}";
+        form.submit();
+    } else if (action === 'purge') {
+        if (!confirm(`Permanently delete ${checked.length} leads and all associated records?`)) return;
+        form.action = "{{ url_for('leads.delete_multiple') }}?permanent=1";
+        form.submit();
+    }
+}
+
+// 3. Chats Batch
+function updateChatsBatchBar() {
+    const checked = Array.from(document.querySelectorAll('.chat-cb:checked'));
+    const bar = document.getElementById('chatsBatchActions');
+    const badge = document.getElementById('chatsSelectedBadge');
+    if (checked.length > 0) {
+        bar.style.display = 'inline-flex';
+        badge.style.display = 'inline-block';
+        badge.innerText = `${checked.length} Selected`;
+    } else {
+        bar.style.display = 'none';
+        badge.style.display = 'none';
+        document.getElementById('selectAllChats').checked = false;
+    }
+}
+
+function submitChatsBatch() {
+    const checked = Array.from(document.querySelectorAll('.chat-cb:checked')).map(cb => cb.value);
+    if (checked.length === 0) return;
+    if (!confirm(`Clear message history for ${checked.length} selected leads?`)) return;
+
+    const form = document.getElementById('chatsBatchForm');
+    form.innerHTML = `<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">`;
+
+    checked.forEach(id => {
+        const inp = document.createElement('input');
+        inp.type = 'hidden';
+        inp.name = 'lead_ids[]';
+        inp.value = id;
+        form.appendChild(inp);
+    });
+
+    form.submit();
+}
+
+// 4. Media Batch
+function updateMediaBatchBar() {
+    const checked = Array.from(document.querySelectorAll('.media-cb:checked'));
+    const bar = document.getElementById('mediaBatchActions');
+    const badge = document.getElementById('mediaSelectedBadge');
+    if (checked.length > 0) {
+        bar.style.display = 'inline-flex';
+        badge.style.display = 'inline-block';
+        badge.innerText = `${checked.length} Selected`;
+    } else {
+        bar.style.display = 'none';
+        badge.style.display = 'none';
+        document.getElementById('selectAllMedia').checked = false;
+    }
+}
+
+function submitMediaBatch() {
+    const checked = Array.from(document.querySelectorAll('.media-cb:checked')).map(cb => cb.value);
+    if (checked.length === 0) return;
+    if (!confirm(`Delete ${checked.length} selected media assets?`)) return;
+
+    const form = document.getElementById('mediaBatchForm');
+    form.innerHTML = `<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">`;
+
+    checked.forEach(id => {
+        const inp = document.createElement('input');
+        inp.type = 'hidden';
+        inp.name = 'file_ids[]';
+        inp.value = id;
+        form.appendChild(inp);
+    });
+
+    form.submit();
+}
+</script>
+{% endblock %}

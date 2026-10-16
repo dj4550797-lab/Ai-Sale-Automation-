@@ -20,9 +20,10 @@ class LeadStatus:
     LOST = 'lost'
     PAUSED = 'paused'
     WAITING_FOR_DEMO = 'Waiting for Admin Demo'
+    ARCHIVED = 'archived'
 
     ALL = [NEW, RESEARCHING, RESEARCHED, QUALIFIED, DISQUALIFIED,
-           CONTACTED, REPLIED, INTERESTED, NEGOTIATION, WON, LOST, PAUSED, WAITING_FOR_DEMO]
+           CONTACTED, REPLIED, INTERESTED, NEGOTIATION, WON, LOST, PAUSED, WAITING_FOR_DEMO, ARCHIVED]
 
 
 # ── Lead Priority ──────────────────────────────────────────────

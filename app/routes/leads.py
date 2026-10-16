@@ -39,6 +39,9 @@ def index():
     # Filters
     if status_filter:
         query = query.filter(Lead.status == status_filter)
+    else:
+        query = query.filter(Lead.status != LeadStatus.ARCHIVED)
+
     if category_filter:
         query = query.filter(Lead.business_category.ilike(f"%{category_filter}%"))
     if rating_filter:
@@ -56,12 +59,14 @@ def index():
     # Categories for filter list
     categories = db.session.query(Lead.business_category).distinct().all()
     categories = [c[0] for c in categories if c[0]]
+    archived_count = Lead.query.filter_by(status=LeadStatus.ARCHIVED).count()
 
     return render_template('leads/index.html', 
                            leads=leads, 
                            pagination=pagination, 
                            categories=categories,
-                           statuses=LeadStatus.ALL)
+                           statuses=LeadStatus.ALL,
+                           archived_count=archived_count)
 
 
 @leads_bp.route('/discover', methods=['GET', 'POST'])
@@ -223,58 +228,90 @@ def trigger_pipeline(id):
 @leads_bp.route('/<int:id>/delete', methods=['POST'])
 @login_required
 def delete_lead(id):
-    """Delete a lead and all associated records securely with cascade."""
+    """Delete a single lead — soft archive into Storage or permanent purge."""
     lead = Lead.query.get_or_404(id)
     name = lead.business_name
+    permanent = (request.args.get('permanent') == '1' or 
+                 request.form.get('permanent') in ['1', 'true', 'on'])
     try:
-        db.session.delete(lead)
-        db.session.commit()
-        flash(f"Lead '{name}' and all associated records have been deleted.", "success")
+        if permanent:
+            try:
+                import os, shutil
+                from flask import current_app
+                upload_base = current_app.config.get('UPLOAD_FOLDER', 'uploads')
+                demo_dir = os.path.join(upload_base, 'demos', str(id))
+                if os.path.exists(demo_dir):
+                    shutil.rmtree(demo_dir, ignore_errors=True)
+            except Exception:
+                pass
+            db.session.delete(lead)
+            db.session.commit()
+            flash(f"Lead '{name}' permanently deleted.", "success")
+        else:
+            lead.status = LeadStatus.ARCHIVED
+            lead.updated_at = datetime.now(timezone.utc)
+            db.session.commit()
+            flash(f"Lead '{name}' moved to Storage & Recycle Bin. You can recover it anytime from Storage Hub.", "success")
     except Exception as e:
         db.session.rollback()
         flash(f"Error deleting lead: {str(e)}", "error")
+
+    ref = request.referrer
+    if ref and ('storage' in ref or 'leads' in ref):
+        return redirect(ref)
     return redirect(url_for('leads.index'))
 
 
 @leads_bp.route('/delete-multiple', methods=['POST'])
 @login_required
 def delete_multiple():
-    """Delete multiple selected leads and all their associated records securely."""
+    """Bulk delete or archive multiple selected leads."""
     lead_ids = request.form.getlist('lead_ids[]')
     if not lead_ids:
         lead_ids = request.form.getlist('lead_ids')
-        
     if not lead_ids and request.is_json:
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         lead_ids = data.get('lead_ids', [])
 
     if not lead_ids:
         if request.is_json:
             return jsonify({"success": False, "error": "No leads selected for deletion."}), 400
-        flash("No leads selected for deletion.", "error")
-        return redirect(url_for('leads.index'))
+        flash("No leads were selected for deletion.", "warning")
+        return redirect(request.referrer or url_for('leads.index'))
 
-    deleted_count = 0
+    permanent = (request.args.get('permanent') == '1' or 
+                 request.form.get('permanent') in ['1', 'true', 'on'])
+    
+    count = 0
     try:
         for lid in lead_ids:
-            lead = Lead.query.get(int(lid))
-            if lead:
-                db.session.delete(lead)
-                deleted_count += 1
+            try:
+                lead = Lead.query.get(int(lid))
+                if lead:
+                    if permanent:
+                        db.session.delete(lead)
+                    else:
+                        lead.status = LeadStatus.ARCHIVED
+                        lead.updated_at = datetime.now(timezone.utc)
+                    count += 1
+            except (ValueError, TypeError):
+                continue
         db.session.commit()
+        if permanent:
+            msg = f"Permanently purged {count} selected leads."
+        else:
+            msg = f"Moved {count} leads to Storage & Recycle Bin. You can recover them anytime."
         
-        message = f"Successfully deleted {deleted_count} leads and all their associated records."
         if request.is_json:
-            return jsonify({"success": True, "message": message})
-        flash(message, "success")
+            return jsonify({"success": True, "message": msg})
+        flash(msg, "success")
     except Exception as e:
         db.session.rollback()
-        message = f"Error deleting leads: {str(e)}"
         if request.is_json:
-            return jsonify({"success": False, "error": message}), 500
-        flash(message, "error")
+            return jsonify({"success": False, "error": str(e)}), 500
+        flash(f"Error deleting selected leads: {str(e)}", "error")
 
-    return redirect(url_for('leads.index'))
+    return redirect(request.referrer or url_for('leads.index'))
 
 
 @leads_bp.route('/<int:id>/save-demo-url', methods=['POST'])
@@ -505,4 +542,175 @@ def regenerate_prd(id):
     else:
         flash(f"Failed to regenerate PRD: {res.get('error')}", "error")
     return redirect(url_for('leads.detail', id=id))
+
+
+# ── Storage & Recovery Hub Management Routes ───────────────────────
+
+
+@leads_bp.route('/<int:id>/restore', methods=['POST'])
+@login_required
+def restore_lead(id):
+    """Restore a single archived lead back to the active pipeline."""
+    lead = Lead.query.get_or_404(id)
+    try:
+        # Determine appropriate status to restore to
+        if lead.prds.count() > 0 and lead.demos.count() > 0:
+            lead.status = LeadStatus.WAITING_FOR_DEMO
+        elif lead.prds.count() > 0:
+            lead.status = LeadStatus.QUALIFIED
+        else:
+            lead.status = LeadStatus.QUALIFIED
+        lead.updated_at = datetime.now(timezone.utc)
+        db.session.commit()
+        flash(f"Lead '{lead.business_name}' successfully recovered and restored to active pipeline!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error restoring lead: {str(e)}", "error")
+    return redirect(request.referrer or url_for('leads.storage_hub'))
+
+
+@leads_bp.route('/restore-all', methods=['POST'])
+@login_required
+def restore_all():
+    """Recover all archived leads in 1-click."""
+    try:
+        archived = Lead.query.filter_by(status=LeadStatus.ARCHIVED).all()
+        count = len(archived)
+        for lead in archived:
+            lead.status = LeadStatus.QUALIFIED
+            lead.updated_at = datetime.now(timezone.utc)
+        db.session.commit()
+        flash(f"🎉 Successfully recovered all {count} archived leads back to active pipeline!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error recovering all leads: {str(e)}", "error")
+    return redirect(url_for('leads.storage_hub'))
+
+
+@leads_bp.route('/<int:id>/delete-chat', methods=['POST'])
+@login_required
+def delete_lead_chat(id):
+    """Delete message history and conversation records for a lead."""
+    lead = Lead.query.get_or_404(id)
+    try:
+        from app.models import Conversation, Message
+        convs = Conversation.query.filter_by(lead_id=id).all()
+        total_msgs = 0
+        for c in convs:
+            deleted_msgs = Message.query.filter_by(conversation_id=c.id).delete()
+            total_msgs += deleted_msgs
+            db.session.delete(c)
+        db.session.commit()
+        flash(f"Cleared {total_msgs} chat messages for '{lead.business_name}'.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error clearing chat history: {str(e)}", "error")
+    return redirect(request.referrer or url_for('leads.storage_hub'))
+
+
+@leads_bp.route('/delete-chats-multiple', methods=['POST'])
+@login_required
+def delete_chats_multiple():
+    """Multi-select delete chat conversations for multiple leads."""
+    lead_ids = request.form.getlist('lead_ids[]')
+    if not lead_ids:
+        flash("No conversations were selected for deletion.", "warning")
+        return redirect(request.referrer or url_for('leads.storage_hub'))
+
+    try:
+        from app.models import Conversation, Message
+        cleared_leads = 0
+        cleared_msgs = 0
+        for lid in lead_ids:
+            try:
+                lid_int = int(lid)
+                convs = Conversation.query.filter_by(lead_id=lid_int).all()
+                if convs:
+                    for c in convs:
+                        cleared_msgs += Message.query.filter_by(conversation_id=c.id).delete()
+                        db.session.delete(c)
+                    cleared_leads += 1
+            except (ValueError, TypeError):
+                continue
+        db.session.commit()
+        flash(f"Cleared chat histories ({cleared_msgs} messages) across {cleared_leads} leads.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error bulk clearing chats: {str(e)}", "error")
+    return redirect(request.referrer or url_for('leads.storage_hub'))
+
+
+@leads_bp.route('/storage')
+@login_required
+def storage_hub():
+    """Storage, Archive, Chat Purge & Media Hub."""
+    from app.models import Conversation, Message, UploadedFile
+    
+    # 1. Archived Leads (Recycle Bin)
+    archived_leads = Lead.query.filter_by(status=LeadStatus.ARCHIVED).order_by(Lead.updated_at.desc()).all()
+    
+    # 2. Active Leads
+    active_leads = Lead.query.filter(Lead.status != LeadStatus.ARCHIVED).order_by(Lead.lead_score.desc()).limit(100).all()
+    
+    # 3. Leads with Conversation Chats
+    leads_with_chats = db.session.query(Lead).join(Conversation).distinct().all()
+    chat_dossiers = []
+    for l in leads_with_chats:
+        c = Conversation.query.filter_by(lead_id=l.id).order_by(Conversation.updated_at.desc()).first()
+        msg_count = Message.query.filter_by(conversation_id=c.id).count() if c else 0
+        last_msg = Message.query.filter_by(conversation_id=c.id).order_by(Message.created_at.desc()).first() if c else None
+        chat_dossiers.append({
+            'lead': l,
+            'conversation': c,
+            'msg_count': msg_count,
+            'last_msg': last_msg
+        })
+    
+    # 4. Media Files
+    media_files = UploadedFile.query.order_by(UploadedFile.created_at.desc()).all()
+    
+    return render_template(
+        'leads/storage.html',
+        archived_leads=archived_leads,
+        active_leads=active_leads,
+        chat_dossiers=chat_dossiers,
+        media_files=media_files
+    )
+
+
+@leads_bp.route('/storage/delete-media', methods=['POST'])
+@login_required
+def delete_media_multiple():
+    """Multi-select bulk delete media files."""
+    file_ids = request.form.getlist('file_ids[]')
+    if not file_ids:
+        flash("No media files selected.", "warning")
+        return redirect(url_for('leads.storage_hub'))
+    
+    try:
+        from app.models import UploadedFile
+        import os
+        from flask import current_app
+        deleted_count = 0
+        for fid in file_ids:
+            try:
+                uf = UploadedFile.query.get(int(fid))
+                if uf:
+                    # Remove from disk if exists
+                    if uf.file_path and os.path.exists(uf.file_path):
+                        try:
+                            os.remove(uf.file_path)
+                        except Exception:
+                            pass
+                    db.session.delete(uf)
+                    deleted_count += 1
+            except (ValueError, TypeError):
+                continue
+        db.session.commit()
+        flash(f"Successfully deleted {deleted_count} media assets.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error deleting media files: {str(e)}", "error")
+    return redirect(url_for('leads.storage_hub'))
+
 

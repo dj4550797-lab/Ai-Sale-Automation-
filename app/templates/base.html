@@ -8,11 +8,9 @@
     <meta name="description" content="{% block meta_description %}Flixora AI Sales Automation Agent{% endblock %}">
 
     <!-- Favicon & Brand Icons -->
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
-    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="icon" href="{{ company_logo or url_for('static', filename='img/logo-icon.svg') }}">
+    <link rel="apple-touch-icon" href="{{ company_logo or url_for('static', filename='img/logo-icon.svg') }}">
+    <link rel="shortcut icon" href="{{ company_logo or url_for('static', filename='img/logo-icon.svg') }}">
 
     <!-- Google Fonts & Custom Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -68,6 +66,10 @@
                     <a href="{{ url_for('leads.index') }}" class="nav-item" id="nav-leads">
                         <span class="material-symbols-outlined">group</span>
                         Leads
+                    </a>
+                    <a href="{{ url_for('leads.storage_hub') }}" class="nav-item" id="nav-storage">
+                        <span class="material-symbols-outlined">inventory_2</span>
+                        Storage & Recovery
                     </a>
                     <a href="{{ url_for('analysis.index') }}" class="nav-item" id="nav-analysis">
                         <span class="material-symbols-outlined">language</span>
@@ -256,6 +258,22 @@
 
                 {% block content %}{% endblock %}
             </div>
+
+            <!-- Global App Footer -->
+            <footer class="app-global-footer" style="padding: var(--space-4) var(--space-6); border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); font-size: var(--text-xs); color: var(--text-muted); background: var(--surface-dim); margin-top: auto;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    {% if company_logo %}
+                    <img src="{{ company_logo }}" alt="{{ company_name }}" style="height: 20px; width: 20px; border-radius: 4px; object-fit: contain;" onerror="this.style.display='none';">
+                    {% endif %}
+                    <span>&copy; 2026 <strong>{{ company_name or 'Flixora' }}</strong>. All rights reserved.</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <a href="{{ url_for('legal.privacy_policy') }}" style="color: var(--text-muted); text-decoration: none;">Privacy</a>
+                    <a href="{{ url_for('legal.terms_of_service') }}" style="color: var(--text-muted); text-decoration: none;">Terms</a>
+                    <a href="{{ url_for('legal.whatsapp_policy') }}" style="color: var(--text-muted); text-decoration: none;">WhatsApp Compliance</a>
+                    <span style="display: inline-flex; align-items: center; gap: 4px; color: var(--success);"><span style="width: 6px; height: 6px; border-radius: 50%; background: var(--success); display: inline-block;"></span> AI Automation Active</span>
+                </div>
+            </footer>
         </main>
     </div>
 

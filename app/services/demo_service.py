@@ -37,6 +37,16 @@ def _generate_premium_fallback_demo_html(lead, prd):
         b_phone = phone_contact.value
     clean_phone = "".join(filter(str.isdigit, b_phone)) if b_phone else "919876543210"
 
+    # Fetch dynamic company brand name
+    comp_name = "Flixora"
+    try:
+        from app.models import Setting
+        c_name_stg = Setting.query.filter_by(category='company', key='company_name').first()
+        if c_name_stg and c_name_stg.value:
+            comp_name = c_name_stg.value
+    except Exception:
+        pass
+
     # Category themes: (primary, secondary, accent, bg_gradient, icon)
     if any(k in cat for k in ['salon', 'beauty', 'spa', 'hair']):
         theme = {
@@ -842,7 +852,7 @@ def _generate_premium_fallback_demo_html(lead, prd):
     <!-- Footer -->
     <footer>
         <div class="container">
-            <p>&copy; {datetime.now().year} {b_name}. All Rights Reserved. &bull; Powered by Flixora AI Web Platform</p>
+            <p>&copy; {datetime.now().year} {b_name}. All Rights Reserved. &bull; Powered by {comp_name} AI Web Platform</p>
         </div>
     </footer>
 

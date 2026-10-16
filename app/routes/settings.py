@@ -97,9 +97,17 @@ def company():
                 try:
                     fname = secure_filename(logo_file.filename)
                     static_img_dir = os.path.join(current_app.root_path, 'static', 'img')
+                    static_dir = os.path.join(current_app.root_path, 'static')
                     os.makedirs(static_img_dir, exist_ok=True)
                     with open(os.path.join(static_img_dir, fname), 'wb') as f:
                         f.write(file_bytes)
+                    with open(os.path.join(static_img_dir, 'company-logo.png'), 'wb') as f:
+                        f.write(file_bytes)
+                    if fname.endswith('.svg') or content_type == 'image/svg+xml':
+                        with open(os.path.join(static_img_dir, 'logo-icon.svg'), 'wb') as f:
+                            f.write(file_bytes)
+                        with open(os.path.join(static_dir, 'favicon.svg'), 'wb') as f:
+                            f.write(file_bytes)
                 except Exception:
                     pass
         else:

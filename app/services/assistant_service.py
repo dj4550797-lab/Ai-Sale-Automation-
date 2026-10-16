@@ -470,6 +470,7 @@ def answer_admin_query(query, history=None, image_path=None, model_name=None):
     # 1. Parse intent - Concise prompt to minimize token usage
     tool = 'none'
     search_term = ''
+    context_data = None
     q_clean = user_query.lower()
 
     if image_base64:

@@ -15,12 +15,26 @@
     <p>Configure model parameters and capability tags for <strong>{{ provider.name }}</strong>.</p>
 </div>
 
-<div class="section-header">
+<div class="section-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-3);">
     <h3>Models List</h3>
-    <button class="btn btn-primary" onclick="openDialog('addModelDialog')">
-        <span class="material-symbols-outlined">add</span>
-        Add Model
-    </button>
+    <div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;">
+        <form method="POST" action="{{ url_for('models.quick_add_model', provider_id=provider.id) }}" style="display:inline;margin:0;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="add_top_free">
+            <button type="submit" class="btn btn-secondary" style="display:inline-flex;align-items:center;gap:4px;border-color:var(--success);color:var(--success);" title="Auto-register top free models with 1-click">
+                <span class="material-symbols-outlined" style="font-size:18px;">bolt</span>
+                ⚡ Add Top Free Models
+            </button>
+        </form>
+        <button class="btn btn-secondary" onclick="openAiDiscoverDialog()" style="display:inline-flex;align-items:center;gap:4px;border-color:var(--primary-500);color:var(--primary-500);">
+            <span class="material-symbols-outlined" style="font-size:18px;">smart_toy</span>
+            🤖 AI Discover Models
+        </button>
+        <button class="btn btn-primary" onclick="openDialog('addModelDialog')" style="display:inline-flex;align-items:center;gap:4px;">
+            <span class="material-symbols-outlined">add</span>
+            Add Model
+        </button>
+    </div>
 </div>
 
 <div class="card">
@@ -202,10 +216,212 @@
         </form>
     </div>
 </div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     AI AUTO-DISCOVER MODELS MODAL
+     ═══════════════════════════════════════════════════════════ -->
+<div class="dialog-overlay" id="aiDiscoverModal">
+    <div class="dialog" style="max-width: 780px; width: 95vw;">
+        <div class="dialog-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="material-symbols-outlined" style="color:var(--primary-500);font-size:24px;">smart_toy</span>
+                    <h3 style="margin:0;font-size:var(--text-lg);font-weight:700;">AI Model Auto-Discovery</h3>
+                </div>
+                <p style="margin-top:4px;font-size:var(--text-xs);color:var(--text-secondary);">
+                    Curated Free, Top Recommended, and Pro models ready for 1-click addition to <strong>{{ provider.name }}</strong>.
+                </p>
+            </div>
+            <button type="button" class="btn btn-icon btn-secondary" onclick="closeDialog('aiDiscoverModal')" style="border:none;background:transparent;">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <div class="dialog-body" style="padding-top:var(--space-2);">
+            <!-- Category Filter Pills -->
+            <div style="display:flex;gap:var(--space-2);border-bottom:1px solid var(--border-color);padding-bottom:var(--space-3);margin-bottom:var(--space-4);overflow-x:auto;">
+                <button type="button" class="btn btn-sm btn-primary ai-tier-btn" data-tier="all" onclick="filterDiscoveredTier('all')">
+                    All Discovered (<span id="count-all">0</span>)
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary ai-tier-btn" data-tier="free" onclick="filterDiscoveredTier('free')">
+                    🟢 Free Tier (:free) (<span id="count-free">0</span>)
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary ai-tier-btn" data-tier="best" onclick="filterDiscoveredTier('best')">
+                    ⭐ Best Overall (<span id="count-best">0</span>)
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary ai-tier-btn" data-tier="pro" onclick="filterDiscoveredTier('pro')">
+                    💎 Pro Models (<span id="count-pro">0</span>)
+                </button>
+            </div>
+
+            <!-- Loader / Results Grid -->
+            <div id="aiDiscoverLoader" style="padding:var(--space-8);text-align:center;">
+                <span class="material-symbols-outlined" style="font-size:36px;color:var(--primary-500);animation:spin 1s linear infinite;">sync</span>
+                <p style="margin-top:8px;font-size:var(--text-sm);color:var(--text-secondary);">Fetching verified provider model catalog...</p>
+            </div>
+
+            <div id="aiDiscoverGrid" style="display:none;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:var(--space-3);max-height:480px;overflow-y:auto;padding-right:4px;">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+        <div class="dialog-footer" style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border-color);padding-top:var(--space-3);">
+            <span style="font-size:var(--text-xs);color:var(--text-muted);">
+                💡 Tip: Click "1-Click Add" to register without typing or manual capability tagging.
+            </span>
+            <button type="button" class="btn btn-secondary" onclick="closeDialog('aiDiscoverModal')">Close</button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+let discoveredCatalog = { free: [], best: [], pro: [] };
+let activeTier = 'all';
+
+async function openAiDiscoverDialog() {
+    openDialog('aiDiscoverModal');
+    const loader = document.getElementById('aiDiscoverLoader');
+    const grid = document.getElementById('aiDiscoverGrid');
+    loader.style.display = 'block';
+    grid.style.display = 'none';
+
+    try {
+        const res = await fetch(`/settings/llm/providers/{{ provider.id }}/models/discover`);
+        const data = await res.json();
+        if (data.success) {
+            discoveredCatalog = data.catalog;
+            const freeCount = (discoveredCatalog.free || []).length;
+            const bestCount = (discoveredCatalog.best || []).length;
+            const proCount = (discoveredCatalog.pro || []).length;
+            document.getElementById('count-free').innerText = freeCount;
+            document.getElementById('count-best').innerText = bestCount;
+            document.getElementById('count-pro').innerText = proCount;
+            document.getElementById('count-all').innerText = freeCount + bestCount + proCount;
+            
+            loader.style.display = 'none';
+            grid.style.display = 'grid';
+            renderDiscoveredModels();
+        } else {
+            loader.innerHTML = `<p style="color:var(--error);">Failed to load models catalog.</p>`;
+        }
+    } catch (e) {
+        loader.innerHTML = `<p style="color:var(--error);">Error connecting to discovery engine: ${e.message}</p>`;
+    }
+}
+
+function filterDiscoveredTier(tier) {
+    activeTier = tier;
+    document.querySelectorAll('.ai-tier-btn').forEach(btn => {
+        if (btn.dataset.tier === tier) {
+            btn.className = 'btn btn-sm btn-primary ai-tier-btn';
+        } else {
+            btn.className = 'btn btn-sm btn-secondary ai-tier-btn';
+        }
+    });
+    renderDiscoveredModels();
+}
+
+function renderDiscoveredModels() {
+    const grid = document.getElementById('aiDiscoverGrid');
+    let list = [];
+    if (activeTier === 'all') {
+        // Interleave unique models
+        const seen = new Set();
+        [...(discoveredCatalog.free || []), ...(discoveredCatalog.best || []), ...(discoveredCatalog.pro || [])].forEach(m => {
+            if (!seen.has(m.model_id)) {
+                seen.add(m.model_id);
+                list.push(m);
+            }
+        });
+    } else {
+        list = discoveredCatalog[activeTier] || [];
+    }
+
+    grid.innerHTML = list.map(m => {
+        const tierBadge = m.tier === 'free' 
+            ? '<span class="badge badge-success" style="font-size:10px;">🟢 Free Tier</span>'
+            : (m.tier === 'pro' 
+                ? '<span class="badge" style="background:#f3e8ff;color:#6b21a8;font-size:10px;">💎 Pro</span>'
+                : '<span class="badge badge-primary" style="font-size:10px;">⭐ Recommended</span>');
+
+        const alreadyAdded = m.already_added;
+        return `
+            <div class="card" style="margin:0;padding:var(--space-3);border:1px solid ${alreadyAdded ? 'var(--border-color)' : 'var(--primary-300)'};background:${alreadyAdded ? 'var(--surface-dim)' : 'var(--surface)'};">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                    <div>
+                        <strong style="font-size:13px;color:var(--text-primary);display:block;">${m.display_name}</strong>
+                        <span style="font-family:monospace;font-size:11px;color:var(--text-muted);word-break:break-all;">${m.model_id}</span>
+                    </div>
+                    ${tierBadge}
+                </div>
+
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;align-items:center;">
+                    <span class="badge badge-secondary" style="font-size:10px;">Context: ${m.context}</span>
+                    <span class="badge badge-secondary" style="font-size:10px;">⚡ ${m.speed}</span>
+                    ${m.supports_vision ? '<span class="badge badge-green" style="font-size:10px;">Vision</span>' : ''}
+                    ${m.supports_tool_calling ? '<span class="badge badge-yellow" style="font-size:10px;">Tools</span>' : ''}
+                    ${m.supports_structured_output ? '<span class="badge badge-purple" style="background:#f3e8ff;color:#6b21a8;font-size:10px;">JSON</span>' : ''}
+                </div>
+
+                <p style="font-size:11px;color:var(--text-secondary);margin:0 0 10px;line-height:1.4;">
+                    ${m.desc}
+                </p>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px dashed var(--border-color);padding-top:8px;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick='prefillManualForm(${JSON.stringify(m).replace(/'/g, "&apos;")})' style="font-size:11px;padding:3px 8px;">
+                        Fill Form
+                    </button>
+                    ${alreadyAdded 
+                        ? '<span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:2px;"><span class="material-symbols-outlined" style="font-size:14px;color:var(--success);">check</span> Added</span>'
+                        : `<button type="button" class="btn btn-primary btn-sm" onclick='quickAddFromAi(${JSON.stringify(m).replace(/'/g, "&apos;")})' style="font-size:11px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px;">
+                             <span class="material-symbols-outlined" style="font-size:14px;">bolt</span> 1-Click Add
+                           </button>`
+                    }
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function quickAddFromAi(model) {
+    try {
+        const payload = {
+            model_id: model.model_id,
+            display_name: model.display_name,
+            priority: model.priority || 10,
+            supports_text: model.supports_text,
+            supports_vision: model.supports_vision,
+            supports_tool_calling: model.supports_tool_calling,
+            supports_structured_output: model.supports_structured_output
+        };
+        const res = await apiFetch(`/settings/llm/providers/{{ provider.id }}/models/quick-add`, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+        showToast(res.message || `Model '${model.display_name}' added!`, 'success');
+        closeDialog('aiDiscoverModal');
+        setTimeout(() => location.reload(), 600);
+    } catch (e) {
+        showToast(`Failed to add model: ${e.message}`, 'error');
+    }
+}
+
+function prefillManualForm(model) {
+    closeDialog('aiDiscoverModal');
+    document.getElementById('add_model_id').value = model.model_id;
+    document.getElementById('add_display_name').value = model.display_name;
+    document.getElementById('add_priority').value = model.priority || 10;
+    
+    document.querySelector('input[name="supports_text"]').checked = !!model.supports_text;
+    document.querySelector('input[name="supports_vision"]').checked = !!model.supports_vision;
+    document.querySelector('input[name="supports_tool_calling"]').checked = !!model.supports_tool_calling;
+    document.querySelector('input[name="supports_structured_output"]').checked = !!model.supports_structured_output;
+    
+    openDialog('addModelDialog');
+}
+
 function openEditDialog(model) {
     const form = document.getElementById('editModelForm');
     form.action = `/settings/llm/providers/{{ provider.id }}/models/${model.id}/edit`;
@@ -233,3 +449,4 @@ async function toggleModel(id) {
 }
 </script>
 {% endblock %}
+

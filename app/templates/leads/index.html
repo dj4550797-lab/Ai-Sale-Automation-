@@ -11,10 +11,19 @@
             Search, filter, and qualify discovered businesses.
         </p>
     </div>
-    <a href="{{ url_for('leads.discover') }}" class="btn btn-primary">
-        <span class="material-symbols-outlined">search</span>
-        Discover Leads
-    </a>
+    <div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;">
+        <a href="{{ url_for('leads.storage_hub') }}" class="btn btn-secondary" style="display:inline-flex;align-items:center;gap:6px;">
+            <span class="material-symbols-outlined" style="font-size:18px;">inventory_2</span>
+            Storage & Archive Hub
+            {% if archived_count and archived_count > 0 %}
+            <span class="badge badge-warning" style="font-size:10px;padding:2px 6px;">{{ archived_count }}</span>
+            {% endif %}
+        </a>
+        <a href="{{ url_for('leads.discover') }}" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:6px;">
+            <span class="material-symbols-outlined" style="font-size:18px;">search</span>
+            Discover Leads
+        </a>
+    </div>
 </div>
 
 <!-- Filter Bar -->
@@ -228,12 +237,22 @@
                 <p style="margin: 0;">Are you sure you want to permanently delete this lead? All associated contacts, website analyses, PRDs, demos, conversations, and outreach campaigns will be automatically removed.</p>
             </div>
         </div>
-        <div class="dialog-footer" style="border-top: 1px solid var(--border-color); padding-top: var(--space-4);">
+        <div class="dialog-footer" style="border-top: 1px solid var(--border-color); padding-top: var(--space-4); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--space-2);">
             <button type="button" class="btn btn-secondary" onclick="closeDialog('deleteLeadModal')">Cancel</button>
-            <form id="delete_form" method="POST" style="display: inline; margin: 0;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-danger">Delete Lead</button>
-            </form>
+            <div style="display:inline-flex; gap:var(--space-2);">
+                <form id="delete_form" method="POST" style="display: inline; margin: 0;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-warning" title="Move to Recycle Bin so you can recover anytime">
+                        <span class="material-symbols-outlined" style="font-size:16px;">archive</span> Move to Recycle Bin
+                    </button>
+                </form>
+                <form id="purge_form" method="POST" style="display: inline; margin: 0;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger" title="Permanently delete lead forever">
+                        <span class="material-symbols-outlined" style="font-size:16px;">delete_forever</span> Purge Forever
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -243,6 +262,7 @@ function confirmDeleteLead(id, name) {
     document.getElementById('delete_lead_id').innerText = id;
     document.getElementById('delete_business_name').innerText = name;
     document.getElementById('delete_form').action = `/leads/${id}/delete`;
+    document.getElementById('purge_form').action = `/leads/${id}/delete?permanent=1`;
     openDialog('deleteLeadModal');
 }
 
@@ -266,7 +286,6 @@ function checkSelectedLeads() {
     } else {
         deleteBtn.style.display = 'none';
         countSpan.innerText = '0';
-        // Deselect select all master checkbox if nothing is checked
         document.getElementById('selectAllLeads').checked = false;
     }
 }
@@ -278,18 +297,24 @@ function confirmDeleteSelected() {
     
     document.getElementById('delete_selected_count').innerText = checked.length;
     
-    const form = document.getElementById('delete_selected_form');
-    // Remove old hidden inputs
-    const oldInputs = form.querySelectorAll('input[name="lead_ids[]"]');
-    oldInputs.forEach(input => input.remove());
+    const formArchive = document.getElementById('delete_selected_form');
+    const formPurge = document.getElementById('purge_selected_form');
     
-    // Append selected IDs
+    formArchive.querySelectorAll('input[name="lead_ids[]"]').forEach(input => input.remove());
+    formPurge.querySelectorAll('input[name="lead_ids[]"]').forEach(input => input.remove());
+    
     checked.forEach(cb => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'lead_ids[]';
-        input.value = cb.value;
-        form.appendChild(input);
+        const inp1 = document.createElement('input');
+        inp1.type = 'hidden';
+        inp1.name = 'lead_ids[]';
+        inp1.value = cb.value;
+        formArchive.appendChild(inp1);
+
+        const inp2 = document.createElement('input');
+        inp2.type = 'hidden';
+        inp2.name = 'lead_ids[]';
+        inp2.value = cb.value;
+        formPurge.appendChild(inp2);
     });
     
     openDialog('deleteSelectedLeadsModal');
@@ -298,11 +323,11 @@ function confirmDeleteSelected() {
 
 <!-- Delete Selected Leads Confirmation Modal -->
 <div class="dialog-overlay" id="deleteSelectedLeadsModal">
-    <div class="dialog" style="max-width: 450px;">
+    <div class="dialog" style="max-width: 480px;">
         <div class="dialog-header">
             <h3 style="color: var(--error);">Delete Selected Leads?</h3>
             <p style="margin-top: 4px; font-size: var(--text-sm); color: var(--text-secondary);">
-                This will permanently delete the selected leads and all their associated records.
+                Choose to safely move to the Recycle Bin or permanently purge from the system.
             </p>
         </div>
         <div class="dialog-body" style="padding-top: var(--space-2);">
@@ -313,15 +338,25 @@ function confirmDeleteSelected() {
                 </div>
             </div>
             <p style="font-size: var(--text-xs); color: var(--text-tertiary); margin-top: var(--space-3); line-height: 1.4;">
-                Warning: This action is irreversible. All contacts, website analyses, PRDs, demos, outreach campaigns, and message histories linked to these selected leads will be cascade-deleted.
+                Tip: Moving to Recycle Bin allows 1-click recovery anytime. Purging permanently removes all PRDs, demos, and contacts.
             </p>
         </div>
-        <div class="dialog-footer" style="border-top: 1px solid var(--border-color); padding-top: var(--space-4);">
+        <div class="dialog-footer" style="border-top: 1px solid var(--border-color); padding-top: var(--space-4); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--space-2);">
             <button type="button" class="btn btn-secondary" onclick="closeDialog('deleteSelectedLeadsModal')">Cancel</button>
-            <form id="delete_selected_form" action="{{ url_for('leads.delete_multiple') }}" method="POST" style="display: inline; margin: 0;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-danger">Delete Selected Leads</button>
-            </form>
+            <div style="display:inline-flex; gap:var(--space-2);">
+                <form id="delete_selected_form" action="{{ url_for('leads.delete_multiple') }}" method="POST" style="display: inline; margin: 0;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-warning" title="Safely move to Recycle Bin">
+                        <span class="material-symbols-outlined" style="font-size:16px;">archive</span> Move to Recycle Bin
+                    </button>
+                </form>
+                <form id="purge_selected_form" action="{{ url_for('leads.delete_multiple') }}?permanent=1" method="POST" style="display: inline; margin: 0;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger" title="Permanently delete all selected">
+                        <span class="material-symbols-outlined" style="font-size:16px;">delete_forever</span> Purge Forever
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
